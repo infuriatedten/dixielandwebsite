@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% import "bootstrap_wtf.html" as wtf %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h1 class="mb-4">{{ title }}</h1>
+
+            <div class="card mb-3">
+                <div class="card-header">Application #{{ application.id }} Details</div>
+                <div class="card-body">
+                    <p><strong>Applicant:</strong> {{ application.applicant.username }}</p>
+                    <p><strong>Status:</strong> <span class="font-weight-bold">{{ application.status.value }}</span></p>
+                    <p><strong>Vehicle Type:</strong> {{ application.vehicle_type }}</p>
+                    <p><strong>Route:</strong><br>{{ application.route_details|safe|nl2br }}</p>
+                    <p><strong>Travel Dates:</strong> {{ application.travel_start_date.strftime('%Y-%m-%d') }} to {{ application.travel_end_date.strftime('%Y-%m-%d') }}</p>
+                    {% if application.user_notes %}
+                        <p><strong>User Notes:</strong><br>{{ application.user_notes|safe|nl2br }}</p>
+                    {% endif %}
+                    {% if application.officer_notes %}
+                        <p><strong>Previous Officer Notes:</strong><br>{{ application.officer_notes|safe|nl2br }}</p>
+                    {% endif %}
+                     {% if application.permit_fee %}
+                        <p><strong>Currently Set Fee:</strong> {{ "%.2f"|format(application.permit_fee) }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if form.new_status.choices|length > 0 %}
+            <div class="card">
+                <div class="card-header">Process Application</div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('dot.review_permit_application', application_id=application.id) }}" novalidate>
+                        {{ form.hidden_tag() }}
+                        {{ wtf.render_field(form.new_status) }}
+
+                        {# Conditional field for permit_fee based on status selection - ideally done with JS, but can show/hide or just validate in backend #}
+                        <div id="permit_fee_group" class="{{ 'd-none' if form.new_status.data != PermitApplicationStatus.APPROVED_PENDING_PAYMENT.value else '' }}">
+                             {{ wtf.render_field(form.permit_fee, placeholder="Enter fee if approving") }}
+                        </div>
+
+                        {{ wtf.render_field(form.officer_notes, rows=5, placeholder="Add notes for the applicant or internal records. Required for rejection or modification requests.") }}
+                        {{ wtf.render_field(form.submit, button_map={'submit': 'btn-primary w-100'}) }}
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-info">This application is not in a state that allows further processing via this form (e.g., already Issued, Paid, or Rejected by a final decision).</div>
+            {% endif %}
+            <a href="{{ url_for('dot.review_permit_applications_list') }}" class="btn btn-secondary mt-3">Back to Review List</a>
+        </div>
+    </div>
+</div>
+
+{# Basic JS to show/hide permit_fee based on status selection #}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var statusSelect = document.getElementById('new_status'); // Ensure your SelectField has id='new_status'
+        var feeGroup = document.getElementById('permit_fee_group');
+        var approvedStatusValue = "{{ PermitApplicationStatus.APPROVED_PENDING_PAYMENT.value }}";
+
+        function toggleFeeGroup() {
+            if (statusSelect.value === approvedStatusValue) {
+                feeGroup.classList.remove('d-none');
+            } else {
+                feeGroup.classList.add('d-none');
+            }
+        }
+
+        if (statusSelect && feeGroup) {
+            statusSelect.addEventListener('change', toggleFeeGroup);
+            // Initial check in case of pre-filled form (e.g. validation error)
+            toggleFeeGroup();
+        }
+    });
+</script>
+{% endblock %}

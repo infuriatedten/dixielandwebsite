@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">{{ title }}</h1>
+    <p>Here are the items you have submitted for auction and their current statuses.</p>
+
+    <div class="mb-3">
+        <a href="{{ url_for('auction.submit_auction_item') }}" class="btn btn-success">Submit New Item for Auction</a>
+    </div>
+
+    {% if submissions.items %}
+    <div class="list-group">
+        {% for item in submissions.items %}
+        <div class="list-group-item list-group-item-action flex-column align-items-start mb-2 shadow-sm">
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">{{ item.item_name }}</h5>
+                <small>Submitted: {{ item.submission_time.strftime('%Y-%m-%d %H:%M') }}</small>
+            </div>
+            <p class="mb-1">
+                Suggested Start Bid: {{ "%.2f"|format(item.suggested_starting_bid) if item.suggested_starting_bid else 'Not set' }}
+                {% if item.actual_starting_bid %} | Actual Start Bid: {{ "%.2f"|format(item.actual_starting_bid) }} {% endif %}
+            </p>
+            <p class="mb-1 small text-muted">Description: {{ item.item_description|truncate(150, True) }}</p>
+
+            <div class="d-flex justify-content-between align-items-center mt-2">
+                <div>
+                    Status:
+                    <span class="badge badge-{{
+                        'primary' if item.status == AuctionStatus.PENDING_APPROVAL
+                        else 'success' if item.status == AuctionStatus.ACTIVE or item.status == AuctionStatus.COMPLETED
+                        else 'info' if item.status == AuctionStatus.SOLD_AWAITING_PAYMENT or item.status == AuctionStatus.SOLD_PENDING_SELLER_PAYOUT
+                        else 'warning' if item.status == AuctionStatus.SOLD_PAYMENT_FAILED
+                        else 'danger' if item.status == AuctionStatus.REJECTED_BY_ADMIN or item.status == AuctionStatus.CANCELLED_BY_ADMIN
+                        else 'secondary' if item.status == AuctionStatus.EXPIRED_NO_BIDS or item.status == AuctionStatus.CANCELLED_BY_SUBMITTER
+                        else 'light' }}">
+                        {{ item.status.value }}
+                    </span>
+                </div>
+                <div>
+                    <a href="{{ url_for('auction.view_auction', auction_id=item.id) }}" class="btn btn-sm btn-info">View Details</a>
+                    {% if item.status == AuctionStatus.PENDING_APPROVAL %}
+                    <form method="POST" action="{{ url_for('auction.cancel_submission', auction_id=item.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to cancel this submission?');">
+                        <input type="submit" value="Cancel Submission" class="btn btn-sm btn-danger">
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+            {% if item.admin_notes %}
+            <div class="mt-2 p-2 bg-light border rounded small">
+                <strong>Admin Notes:</strong> {{ item.admin_notes|safe|nl2br }}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <nav aria-label="My submissions pagination">
+        <ul class="pagination justify-content-center mt-4">
+            {% if submissions.has_prev %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('auction.my_submissions', page=submissions.prev_num) }}">Previous</a></li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+            {% endif %}
+            {% for page_num in submissions.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+            {% if page_num %}
+            {% if submissions.page == page_num %}
+            <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
+            {% else %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('auction.my_submissions', page=page_num) }}">{{ page_num }}</a></li>
+            {% endif %}
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+            {% endfor %}
+            {% if submissions.has_next %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('auction.my_submissions', page=submissions.next_num) }}">Next</a></li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% else %}
+    <div class="alert alert-info">You have not submitted any items for auction yet.</div>
+    {% endif %}
+</div>
+{% endblock %}

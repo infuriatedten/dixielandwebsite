@@ -1,0 +1,59 @@
+{% extends "admin/index.html" %} {# Or your admin base template #}
+{% import "bootstrap_wtf.html" as wtf %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <h1 class="mb-4">{{ title }}: {{ item.item_name }}</h1>
+
+            <div class="card mb-3 shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">User Submission Details (ID: {{ item.id }})</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Submitted By:</strong> {{ item.submitter.username }} on {{ item.submission_time.strftime('%Y-%m-%d %H:%M') }}</p>
+                    <p><strong>Item Name:</strong> {{ item.item_name }}</p>
+                    <p><strong>Description:</strong><br>{{ item.item_description|safe|nl2br }}</p>
+                    <p><strong>Suggested Starting Bid:</strong> {{ "%.2f"|format(item.suggested_starting_bid) if item.suggested_starting_bid is not none else 'Not provided' }}</p>
+                    {% if item.image_url %}
+                        <p><strong>Image URL:</strong> <a href="{{ item.image_url }}" target="_blank">{{ item.image_url }}</a></p>
+                        <img src="{{ item.image_url }}" alt="Item Image" class="img-thumbnail mb-2" style="max-height: 200px;">
+                    {% else %}
+                        <p><strong>Image URL:</strong> Not provided</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">Admin Approval & Configuration</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('auction.approve_auction_item', item_id=item.id) }}" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        <p class="text-muted">Set the final parameters for this auction if approving, or provide notes if rejecting.</p>
+
+                        {{ wtf.render_field(form.actual_starting_bid, placeholder="e.g., 150.00") }}
+                        {{ wtf.render_field(form.minimum_bid_increment, placeholder="e.g., 5.00 (Default: " ~ config.AUCTION_DEFAULT_MIN_BID_INCREMENT ~ ")") }}
+                        {# Add form.auction_duration_hours if made configurable #}
+
+                        {{ wtf.render_field(form.admin_notes, rows=4, placeholder="Required if rejecting. Optional for approval notes.") }}
+
+                        <div class="form-row mt-3">
+                            <div class="col">
+                                {{ wtf.render_field(form.submit_approve, button_map={'submit_approve': 'btn-success btn-block'}) }}
+                            </div>
+                            <div class="col">
+                                {{ wtf.render_field(form.submit_reject, button_map={'submit_reject': 'btn-danger btn-block'}) }}
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <a href="{{ url_for('auction.list_pending_auctions') }}" class="btn btn-secondary mt-3">Back to Pending Approvals</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

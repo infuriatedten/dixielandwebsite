@@ -1,0 +1,68 @@
+{% extends "admin/index.html" %} {# Or your admin base template if different #}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">{{ title }}</h1>
+    <p>Review items submitted by users and approve or reject them for auction.</p>
+
+    {% if auctions.items %}
+    <table class="table table-striped table-hover table-sm">
+        <thead class="thead-dark">
+            <tr>
+                <th>ID</th>
+                <th>Item Name</th>
+                <th>Submitted By</th>
+                <th>Submission Date</th>
+                <th>Suggested Start Bid</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in auctions.items %}
+            <tr>
+                <td>{{ item.id }}</td>
+                <td>{{ item.item_name|truncate(50) }}</td>
+                <td>{{ item.submitter.username }}</td>
+                <td>{{ item.submission_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>{{ "%.2f"|format(item.suggested_starting_bid) if item.suggested_starting_bid is not none else 'N/A' }}</td>
+                <td>
+                    <a href="{{ url_for('auction.approve_auction_item', item_id=item.id) }}" class="btn btn-xs btn-primary">Review & Process</a>
+                    {# Quick view link to the item's eventual public page, might be disabled if not yet viewable #}
+                    <a href="{{ url_for('auction.view_auction', auction_id=item.id) }}" class="btn btn-xs btn-info" target="_blank">View Submission</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <nav aria-label="Pending auctions pagination">
+        <ul class="pagination justify-content-center">
+            {% if auctions.has_prev %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('auction.list_pending_auctions', page=auctions.prev_num) }}">Previous</a></li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+            {% endif %}
+            {% for page_num in auctions.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+            {% if page_num %}
+            {% if auctions.page == page_num %}
+            <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
+            {% else %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('auction.list_pending_auctions', page=page_num) }}">{{ page_num }}</a></li>
+            {% endif %}
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+            {% endfor %}
+            {% if auctions.has_next %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('auction.list_pending_auctions', page=auctions.next_num) }}">Next</a></li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% else %}
+    <div class="alert alert-info">There are no auction submissions currently pending approval.</div>
+    {% endif %}
+     <a href="{{ url_for('admin.index') }}" class="btn btn-secondary mt-3">Back to Admin Dashboard</a>
+</div>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">{{ title }}</h1>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <span>Ticket ID: {{ ticket.id }}</span>
+                <span class="badge badge-lg badge-{{
+                    'warning' if ticket.status == TicketStatus.OUTSTANDING or ticket.status == TicketStatus.RESOLVED_UNPAID
+                    else 'success' if ticket.status == TicketStatus.PAID or ticket.status == TicketStatus.RESOLVED_DISMISSED
+                    else 'info' if ticket.status == TicketStatus.CONTESTED
+                    else 'secondary' }}">
+                    Status: {{ ticket.status.value }}
+                </span>
+            </div>
+        </div>
+        <div class="card-body">
+            <p><strong>Issued To:</strong> {{ ticket.issued_to.username if ticket.issued_to else 'N/A' }}</p>
+            <p><strong>Issued By:</strong> Officer {{ ticket.issued_by.username if ticket.issued_by else 'System/Unknown' }}</p>
+            <p><strong>Vehicle ID:</strong> {{ ticket.vehicle_id|default('N/A', True) }}</p>
+            <p><strong>Fine Amount:</strong> {{ "%.2f"|format(ticket.fine_amount) }} {{ current_user.accounts.first().currency if current_user.accounts.first() else '' }}</p>
+            <p><strong>Issue Date:</strong> {{ ticket.issue_date.strftime('%Y-%m-%d %H:%M:%S UTC') if ticket.issue_date else 'N/A' }}</p>
+            <p><strong>Due Date:</strong> {{ ticket.due_date.strftime('%Y-%m-%d %H:%M:%S UTC') if ticket.due_date else 'N/A' }}</p>
+
+            <h5 class="mt-3">Violation Details:</h5>
+            <p class="bg-light p-2 rounded">{{ ticket.violation_details|safe }}</p>
+
+            {% if ticket.user_contest_reason %}
+            <h5 class="mt-3">Your Reason for Contesting:</h5>
+            <p class="bg-light p-2 rounded">{{ ticket.user_contest_reason|safe }}</p>
+            {% endif %}
+
+            {% if ticket.resolution_notes %}
+            <h5 class="mt-3">Admin Resolution Notes:</h5>
+            <p class="bg-light p-2 rounded">
+                {{ ticket.resolution_notes|safe }}
+                <br><small class="text-muted">Resolved by: {{ ticket.resolved_by_admin.username if ticket.resolved_by_admin else 'Admin' }}</small>
+            </p>
+            {% endif %}
+
+            {% if ticket.status == TicketStatus.PAID and ticket.payment_transaction %}
+            <h5 class="mt-3">Payment Information:</h5>
+            <p>Paid on: {{ ticket.payment_transaction.timestamp.strftime('%Y-%m-%d %H:%M:%S UTC') }}</p>
+            <p>Banking Transaction ID: {{ ticket.banking_transaction_id }}</p>
+            {% endif %}
+        </div>
+        <div class="card-footer text-right">
+            {% if ticket.issued_to_user_id == current_user.id %}
+                {% if ticket.status == TicketStatus.OUTSTANDING or ticket.status == TicketStatus.RESOLVED_UNPAID %}
+                    <form method="POST" action="{{ url_for('dot.pay_ticket', ticket_id=ticket.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to pay this fine? The amount will be deducted from your bank account.');">
+                        <input type="submit" value="Pay Fine ({{ "%.2f"|format(ticket.fine_amount) }})" class="btn btn-success">
+                    </form>
+                {% endif %}
+                {% if ticket.status == TicketStatus.OUTSTANDING %}
+                    <a href="{{ url_for('dot.contest_ticket', ticket_id=ticket.id) }}" class="btn btn-warning">Contest Ticket</a>
+                {% endif %}
+                 <a href="{{ url_for('dot.my_tickets') }}" class="btn btn-secondary">Back to My Tickets</a>
+            {% elif current_user.role == UserRole.OFFICER and ticket.issued_by_officer_id == current_user.id %}
+                 <a href="{{ url_for('dot.list_issued_tickets') }}" class="btn btn-secondary">Back to My Issued Tickets</a>
+            {% elif current_user.role == UserRole.ADMIN %}
+                 <a href="{{ url_for('admin.manage_tickets') }}" class="btn btn-secondary">Back to Admin Ticket List</a>
+                 {% if ticket.status == TicketStatus.CONTESTED or ticket.status == TicketStatus.OUTSTANDING %}
+                    <a href="{{ url_for('admin.resolve_ticket', ticket_id=ticket.id) }}" class="btn btn-primary">Resolve/Update (Admin)</a>
+                 {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title or "Game Website" }} - My Application</title>
+    <!-- Add any CSS frameworks or custom stylesheets here -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="{{ url_for('main.index') }}">Game Portal</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('main.index') }}">Home</a>
+                </li>
+                <!-- Add other navigation links for modules here as they are built -->
+                {% if current_user.is_authenticated %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.profile') }}">Profile</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('banking.dashboard') }}">Banking</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('taxes.tax_info') }}">Tax Info</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="dotDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            DOT Services
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="dotDropdown">
+                            <a class="dropdown-item" href="{{ url_for('dot.my_tickets') }}">My Tickets</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="{{ url_for('dot.apply_for_permit') }}">Apply for New Permit</a>
+                            <a class="dropdown-item" href="{{ url_for('dot.my_permit_applications') }}">My Permit Applications</a>
+                            {% if current_user.role in [UserRole.OFFICER, UserRole.ADMIN] %}
+                                <div class="dropdown-divider"></div>
+                                <h6 class="dropdown-header">Officer Tools</h6>
+                                <a class="dropdown-item" href="{{ url_for('dot.issue_ticket') }}">Issue Ticket</a>
+                                <a class="dropdown-item" href="{{ url_for('dot.list_issued_tickets') }}">My Issued Tickets</a>
+                                <a class="dropdown-item" href="{{ url_for('dot.review_permit_applications_list') }}">Review Permit Apps</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="{{ url_for('dot.record_inspection') }}">Record Inspection</a>
+                                <a class="dropdown-item" href="{{ url_for('dot.list_my_conducted_inspections') }}">My Conducted Inspections</a>
+                            {% endif %}
+                        </div>
+                    </li>
+                    {% if current_user.role == UserRole.ADMIN %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.index') }}">Admin Panel</a></li>
+                    {% endif %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('marketplace.index') }}">Marketplace</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('auction.index') }}">Auctions</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('livemap.server_status') }}">Server Status</a></li>
+                {% endif %}
+            </ul>
+            <ul class="navbar-nav">
+                {% if current_user.is_authenticated %}
+                    <li class="nav-item nav-link text-dark">
+                        Welcome, {{ current_user.username }} ({{ current_user.role.name.capitalize() }})
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-outline-secondary btn-sm" href="{{ url_for('auth.logout') }}">Logout</a>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.register') }}">Register</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <footer class="footer mt-auto py-3 bg-light">
+        <div class="container">
+            <span class="text-muted">© {{ SCRIPT_YEAR }} Game Website Project</span>
+        </div>
+    </footer>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

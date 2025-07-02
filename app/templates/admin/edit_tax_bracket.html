@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% import "bootstrap_wtf.html" as wtf %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">{{ title }}: {{ bracket.name }}</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('admin.edit_tax_bracket', bracket_id=bracket.id) }}" novalidate>
+                {{ form.hidden_tag() }}
+                {{ wtf.render_field(form.name) }}
+                {{ wtf.render_field(form.description) }}
+                <div class="form-row">
+                    <div class="col-md-6">{{ wtf.render_field(form.min_balance) }}</div>
+                    <div class="col-md-6">{{ wtf.render_field(form.max_balance) }}</div>
+                </div>
+                {{ wtf.render_field(form.tax_rate) }}
+                {{ wtf.render_field(form.is_active) }}
+                {{ wtf.render_field(form.submit, button_map={'submit': 'btn-success'}) }}
+            </form>
+        </div>
+    </div>
+
+    <a href="{{ url_for('admin.manage_tax_brackets') }}" class="btn btn-secondary mt-3">Back to Tax Brackets</a>
+</div>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% import "bootstrap_wtf.html" as wtf %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h1 class="mb-4">{{ title }}</h1>
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('dot.issue_ticket') }}" novalidate>
+                        {{ form.hidden_tag() }}
+                        <p class="text-muted">Ensure the username is correct. Tickets cannot be re-assigned easily.</p>
+                        {{ wtf.render_field(form.user_search, placeholder="Enter exact username of the recipient") }}
+                        {{ wtf.render_field(form.vehicle_id, placeholder="e.g., License Plate or Vehicle Name") }}
+                        {{ wtf.render_field(form.violation_details, rows=5, placeholder="Describe the violation clearly and concisely.") }}
+                        {{ wtf.render_field(form.fine_amount, placeholder="e.g., 150.00") }}
+
+                        {{ wtf.render_field(form.submit, button_map={'submit': 'btn-danger w-100'}) }}
+                    </form>
+                </div>
+            </div>
+            <a href="{{ url_for('dot.list_issued_tickets') }}" class="btn btn-secondary mt-3">Back to My Issued Tickets</a>
+            {% if current_user.role == UserRole.ADMIN %}
+                 <a href="{{ url_for('admin.manage_tickets') }}" class="btn btn-info mt-3">Admin Ticket Management</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

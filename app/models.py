@@ -1,0 +1,452 @@
+from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
+from app import db
+import enum
+
+class UserRole(enum.Enum):
+    USER = "user"
+    OFFICER = "officer"
+    ADMIN = "admin"
+
+class User(UserMixin, db.Model):
+    __tablename__ = 'users' # Explicitly naming the table
+
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(64), index=True, unique=True, nullable=False)
+    email = db.Column(db.String(120), index=True, unique=True, nullable=False) # Added email
+    password_hash = db.Column(db.String(256), nullable=False) # Increased length for future hash algorithms
+    role = db.Column(db.Enum(UserRole), default=UserRole.USER, nullable=False)
+
+    # Relationships (examples, will be built out in respective modules)
+    # accounts = db.relationship('Account', backref='owner', lazy='dynamic')
+    # tickets_issued = db.relationship('Ticket', foreign_keys='Ticket.issued_by_officer_id', backref='issuer', lazy='dynamic')
+    # tickets_received = db.relationship('Ticket', foreign_keys='Ticket.issued_to_user_id', backref='recipient', lazy='dynamic')
+    # permit_applications = db.relationship('PermitApplication', backref='applicant', lazy='dynamic')
+    # marketplace_listings = db.relationship('MarketplaceListing', backref='seller', lazy='dynamic')
+    # inspections_conducted = db.relationship('Inspection', foreign_keys='Inspection.officer_user_id', backref='inspecting_officer', lazy='dynamic')
+    # inspections_on_user = db.relationship('Inspection', foreign_keys='Inspection.inspected_user_id', backref='inspected_party', lazy='dynamic')
+
+    # Discord Integration fields
+    discord_user_id = db.Column(db.String(100), nullable=True, unique=True, index=True) # Discord's Snowflake ID for bot interactions
+    discord_username = db.Column(db.String(100), nullable=True) # Discord username#discriminator, for display or lookup
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    def __repr__(self):
+        return f'<User {self.username} ({self.role.value})>'
+
+from datetime import datetime
+
+# Placeholder for other models to be added in future steps
+
+class Account(db.Model):
+    __tablename__ = 'accounts'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    balance = db.Column(db.Numeric(10, 2), default=0.00, nullable=False) # Using Numeric for currency
+    currency = db.Column(db.String(10), default="GDC", nullable=False) # Game Dollar Credits
+    last_updated_on = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Potentially: admin_id who last updated, if needed for audit.
+    # last_updated_by_admin_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+
+    user = db.relationship('User', backref=db.backref('accounts', lazy='dynamic'))
+    transactions = db.relationship('Transaction', backref='account', lazy='dynamic', cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f'<Account {self.id} for User {self.user_id} - {self.balance} {self.currency}>'
+
+class TransactionType(enum.Enum):
+    INITIAL_SETUP = "initial_setup"
+    ADMIN_DEPOSIT = "admin_deposit"
+    ADMIN_WITHDRAWAL = "admin_withdrawal"
+    TICKET_PAYMENT = "ticket_payment"
+    PERMIT_FEE = "permit_fee"
+    MARKETPLACE_SALE = "marketplace_sale"
+    MARKETPLACE_PURCHASE = "marketplace_purchase"
+    TAX_PAYMENT = "tax_payment" # User-initiated tax payment (if we had that)
+    AUTOMATED_TAX_DEDUCTION = "automated_tax_deduction" # For the new automated system
+    TICKET_PAYMENT = "ticket_payment" # For paying DOT tickets
+    PERMIT_FEE_PAYMENT = "permit_fee_payment" # For paying vehicle permits. This was already added in the previous step plan.
+    AUCTION_WIN_DEBIT = "auction_win_debit" # Deduction from auction winner's account
+    AUCTION_SALE_CREDIT = "auction_sale_credit" # Credit to auction seller's account
+    OTHER = "other"
+
+class Transaction(db.Model):
+    __tablename__ = 'transactions'
+    id = db.Column(db.Integer, primary_key=True)
+    account_id = db.Column(db.Integer, db.ForeignKey('accounts.id'), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    type = db.Column(db.Enum(TransactionType), nullable=False)
+    amount = db.Column(db.Numeric(10, 2), nullable=False) # Positive for deposits/credits, negative for withdrawals/debits
+    description = db.Column(db.String(255))
+
+    # Potentially: admin_id who processed this, if it's an admin-initiated one
+    # processed_by_admin_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+
+    def __repr__(self):
+        return f'<Transaction {self.id} ({self.type.value}) of {self.amount} for Account {self.account_id}>'
+
+
+# Update User model to have a backref to accounts
+User.accounts_collection = db.relationship('Account', backref='owner_user', lazy='dynamic', foreign_keys=[Account.user_id])
+# If using admin_id fields in Account/Transaction:
+# User.admin_account_updates = db.relationship('Account', backref='admin_updater', lazy='dynamic', foreign_keys=[Account.last_updated_by_admin_id])
+# User.admin_transactions_processed = db.relationship('Transaction', backref='admin_processor', lazy='dynamic', foreign_keys=[Transaction.processed_by_admin_id])
+
+
+# --- Tax System Models ---
+class TaxType(db.Model):
+    __tablename__ = 'tax_types'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    description = db.Column(db.String(255))
+    amount = db.Column(db.Numeric(10, 2), nullable=False) # Fixed amount for the tax
+    frequency = db.Column(db.String(50)) # e.g., "One-Time", "Annual", "Monthly" - informational
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+
+    payments = db.relationship('TaxPaymentLog', backref='tax_type', lazy='dynamic')
+
+    def __repr__(self):
+        return f'<TaxType {self.name} - {self.amount}>'
+
+class TaxPaymentLog(db.Model):
+    __tablename__ = 'tax_payment_logs'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    tax_type_id = db.Column(db.Integer, db.ForeignKey('tax_types.id'), nullable=False)
+    amount_paid = db.Column(db.Numeric(10, 2), nullable=False)
+    payment_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    banking_transaction_id = db.Column(db.Integer, db.ForeignKey('transactions.id'), unique=True, nullable=False) # Link to the debit transaction
+
+    user = db.relationship('User', backref=db.backref('tax_payments', lazy='dynamic'))
+    banking_transaction = db.relationship('Transaction', backref=db.backref('tax_payment_log_entry', uselist=False)) # one-to-one
+
+    def __repr__(self):
+        return f'<TaxPaymentLog ID: {self.id} - User: {self.user_id} paid {self.amount_paid} for TaxType: {self.tax_type_id}>'
+
+# Add backref to User model for tax payments
+User.tax_payment_logs = db.relationship('TaxPaymentLog', backref='payer', lazy='dynamic', foreign_keys=[TaxPaymentLog.user_id])
+
+
+# --- Tax System Models (Revised for Automated, Balance-Based Taxes) ---
+class TaxBracket(db.Model):
+    __tablename__ = 'tax_brackets'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    description = db.Column(db.String(255))
+    min_balance = db.Column(db.Numeric(10, 2), nullable=False, index=True)  # Minimum balance to qualify for this bracket (inclusive)
+    max_balance = db.Column(db.Numeric(10, 2), nullable=True, index=True)   # Maximum balance for this bracket (exclusive). Null for top tier.
+    tax_rate = db.Column(db.Numeric(5, 2), nullable=False)  # Percentage, e.g., 1.5 for 1.5%
+    # Frequency is implicitly weekly based on user requirement, managed by scheduler. Field could be added if more flexibility needed later.
+    # frequency = db.Column(db.String(50), default='WEEKLY', nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
+
+    deduction_logs = db.relationship('AutomatedTaxDeductionLog', backref='tax_bracket', lazy='dynamic')
+
+    def __repr__(self):
+        return f'<TaxBracket {self.name} ({self.tax_rate}%) for balances {self.min_balance} to {self.max_balance if self.max_balance else "infinity"}>'
+
+class AutomatedTaxDeductionLog(db.Model):
+    __tablename__ = 'automated_tax_deduction_logs'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    tax_bracket_id = db.Column(db.Integer, db.ForeignKey('tax_brackets.id'), nullable=False)
+    balance_before_deduction = db.Column(db.Numeric(10, 2), nullable=False)
+    tax_rate_applied = db.Column(db.Numeric(5,2), nullable=False) # Store the rate at the time of deduction
+    amount_deducted = db.Column(db.Numeric(10, 2), nullable=False)
+    deduction_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
+    banking_transaction_id = db.Column(db.Integer, db.ForeignKey('transactions.id'), unique=True, nullable=False)
+
+    user = db.relationship('User', backref=db.backref('automated_tax_deductions', lazy='dynamic'))
+    banking_transaction = db.relationship('Transaction', backref=db.backref('automated_tax_deduction_log_entry', uselist=False))
+
+    def __repr__(self):
+        return f'<AutomatedTaxDeductionLog ID: {self.id} - User: {self.user_id} deducted {self.amount_deducted}>'
+
+# Update User model backref
+User.automated_tax_deduction_logs = db.relationship('AutomatedTaxDeductionLog', backref='taxed_user', lazy='dynamic', foreign_keys=[AutomatedTaxDeductionLog.user_id])
+
+# Remove old TaxType and TaxPaymentLog if they were committed and need replacing
+# This would ideally be a migration. For now, we assume they might not have been if we are iterating quickly.
+# If they were, running this will error if old tables exist. We'd need a migration script.
+# For sandbox, we can assume we're redefining.
+
+# --- DOT Ticket System Models ---
+class TicketStatus(enum.Enum):
+    OUTSTANDING = "Outstanding"         # Newly issued, awaiting payment or contest
+    PAID = "Paid"                       # Fine has been paid
+    CONTESTED = "Contested"             # User has chosen to fight the ticket
+    CANCELLED = "Cancelled"             # Officer or Admin cancelled the ticket
+    RESOLVED_UNPAID = "Resolved - Unpaid" # Contested, admin ruled fine is due
+    RESOLVED_DISMISSED = "Resolved - Dismissed" # Contested, admin ruled in favor of user
+
+class Ticket(db.Model):
+    __tablename__ = 'tickets'
+    id = db.Column(db.Integer, primary_key=True)
+    issued_to_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    issued_by_officer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+
+    vehicle_id = db.Column(db.String(100), nullable=True) # e.g., license plate or in-game vehicle identifier
+    violation_details = db.Column(db.Text, nullable=False)
+    fine_amount = db.Column(db.Numeric(10, 2), nullable=False)
+
+    issue_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    due_date = db.Column(db.DateTime, nullable=False) # To be set at 72 hours from issue_date
+
+    status = db.Column(db.Enum(TicketStatus), default=TicketStatus.OUTSTANDING, nullable=False, index=True)
+
+    user_contest_reason = db.Column(db.Text, nullable=True) # Reason provided by user if contested
+    resolution_notes = db.Column(db.Text, nullable=True)   # Notes from admin after reviewing a contested ticket
+    resolved_by_admin_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True) # Admin who resolved it
+
+    banking_transaction_id = db.Column(db.Integer, db.ForeignKey('transactions.id'), unique=True, nullable=True) # Link to payment transaction
+
+    # Relationships
+    issued_to = db.relationship('User', foreign_keys=[issued_to_user_id], backref=db.backref('tickets_received', lazy='dynamic'))
+    issued_by = db.relationship('User', foreign_keys=[issued_by_officer_id], backref=db.backref('tickets_issued', lazy='dynamic'))
+    resolved_by_admin = db.relationship('User', foreign_keys=[resolved_by_admin_id], backref=db.backref('tickets_resolved', lazy='dynamic'))
+    payment_transaction = db.relationship('Transaction', backref=db.backref('ticket_payment_entry', uselist=False))
+
+    def __repr__(self):
+        return f'<Ticket {self.id} for User {self.issued_to_user_id} - Status: {self.status.value}>'
+
+
+# Update User model for ticket relationships
+User.tickets_received_collection = db.relationship('Ticket', foreign_keys=[Ticket.issued_to_user_id], backref='recipient_user', lazy='dynamic')
+User.tickets_issued_collection = db.relationship('Ticket', foreign_keys=[Ticket.issued_by_officer_id], backref='issuing_officer_user', lazy='dynamic')
+User.tickets_resolved_collection = db.relationship('Ticket', foreign_keys=[Ticket.resolved_by_admin_id], backref='resolving_admin_user', lazy='dynamic')
+
+
+# --- DOT Permit System Models ---
+class PermitApplicationStatus(enum.Enum):
+    PENDING_REVIEW = "Pending Review"                 # User submitted, awaiting officer/admin action
+    REQUIRES_MODIFICATION = "Requires Modification"   # Officer/Admin sent back to user for changes
+    APPROVED_PENDING_PAYMENT = "Approved - Pending Payment" # Officer/Admin approved, fee set, awaiting user payment
+    PAID_AWAITING_ISSUANCE = "Paid - Awaiting Issuance" # User paid, awaiting final issuance by officer/admin
+    ISSUED = "Issued"                                 # Permit fee paid and permit officially issued
+    REJECTED = "Rejected"                             # Application denied
+    CANCELLED_BY_USER = "Cancelled by User"           # User withdrew the application
+    CANCELLED_BY_ADMIN = "Cancelled by Admin"         # Admin cancelled it (e.g. due to non-payment after approval)
+
+class PermitApplication(db.Model):
+    __tablename__ = 'permit_applications'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+
+    vehicle_type = db.Column(db.String(150), nullable=False)
+    route_details = db.Column(db.Text, nullable=False) # E.g., From X, via Y, to Z
+    travel_start_date = db.Column(db.Date, nullable=False)
+    travel_end_date = db.Column(db.Date, nullable=False)
+
+    user_notes = db.Column(db.Text, nullable=True) # Additional info from user
+    application_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    status = db.Column(db.Enum(PermitApplicationStatus), default=PermitApplicationStatus.PENDING_REVIEW, nullable=False, index=True)
+
+    permit_fee = db.Column(db.Numeric(10, 2), nullable=True) # Set by admin upon approval
+    officer_notes = db.Column(db.Text, nullable=True) # Feedback/notes from officer/admin reviewing
+    reviewed_by_officer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+
+    banking_transaction_id = db.Column(db.Integer, db.ForeignKey('transactions.id'), unique=True, nullable=True) # Link to fee payment
+
+    issued_permit_id_str = db.Column(db.String(100), nullable=True, unique=True) # The actual permit number/ID string, generated on issuance
+    issued_on_date = db.Column(db.DateTime, nullable=True)
+    issued_by_officer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+
+    # Relationships
+    applicant = db.relationship('User', foreign_keys=[user_id], backref=db.backref('permit_applications', lazy='dynamic'))
+    reviewer_officer = db.relationship('User', foreign_keys=[reviewed_by_officer_id], backref=db.backref('permits_reviewed', lazy='dynamic'))
+    issuer_officer = db.relationship('User', foreign_keys=[issued_by_officer_id], backref=db.backref('permits_issued', lazy='dynamic'))
+    payment_transaction = db.relationship('Transaction', backref=db.backref('permit_fee_payment_entry', uselist=False))
+
+    def __repr__(self):
+        return f'<PermitApplication {self.id} for User {self.user_id} - Status: {self.status.value}>'
+
+# Update User model for permit relationships
+User.permit_applications_collection = db.relationship('PermitApplication', foreign_keys=[PermitApplication.user_id], backref='applicant_user', lazy='dynamic')
+User.permits_reviewed_collection = db.relationship('PermitApplication', foreign_keys=[PermitApplication.reviewed_by_officer_id], backref='reviewing_officer_user', lazy='dynamic')
+User.permits_issued_collection = db.relationship('PermitApplication', foreign_keys=[PermitApplication.issued_by_officer_id], backref='issuing_permit_officer_user', lazy='dynamic')
+
+
+# --- Marketplace Models ---
+class MarketplaceItemStatus(enum.Enum):
+    AVAILABLE = "Available"
+    SOLD_PENDING_RELIST = "Sold - More Available (Relist Soon)" # User indicated more stock, but this item instance sold
+    SOLD_OUT = "Sold Out" # All stock of this item from this listing is gone
+    CANCELLED = "Cancelled" # Seller removed the listing
+
+class MarketplaceListing(db.Model):
+    __tablename__ = 'marketplace_listings'
+    id = db.Column(db.Integer, primary_key=True)
+    seller_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+
+    item_name = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    price = db.Column(db.Numeric(10, 2), nullable=False)
+    quantity = db.Column(db.Numeric(10, 2), nullable=False) # Using Numeric for flexibility (e.g., 0.5 for half liter)
+    unit = db.Column(db.String(50), nullable=False) # e.g., "liters", "item(s)", "kg", "gallons"
+
+    status = db.Column(db.Enum(MarketplaceItemStatus), default=MarketplaceItemStatus.AVAILABLE, nullable=False, index=True)
+
+    creation_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
+    last_update_date = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    discord_message_id = db.Column(db.String(100), nullable=True) # Optional: Store ID of the message posted to Discord
+
+    # Relationships
+    seller = db.relationship('User', backref=db.backref('marketplace_listings', lazy='dynamic'))
+
+    def __repr__(self):
+        return f'<MarketplaceListing {self.id}: {self.quantity} {self.unit} of {self.item_name} by User {self.seller_user_id} for {self.price}>'
+
+# Update User model for marketplace listings relationship - This line was duplicated, ensure it's correctly defined once for the User class.
+# User.marketplace_listings_collection = db.relationship('MarketplaceListing', foreign_keys=[MarketplaceListing.seller_user_id], backref='listing_seller_user', lazy='dynamic')
+
+
+# --- DOT Inspection System Models ---
+# This section was already present from a previous step, verifying its contents.
+# class Inspection(db.Model):
+#     __tablename__ = 'inspections'
+#     id = db.Column(db.Integer, primary_key=True)
+#     officer_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True) # Officer performing
+#     inspected_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True) # User whose vehicle/self was inspected (if registered)
+
+#     vehicle_id = db.Column(db.String(100), nullable=False) # e.g., License plate, in-game vehicle ID
+#     timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+#     # True for Pass, False for Fail. Could be an Enum if more states are needed.
+#     pass_status = db.Column(db.Boolean, nullable=False)
+#     notes = db.Column(db.Text, nullable=True) # Details, reasons for failure, etc.
+
+#     # Relationships
+#     officer = db.relationship('User', foreign_keys=[officer_user_id], backref=db.backref('inspections_conducted', lazy='dynamic'))
+#     inspected_user = db.relationship('User', foreign_keys=[inspected_user_id], backref=db.backref('inspections_received', lazy='dynamic'))
+
+#     def __repr__(self):
+#         status_str = "Pass" if self.pass_status else "Fail"
+#         return f'<Inspection {self.id} on Vehicle {self.vehicle_id} by Officer {self.officer_user_id} - Result: {status_str}>'
+
+# # Update User model for inspection relationships
+# User.inspections_conducted_collection = db.relationship('Inspection', foreign_keys=[Inspection.officer_user_id], backref='conducting_officer_user', lazy='dynamic')
+# User.inspections_received_collection = db.relationship('Inspection', foreign_keys=[Inspection.inspected_user_id], backref='inspected_person_user', lazy='dynamic')
+
+
+# etc.
+# Re-affirming the Inspection model as it was defined previously.
+# If it was not actually added, this will add it. If it was, this is just a check.
+# Ensure this is the definitive version.
+
+class Inspection(db.Model):
+    __tablename__ = 'inspections'
+    id = db.Column(db.Integer, primary_key=True)
+    # Officer performing the inspection
+    officer_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    # User associated with the vehicle/inspection (driver/owner), if they are a registered user
+    inspected_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
+
+    vehicle_id = db.Column(db.String(100), nullable=False)  # Vehicle identifier (e.g., license plate)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True) # Time of inspection
+
+    pass_status = db.Column(db.Boolean, nullable=False)  # True for Pass, False for Fail
+    notes = db.Column(db.Text, nullable=True)  # Officer's notes, details, reasons for fail
+
+    # Relationships
+    # Officer who conducted the inspection
+    officer = db.relationship('User', foreign_keys=[officer_user_id], backref=db.backref('conducted_inspections', lazy='dynamic'))
+    # User who was inspected (if applicable)
+    inspected_user = db.relationship('User', foreign_keys=[inspected_user_id], backref=db.backref('received_inspections', lazy='dynamic'))
+
+    def __repr__(self):
+        status_str = "Pass" if self.pass_status else "Fail"
+        return f'<Inspection {self.id} on Vehicle {self.vehicle_id} by Officer {self.officer.username if self.officer else self.officer_user_id} - Result: {status_str}>'
+
+# Ensure User model has these backrefs if not already defined elsewhere.
+# These might conflict if defined differently above, ensure consistency.
+# User.conducted_inspections_collection = db.relationship('Inspection', foreign_keys=[Inspection.officer_user_id], backref='conducting_officer_user_explicit', lazy='dynamic')
+# User.received_inspections_collection = db.relationship('Inspection', foreign_keys=[Inspection.inspected_user_id], backref='inspected_person_user_explicit', lazy='dynamic')
+# Using the backrefs defined in Inspection model (conducted_inspections, received_inspections) is usually sufficient.
+# class Inspection(db.Model): # This was a duplicate definition. The one above this comment block is the correct one.
+#    ... (content of duplicate removed)
+
+
+# --- Auction House Models ---
+class AuctionStatus(enum.Enum):
+    PENDING_APPROVAL = "Pending Approval"
+    ACTIVE = "Active"
+    # Clarified status names for payment flow
+    SOLD_AWAITING_PAYMENT = "Sold - Awaiting Winner Payment"
+    SOLD_PAYMENT_FAILED = "Sold - Winner Payment Failed"
+    SOLD_PENDING_SELLER_PAYOUT = "Sold - Pending Seller Payout" # Winner paid, seller payout pending
+    COMPLETED = "Completed" # Winner paid, seller paid
+    REJECTED_BY_ADMIN = "Rejected by Admin"
+    EXPIRED_NO_BIDS = "Expired - No Bids"
+    CANCELLED_BY_SUBMITTER = "Cancelled by Submitter"
+    CANCELLED_BY_ADMIN = "Cancelled by Admin"
+
+class AuctionItem(db.Model):
+    __tablename__ = 'auction_items'
+    id = db.Column(db.Integer, primary_key=True)
+    submitter_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    admin_approver_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
+
+    item_name = db.Column(db.String(200), nullable=False)
+    item_description = db.Column(db.Text, nullable=True)
+    image_url = db.Column(db.String(512), nullable=True)
+
+    suggested_starting_bid = db.Column(db.Numeric(10, 2), nullable=True)
+    actual_starting_bid = db.Column(db.Numeric(10, 2), nullable=True) # Nullable until admin sets it
+    minimum_bid_increment = db.Column(db.Numeric(10, 2), default=1.00, nullable=True) # Nullable, admin can set
+
+    submission_time = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    approval_time = db.Column(db.DateTime, nullable=True)
+    start_time = db.Column(db.DateTime, nullable=True, index=True)
+    original_end_time = db.Column(db.DateTime, nullable=True)
+    current_end_time = db.Column(db.DateTime, nullable=True, index=True)
+
+    status = db.Column(db.Enum(AuctionStatus), default=AuctionStatus.PENDING_APPROVAL, nullable=False, index=True)
+    admin_notes = db.Column(db.Text, nullable=True)
+
+    winning_bid_id = db.Column(db.Integer, db.ForeignKey('auction_bids.id', use_alter=True, name='fk_auction_item_winning_bid_id'), nullable=True)
+    winner_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
+
+    winner_payment_transaction_id = db.Column(db.Integer, db.ForeignKey('transactions.id'), nullable=True)
+    seller_payout_transaction_id = db.Column(db.Integer, db.ForeignKey('transactions.id'), nullable=True)
+
+    # Relationships
+    submitter = db.relationship('User', foreign_keys=[submitter_user_id], backref=db.backref('submitted_auction_items', lazy='dynamic'))
+    admin_approver = db.relationship('User', foreign_keys=[admin_approver_id], backref=db.backref('approved_auction_items', lazy='dynamic'))
+    bids = db.relationship('AuctionBid', backref='auction_item', lazy='dynamic', cascade="all, delete-orphan", order_by="desc(AuctionBid.bid_amount)") # Order by amount for easy highest
+
+    winning_bid_ref = db.relationship('AuctionBid', foreign_keys=[winning_bid_id], post_update=True, uselist=False)
+    winner_user_ref = db.relationship('User', foreign_keys=[winner_user_id], backref=db.backref('auctions_won', lazy='dynamic'))
+
+    winner_payment_tx = db.relationship('Transaction', foreign_keys=[winner_payment_transaction_id], backref=db.backref('auction_winner_payment_tx', uselist=False))
+    seller_payout_tx = db.relationship('Transaction', foreign_keys=[seller_payout_transaction_id], backref=db.backref('auction_seller_payout_tx', uselist=False))
+
+    def __repr__(self):
+        return f'<AuctionItem {self.id}: {self.item_name} - Status: {self.status.value}>'
+
+class AuctionBid(db.Model):
+    __tablename__ = 'auction_bids'
+    id = db.Column(db.Integer, primary_key=True)
+    auction_item_id = db.Column(db.Integer, db.ForeignKey('auction_items.id'), nullable=False, index=True)
+    bidder_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    bid_amount = db.Column(db.Numeric(10, 2), nullable=False)
+    bid_time = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+    bidder = db.relationship('User', backref=db.backref('auction_bids_placed', lazy='dynamic'))
+
+    def __repr__(self):
+        return f'<AuctionBid {self.id} for Item {self.auction_item_id} by User {self.bidder_user_id} for {self.bid_amount}>'
+
+# User model backrefs are implicitly created by the relationships in AuctionItem and AuctionBid.
+# Explicit User.xyz_collection = ... lines are not strictly necessary if backrefs are well-defined.
+# Example: User will have `user.submitted_auction_items`, `user.approved_auction_items`,
+# `user.auction_bids_placed`, `user.auctions_won` due to the backrefs.
+
+# etc.

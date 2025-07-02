@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% import "bootstrap_wtf.html" as wtf %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">{{ title }}</h1>
+
+    <div class="card mb-4">
+        <div class="card-header">Create New Tax Bracket</div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('admin.manage_tax_brackets') }}" novalidate>
+                {{ form.hidden_tag() }}
+                {{ wtf.render_field(form.name) }}
+                {{ wtf.render_field(form.description) }}
+                <div class="form-row">
+                    <div class="col-md-6">{{ wtf.render_field(form.min_balance) }}</div>
+                    <div class="col-md-6">{{ wtf.render_field(form.max_balance) }}</div>
+                </div>
+                {{ wtf.render_field(form.tax_rate) }}
+                {{ wtf.render_field(form.is_active) }}
+                {{ wtf.render_field(form.submit, button_map={'submit': 'btn-success'}) }}
+            </form>
+        </div>
+    </div>
+
+    <h2 class="mt-5 mb-3">Existing Tax Brackets</h2>
+    <p class="text-muted small">Note: Ensure Min/Max balance ranges are logical and do not unintentionally overlap in a way that causes incorrect tax application. The system will attempt to apply only one bracket per user based on their balance (typically the highest applicable `min_balance` tier they fall into if overlaps exist, but distinct tiers are best).</p>
+    <table class="table table-striped table-hover">
+        <thead class="thead-dark">
+            <tr>
+                <th>Name</th>
+                <th>Min Balance</th>
+                <th>Max Balance</th>
+                <th>Tax Rate (%)</th>
+                <th>Status</th>
+                <th>Description</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for bracket in brackets %}
+            <tr>
+                <td>{{ bracket.name }}</td>
+                <td>{{ "%.2f"|format(bracket.min_balance) }}</td>
+                <td>{{ "%.2f"|format(bracket.max_balance) if bracket.max_balance is not none else 'No Limit' }}</td>
+                <td>{{ "%.2f"|format(bracket.tax_rate) }}%</td>
+                <td>
+                    <span class="badge badge-{{ 'success' if bracket.is_active else 'secondary' }}">
+                        {{ 'Active' if bracket.is_active else 'Inactive' }}
+                    </span>
+                </td>
+                <td>{{ bracket.description|truncate(50, True) }}</td>
+                <td>
+                    <a href="{{ url_for('admin.edit_tax_bracket', bracket_id=bracket.id) }}" class="btn btn-sm btn-warning">Edit</a>
+                    <form method="POST" action="{{ url_for('admin.toggle_tax_bracket_active', bracket_id=bracket.id) }}" style="display:inline;">
+                        <input type="submit" value="{{ 'Deactivate' if bracket.is_active else 'Activate' }}"
+                               class="btn btn-sm btn-{{ 'danger' if bracket.is_active else 'success' }}">
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" class="text-center">No tax brackets defined yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{{ url_for('admin.view_tax_deduction_logs') }}" class="btn btn-info mt-3">View Deduction Logs</a>
+</div>
+{% endblock %}
