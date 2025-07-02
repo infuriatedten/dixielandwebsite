@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="text-center mb-4">
+        <h1>Account Statement</h1>
+        <p class="lead"><strong>User:</strong> {{ account.owner_user.username }}</p>
+        <p><strong>Account ID:</strong> {{ account.id }} | <strong>Currency:</strong> {{ account.currency }}</p>
+        <p><strong>Statement Generated:</strong> {{ "now"|datetimeformat('%Y-%m-%d %H:%M:%S') }}</p> {# Requires datetimeformat filter, or pass from view #}
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">Current Balance: {{ "%.2f"|format(account.balance) }} {{ account.currency }}</h5>
+        </div>
+    </div>
+
+    <h3 class="mt-4 mb-3">Transaction Details</h3>
+    <table class="table table-bordered table-sm">
+        <thead class="thead-light">
+            <tr>
+                <th>Date & Time</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Amount</th>
+                <th>Running Balance (Approx.)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {# For accurate running balance, you'd typically calculate this in the view and pass it,
+               or start from an initial balance and iterate. This is a simplified display. #}
+            {% set running_balance = account.balance %} {# This is final balance, not starting #}
+            {# To do it properly, you'd need to iterate transactions from oldest to newest and sum up #}
+            {# Or, better, pass running balances from the view if calculated there #}
+            {% for transaction in transactions %} {# Assuming transactions are sorted oldest to newest for statement #}
+            <tr>
+                <td>{{ transaction.timestamp.strftime('%Y-%m-%d %H:%M:%S') if transaction.timestamp else 'N/A' }}</td>
+                <td>{{ transaction.type.name.replace("_", " ").title() }}</td>
+                <td>{{ transaction.description }}</td>
+                <td class="{{ 'text-success' if transaction.amount > 0 else 'text-danger' if transaction.amount < 0 else '' }}">
+                    {{ "%.2f"|format(transaction.amount) }}
+                </td>
+                <td>
+                    {# This is a pseudo running balance. For a real statement, calculate from oldest to newest.
+                       The `transactions` list for this page IS sorted ASC.
+                       However, calculating it purely in Jinja without a starting balance is tricky.
+                       The view should ideally provide this. For now, this is just illustrative.
+                    #}
+                    N/A
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="text-center">No transactions found for this account.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="text-center mt-4">
+        <p class="text-muted small">--- End of Statement ---</p>
+        <button class="btn btn-secondary" onclick="window.print();">Print Statement</button>
+        <a href="{{ url_for('banking.view_account', account_id=account.id) }}" class="btn btn-primary">Back to Account View</a>
+    </div>
+
+</div>
+
+{# Add custom filter for datetimeformat if not available globally, or do in view #}
+{# For example, if using Flask-Moment or similar #}
+{# This template assumes you have a way to format 'now' or pass it from the view context #}
+
+{% endblock %}

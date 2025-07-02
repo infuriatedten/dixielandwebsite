@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% import "bootstrap_wtf.html" as wtf %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h1 class="mb-4">{{ title }}</h1>
+            <p class="text-muted">Log a new vehicle inspection. Ensure all details are accurate.</p>
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('dot.record_inspection') }}" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        {{ wtf.render_field(form.vehicle_id, placeholder="Enter Vehicle ID or License Plate") }}
+                        {{ wtf.render_field(form.inspected_user_search, placeholder="Username of driver/owner (if registered)") }}
+
+                        <div class="form-group">
+                            {{ form.pass_status.label(class="form-control-label") }}<br>
+                            {% for subfield in form.pass_status %}
+                                <div class="form-check form-check-inline">
+                                    {{ subfield(class="form-check-input") }}
+                                    {{ subfield.label(class="form-check-label") }}
+                                </div>
+                            {% endfor %}
+                            {% if form.pass_status.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.pass_status.errors %}<span>{{ error }}</span><br>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        {{ wtf.render_field(form.notes, rows=5, placeholder="Enter detailed notes, especially required if inspection failed.") }}
+
+                        {{ wtf.render_field(form.submit, button_map={'submit': 'btn-primary w-100'}) }}
+                    </form>
+                </div>
+            </div>
+            <a href="{{ url_for('dot.list_my_conducted_inspections') }}" class="btn btn-secondary mt-3">Back to My Inspections</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

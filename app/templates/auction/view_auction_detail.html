@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% import "bootstrap_wtf.html" as wtf %} {# For PlaceBidForm if rendered directly #}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <h1 class="mb-1">{{ auction.item_name }}</h1>
+            <p class="text-muted small">
+                Submitted by: {{ auction.submitter.username }} |
+                Status: <span class="font-weight-bold">{{ auction.status.value }}</span>
+                {% if auction.status == AuctionStatus.ACTIVE and auction.current_end_time %}
+                    | Ends: {{ auction.current_end_time.strftime('%Y-%m-%d %H:%M:%S UTC') }}
+                    (<span id="time-remaining-{{ auction.id }}">Calculating...</span>)
+                {% elif auction.original_end_time %}
+                     | Original End: {{ auction.original_end_time.strftime('%Y-%m-%d %H:%M:%S UTC') }}
+                {% endif %}
+            </p>
+            <hr>
+
+            {% if auction.image_url %}
+                <img src="{{ auction.image_url }}" class="img-fluid rounded mb-3" alt="{{ auction.item_name }}" style="max-height: 400px; width: auto;">
+            {% else %}
+                <div class="bg-secondary text-light d-flex align-items-center justify-content-center rounded mb-3" style="height: 250px; width: 100%;">
+                    <span>No Image Provided</span>
+                </div>
+            {% endif %}
+
+            <h5>Description:</h5>
+            <p class="bg-light p-3 rounded">{{ auction.item_description|safe|nl2br }}</p>
+
+            {% if auction.admin_notes and (current_user.is_authenticated and (current_user.id == auction.submitter_user_id or current_user.role == UserRole.ADMIN)) %}
+                <div class="alert alert-info">
+                    <strong>Admin Notes:</strong><br>{{ auction.admin_notes|safe|nl2br }}
+                </div>
+            {% endif %}
+
+            {% if auction.status == AuctionStatus.COMPLETED and auction.winner_user_ref %}
+                <div class="alert alert-success">
+                    <strong>Auction Ended!</strong><br>
+                    Winner: {{ auction.winner_user_ref.username }} with a bid of {{ "%.2f"|format(auction.winning_bid_ref.bid_amount) }}. <br>
+                    Payment: Successful. Seller has been credited. Item transfer is manual.
+                </div>
+            {% elif auction.status == AuctionStatus.SOLD_AWAITING_PAYMENT %}
+                 <div class="alert alert-warning"><strong>Auction Ended!</strong> Awaiting payment from winner.</div>
+            {% elif auction.status == AuctionStatus.SOLD_PAYMENT_FAILED %}
+                 <div class="alert alert-danger"><strong>Auction Ended!</strong> Winner payment failed. Item may be relisted.</div>
+            {% elif auction.status == AuctionStatus.EXPIRED_NO_BIDS %}
+                 <div class="alert alert-secondary"><strong>Auction Ended!</strong> No bids were placed.</div>
+            {% endif %}
+
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h4 class="mb-0">Bidding Information</h4>
+                </div>
+                <div class="card-body">
+                    <p><strong>Starting Bid:</strong> {{ "%.2f"|format(auction.actual_starting_bid) }}</p>
+                    {% set current_bid = auction.bids.order_by(AuctionBid.bid_amount.desc()).first() %}
+                    <p><strong>Current Highest Bid:</strong>
+                        <span class="text-success font-weight-bold h5">
+                            {{ "%.2f"|format(current_bid.bid_amount) if current_bid else "None yet" }}
+                        </span>
+                    </p>
+                    <p><strong>Highest Bidder:</strong> {{ current_bid.bidder.username if current_bid else "N/A" }}</p>
+                    <p><strong>Total Bids:</strong> {{ auction.bids.count() }}</p>
+                    <p><strong>Minimum Next Bid:</strong>
+                        {% if auction.status == AuctionStatus.ACTIVE %}
+                            {{ "%.2f"|format( (current_bid.bid_amount if current_bid else auction.actual_starting_bid) + (auction.minimum_bid_increment or 0.01) ) }}
+                        {% else %}
+                            N/A (Auction not active)
+                        {% endif %}
+                    </p>
+
+                    {% if auction.status == AuctionStatus.ACTIVE and current_user.is_authenticated %}
+                        {% if current_user.id != auction.submitter_user_id %}
+                            <hr>
+                            <h5>Place Your Bid:</h5>
+                            <form method="POST" action="{{ url_for('auction.view_auction', auction_id=auction.id) }}" novalidate>
+                                {{ form.hidden_tag() }}
+                                {{ wtf.render_field(form.bid_amount, placeholder="Enter your bid") }}
+                                {{ wtf.render_field(form.submit, button_map={'submit': 'btn-success btn-block'}) }}
+                            </form>
+                        {% else %}
+                            <div class="alert alert-secondary small">You cannot bid on your own auction.</div>
+                        {% endif %}
+                    {% elif not current_user.is_authenticated and auction.status == AuctionStatus.ACTIVE %}
+                        <p><a href="{{ url_for('auth.login', next=request.url) }}">Login</a> to place a bid.</p>
+                    {% elif auction.status != AuctionStatus.ACTIVE %}
+                         <p class="text-muted">Bidding is closed for this item.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if auction.bids.count() > 0 %}
+            <div class="card mt-3 shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Bid History (Top 5)</h5>
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for bid in auction.bids.order_by(AuctionBid.bid_time.desc()).limit(5) %}
+                    <li class="list-group-item">
+                        {{ bid.bidder.username }}: <strong>{{ "%.2f"|format(bid.bid_amount) }}</strong>
+                        <small class="text-muted float-right">{{ bid.bid_time.strftime('%Y-%m-%d %H:%M') }}</small>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="mt-4">
+        {% if current_user.is_authenticated and current_user.id == auction.submitter_user_id %}
+            <a href="{{ url_for('auction.my_submissions') }}" class="btn btn-outline-secondary">Back to My Submissions</a>
+        {% elif current_user.is_authenticated and current_user.role == UserRole.ADMIN %}
+             <a href="{{ url_for('auction.manage_all_auctions') }}" class="btn btn-outline-secondary">Admin: Manage All Auctions</a>
+        {% else %}
+            <a href="{{ url_for('auction.index') }}" class="btn btn-outline-secondary">Back to Active Auctions</a>
+        {% endif %}
+    </div>
+</div>
+
+{# Countdown script for this specific page #}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var timeRemainingElement = document.getElementById('time-remaining-{{ auction.id }}');
+
+    function updateSingleCountdown() {
+        if (!timeRemainingElement) return;
+
+        var endTime = new Date("{{ auction.current_end_time.isoformat() if auction.current_end_time and auction.status == AuctionStatus.ACTIVE else '' }}Z").getTime();
+        var status = "{{ auction.status.name }}";
+
+        if (status === 'ACTIVE' && endTime) {
+            var now = new Date().getTime();
+            var distance = endTime - now;
+
+            if (distance < 0) {
+                timeRemainingElement.innerHTML = "Ended - Awaiting Processing";
+                // Could trigger a page reload after a delay to show final status
+                // setTimeout(() => window.location.reload(), 10000);
+                return;
+            }
+
+            var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            var timeString = "";
+            if (days > 0) timeString += days + "d ";
+            if (hours > 0 || days > 0) timeString += hours + "h ";
+            if (minutes > 0 || hours > 0 || days > 0) timeString += minutes + "m ";
+            timeString += seconds + "s";
+
+            timeRemainingElement.innerHTML = timeString.trim() !== "" ? timeString : "Ending very soon!";
+        } else if (timeRemainingElement) {
+            timeRemainingElement.innerHTML = status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+    }
+
+    if (timeRemainingElement) {
+        updateSingleCountdown();
+        var countdownInterval = setInterval(function() {
+            updateSingleCountdown();
+            // If status changes from ACTIVE or time is up, stop interval
+            // This needs more robust state management or a check if element still exists/is relevant
+            var currentStatus = "{{ auction.status.name }}";
+            if (currentStatus !== 'ACTIVE' || new Date("{{ auction.current_end_time.isoformat() if auction.current_end_time else '' }}Z").getTime() < new Date().getTime()) {
+                // clearInterval(countdownInterval); // Might cause issues if page reloads or status changes server-side
+            }
+        }, 1000);
+    }
+});
+</script>
+{% endblock %}

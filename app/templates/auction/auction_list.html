@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ title }}</h1>
+        {% if current_user.is_authenticated %}
+            <a href="{{ url_for('auction.submit_auction_item') }}" class="btn btn-success">Submit Item for Auction</a>
+        {% endif %}
+    </div>
+    <p class="text-muted">Browse currently active auctions. Bid wisely!</p>
+
+    {% if auctions.items %}
+    <div class="row">
+        {% for auction in auctions.items %}
+        <div class="col-md-6 col-lg-4 mb-4 d-flex align-items-stretch">
+            <div class="card h-100 w-100">
+                {% if auction.image_url %}
+                    <img src="{{ auction.image_url }}" class="card-img-top" alt="{{ auction.item_name }}" style="max-height: 200px; object-fit: cover;">
+                {% else %}
+                    <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 200px;">
+                        <span class="text-light">No Image</span>
+                    </div>
+                {% endif %}
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ auction.item_name }}</h5>
+                    {% set current_bid = auction.bids.order_by(AuctionBid.bid_amount.desc()).first() %}
+                    <p class="card-text">
+                        <strong>Current Bid:</strong>
+                        <span class="text-success font-weight-bold">
+                            {{ "%.2f"|format(current_bid.bid_amount) if current_bid else "%.2f"|format(auction.actual_starting_bid) }}
+                            {{ current_user.accounts.first().currency if current_user.is_authenticated and current_user.accounts.first() else 'GDC' }}
+                        </span><br>
+                        <small class="text-muted">
+                            Highest Bidder: {{ current_bid.bidder.username if current_bid else "No bids yet" }} <br>
+                            Bids: {{ auction.bids.count() }}
+                        </small>
+                    </p>
+                    <p class="card-text flex-grow-1">
+                        <small>{{ auction.item_description|truncate(100, True)|default('', True) }}</small>
+                    </p>
+                    <p class="card-text small">
+                        Time Remaining:
+                        <span id="time-remaining-{{ auction.id }}">Calculating...</span>
+                        <br>
+                        (Ends: {{ auction.current_end_time.strftime('%Y-%m-%d %H:%M UTC') if auction.current_end_time else 'N/A' }})
+                    </p>
+                    <a href="{{ url_for('auction.view_auction', auction_id=auction.id) }}" class="btn btn-primary mt-auto">View & Bid</a>
+                </div>
+                <div class="card-footer text-muted small">
+                    Seller: {{ auction.submitter.username }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <nav aria-label="Auction list pagination">
+        <ul class="pagination justify-content-center">
+            {% if auctions.has_prev %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('auction.index', page=auctions.prev_num) }}">Previous</a></li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+            {% endif %}
+            {% for page_num in auctions.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+            {% if page_num %}
+            {% if auctions.page == page_num %}
+            <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
+            {% else %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('auction.index', page=page_num) }}">{{ page_num }}</a></li>
+            {% endif %}
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+            {% endfor %}
+            {% if auctions.has_next %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('auction.index', page=auctions.next_num) }}">Next</a></li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% else %}
+    <div class="alert alert-info">No active auctions at the moment. Check back soon or submit your own item!</div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function updateCountdown() {
+        document.querySelectorAll('[id^="time-remaining-"]').forEach(function(element) {
+            var auctionId = element.id.split('-')[2];
+            var auctionItem = null;
+            {% if auctions and auctions.items %}
+            var auctionsData = {
+                {% for auction_item_js in auctions.items %}
+                "{{ auction_item_js.id }}": {
+                    endTime: new Date("{{ auction_item_js.current_end_time.isoformat() if auction_item_js.current_end_time else '' }}Z").getTime(),
+                    status: "{{ auction_item_js.status.name }}"
+                 } {% if not loop.last %},{% endif %}
+                {% endfor %}
+            };
+            auctionItem = auctionsData[auctionId];
+            {% endif %}
+
+            if (auctionItem && auctionItem.status === 'ACTIVE' && auctionItem.endTime) {
+                var now = new Date().getTime();
+                var distance = auctionItem.endTime - now;
+
+                if (distance < 0) {
+                    element.innerHTML = "Ended";
+                    // Optionally refresh or indicate it needs refreshing
+                    // setTimeout(() => window.location.reload(), 5000); // Basic reload
+                    return;
+                }
+
+                var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                var timeString = "";
+                if (days > 0) timeString += days + "d ";
+                if (hours > 0 || days > 0) timeString += hours + "h ";
+                if (minutes > 0 || hours > 0 || days > 0) timeString += minutes + "m ";
+                timeString += seconds + "s";
+
+                element.innerHTML = timeString.trim() !== "" ? timeString : "Ending soon";
+            } else if (auctionItem) {
+                 element.innerHTML = auctionItem.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()); // Display status if not ACTIVE
+            } else {
+                element.innerHTML = "N/A";
+            }
+        });
+    }
+    if (document.querySelector('[id^="time-remaining-"]')) {
+        updateCountdown(); // Initial call
+        setInterval(updateCountdown, 1000); // Update every second
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% import "bootstrap_wtf.html" as wtf %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-9">
+            <h1 class="mb-4">{{ title }}</h1>
+
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">Application #{{ application.id }} - Submitted by: {{ application.applicant.username }}</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Status:</strong> <span class="font-weight-bold">{{ application.status.value }}</span></p>
+                    <p><strong>Application Date:</strong> {{ application.application_date.strftime('%Y-%m-%d %H:%M UTC') }}</p>
+                    <hr>
+                    <p><strong>Vehicle Type:</strong> {{ application.vehicle_type }}</p>
+                    <p><strong>Route Details:</strong><br>{{ application.route_details|safe|nl2br }}</p>
+                    <p><strong>Travel Dates:</strong> {{ application.travel_start_date.strftime('%Y-%m-%d') }} to {{ application.travel_end_date.strftime('%Y-%m-%d') }}</p>
+                    {% if application.user_notes %}
+                        <p><strong>User Notes:</strong><br>{{ application.user_notes|safe|nl2br }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if application.status in [PermitApplicationStatus.PENDING_REVIEW, PermitApplicationStatus.REQUIRES_MODIFICATION] %}
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">Process Application</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('dot.process_permit_application', application_id=application.id) }}" novalidate>
+                        {{ form.hidden_tag() }}
+                        {{ wtf.render_field(form.new_status) }}
+
+                        <div id="permit_fee_group" style="display:none;"> {# Shown/hidden by JS based on status selection #}
+                            {{ wtf.render_field(form.permit_fee, placeholder="Enter fee amount if approving") }}
+                        </div>
+
+                        {{ wtf.render_field(form.officer_notes, rows=5, placeholder="Provide feedback to the user or internal notes regarding this decision.") }}
+
+                        <div class="form-group mt-3">
+                            {{ wtf.render_field(form.submit, button_map={'submit': 'btn-primary btn-block'}) }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% elif application.status == PermitApplicationStatus.PAID_AWAITING_ISSUANCE %}
+            <div class="alert alert-info">
+                This application has been paid by the user and is awaiting final permit issuance.
+                <form method="POST" action="{{ url_for('dot.issue_final_permit', application_id=application.id) }}" class="mt-2" onsubmit="return confirm('Are you sure you want to issue this permit? This is the final step.');">
+                    <input type="submit" value="Issue Final Permit Now" class="btn btn-success">
+                </form>
+            </div>
+            {% else %}
+            <div class="alert alert-secondary">
+                This application is in status '{{ application.status.value }}' and no further processing actions are available via this form.
+                It might be already issued, rejected, cancelled, or awaiting user payment.
+            </div>
+            {% endif %}
+
+            <div class="mt-3">
+                <a href="{{ url_for('dot.list_permit_applications_for_review') }}" class="btn btn-outline-secondary">Back to Review List</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Simple JS to show/hide permit fee based on selected status
+    document.addEventListener('DOMContentLoaded', function() {
+        const statusSelect = document.getElementById('new_status'); // Ensure your SelectField has id='new_status'
+        const feeGroup = document.getElementById('permit_fee_group');
+        const approvedStatusValue = "{{ PermitApplicationStatus.APPROVED_PENDING_PAYMENT.value }}";
+
+        function toggleFeeGroup() {
+            if (statusSelect && feeGroup) {
+                if (statusSelect.value === approvedStatusValue) {
+                    feeGroup.style.display = 'block';
+                } else {
+                    feeGroup.style.display = 'none';
+                }
+            }
+        }
+
+        if (statusSelect) {
+            statusSelect.addEventListener('change', toggleFeeGroup);
+            toggleFeeGroup(); // Initial check
+        }
+    });
+</script>
+{% endblock %}

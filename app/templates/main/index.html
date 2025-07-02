@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="jumbotron">
+        <h1 class="display-4">Welcome to the Game Portal!</h1>
+        <p class="lead">This is the central hub for all your in-game activities, including banking, taxes, tickets, permits, and the marketplace.</p>
+        <hr class="my-4">
+        {% if current_user.is_authenticated %}
+            <p>You are logged in as {{ current_user.username }}. Explore the available services through the navigation bar.</p>
+            <a class="btn btn-primary btn-lg" href="{{ url_for('auth.profile') }}" role="button">View Profile</a>
+        {% else %}
+            <p>Please log in or register to access all features.</p>
+            <a class="btn btn-primary btn-lg" href="{{ url_for('auth.login') }}" role="button">Login</a>
+            <a class="btn btn-secondary btn-lg" href="{{ url_for('auth.register') }}" role="button">Register</a>
+        {% endif %}
+    </div>
+
+    <h2>Features Overview</h2>
+    <ul>
+        <li>View Bank Information (Balance, History, Statements)</li>
+        <li>Pay Taxes</li>
+        <li>Manage and Pay Tickets</li>
+        <li>Apply for Vehicle Permits</li>
+        <li>DOT System (Inspections, Ticket Issuance, Permit Management)</li>
+        <li>Marketplace with Discord Integration</li>
+    </ul>
+    <p><em>Modules will become accessible as they are developed.</em></p>
+
+{% endblock %}

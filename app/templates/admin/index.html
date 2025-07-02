@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">{{ title }}</h1>
+    <p class="lead">Welcome to the Admin Control Panel, {{ current_user.username }}.</p>
+
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">User Management</h5>
+                    <p class="card-text">View and manage user accounts and roles.</p>
+                    <a href="{{ url_for('admin.manage_users') }}" class="btn btn-primary">Manage Users</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Bank Account Management</h5>
+                    <p class="card-text">Create accounts, adjust balances, and view all accounts.</p>
+                    <a href="{{ url_for('admin.manage_accounts') }}" class="btn btn-primary">Manage Bank Accounts</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Transaction Management</h5>
+                    <p class="card-text">Record manual transactions and view transaction history.</p>
+                    <a href="{{ url_for('admin.manage_transactions') }}" class="btn btn-primary">Manage Transactions</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Tax System Management</h5>
+                    <p class="card-text">Define tax brackets for automated weekly deductions and view logs.</p>
+                    <a href="{{ url_for('admin.manage_tax_brackets') }}" class="btn btn-info">Manage Tax Brackets</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">DOT Ticket Management</h5>
+                    <p class="card-text">View all issued tickets, resolve contested tickets, and manage statuses.</p>
+                    <a href="{{ url_for('admin.manage_tickets') }}" class="btn btn-warning">Manage All Tickets</a>
+                </div>
+            </div>
+        </div>
+         <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">DOT Permit Management</h5>
+                    <p class="card-text">Oversee all permit applications and their statuses.</p>
+                    <a href="{{ url_for('admin.manage_permit_applications') }}" class="btn btn-info">Manage All Permits</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Marketplace Moderation</h5>
+                    <p class="card-text">View and manage all marketplace listings.</p>
+                    <a href="{{ url_for('marketplace.admin_all_listings') }}" class="btn btn-secondary">Marketplace Listings</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">DOT Permit Management</h5>
+                    <p class="card-text">Review and process vehicle movement permit applications.</p>
+                    <a href="{{ url_for('dot.review_permit_applications_list') }}" class="btn btn-primary">Review Permit Applications</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">DOT Inspection Oversight</h5>
+                    <p class="card-text">View all recorded vehicle inspections.</p>
+                    <a href="{{ url_for('admin.manage_inspections') }}" class="btn btn-secondary">View All Inspections</a>
+                </div>
+            </div>
+        </div>
+         <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Auction House Management</h5>
+                    <p class="card-text">Approve pending auctions and manage all auction items.</p>
+                    <a href="{{ url_for('auction.list_pending_auctions') }}" class="btn btn-success">Pending Approvals</a>
+                    <a href="{{ url_for('auction.manage_all_auctions') }}" class="btn btn-outline-primary mt-2">Manage All Auctions</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <!-- Future admin modules can be added here -->
+        <!-- Example:
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                 <div class="card-body">
+                    <h5 class="card-title">Discord Bot Control</h5>
+                    <p class="card-text">(Placeholder for bot stats/control if web interface built for it)</p>
+                    <a href="#" class="btn btn-dark disabled">Bot Admin</a>
+                </div>
+            </div>
+        </div>
+        -->
+    </div>
+</div>
+{% endblock %}

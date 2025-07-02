@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">{{ title }}</h1>
+    <p>This page lists tickets you have issued as a DOT Officer.</p>
+
+    <a href="{{ url_for('dot.issue_ticket') }}" class="btn btn-success mb-3">Issue New Ticket</a>
+
+    {% if tickets_pagination.items %}
+    <table class="table table-striped table-hover table-sm">
+        <thead class="thead-dark">
+            <tr>
+                <th>ID</th>
+                <th>Issued To</th>
+                <th>Violation (Summary)</th>
+                <th>Fine</th>
+                <th>Issue Date</th>
+                <th>Due Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ticket in tickets_pagination.items %}
+            <tr>
+                <td>{{ ticket.id }}</td>
+                <td>{{ ticket.issued_to.username if ticket.issued_to else 'N/A' }}</td>
+                <td>{{ ticket.violation_details|truncate(50, True) }}</td>
+                <td>{{ "%.2f"|format(ticket.fine_amount) }}</td>
+                <td>{{ ticket.issue_date.strftime('%Y-%m-%d %H:%M') if ticket.issue_date else 'N/A' }}</td>
+                <td>{{ ticket.due_date.strftime('%Y-%m-%d %H:%M') if ticket.due_date else 'N/A' }}</td>
+                <td>
+                    <span class="badge badge-{{ 'warning' if ticket.status == TicketStatus.OUTSTANDING else 'success' if ticket.status == TicketStatus.PAID else 'info' if ticket.status == TicketStatus.CONTESTED else 'secondary' }}">
+                        {{ ticket.status.value }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{{ url_for('dot.view_ticket_detail', ticket_id=ticket.id) }}" class="btn btn-xs btn-info">View</a>
+                    {# Add cancel button if officer is allowed to cancel their own recent/unpaid tickets #}
+                    {#
+                    {% if ticket.status == TicketStatus.OUTSTANDING %}
+                    <form method="POST" action="{{ url_for('dot.cancel_my_ticket', ticket_id=ticket.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to cancel this ticket?');">
+                        <input type="submit" value="Cancel" class="btn btn-xs btn-danger">
+                    </form>
+                    {% endif %}
+                    #}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <nav aria-label="Ticket pagination">
+        <ul class="pagination justify-content-center">
+            {% if tickets_pagination.has_prev %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('dot.list_issued_tickets', page=tickets_pagination.prev_num) }}">Previous</a></li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+            {% endif %}
+
+            {% for page_num in tickets_pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+            {% if page_num %}
+            {% if tickets_pagination.page == page_num %}
+            <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
+            {% else %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('dot.list_issued_tickets', page=page_num) }}">{{ page_num }}</a></li>
+            {% endif %}
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+            {% endfor %}
+
+            {% if tickets_pagination.has_next %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('dot.list_issued_tickets', page=tickets_pagination.next_num) }}">Next</a></li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% else %}
+    <p>You have not issued any tickets yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% import "bootstrap_wtf.html" as wtf %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h1 class="mb-4">{{ title }}</h1>
+            <p>You are about to contest Ticket #{{ ticket.id }}. Please provide a clear and detailed reason for your contestation. This information will be reviewed by an administrator.</p>
+
+            <div class="card mb-3">
+                <div class="card-header">Ticket Summary</div>
+                <div class="card-body">
+                    <p><strong>Violation:</strong> {{ ticket.violation_details|truncate(100, True) }}</p>
+                    <p><strong>Fine Amount:</strong> {{ "%.2f"|format(ticket.fine_amount) }}</p>
+                    <p><strong>Issue Date:</strong> {{ ticket.issue_date.strftime('%Y-%m-%d %H:%M') }}</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Your Contestation</div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('dot.contest_ticket', ticket_id=ticket.id) }}" novalidate>
+                        {{ form.hidden_tag() }}
+                        {{ wtf.render_field(form.user_contest_reason, rows=10, placeholder="Explain why you believe this ticket was issued incorrectly or should be dismissed...") }}
+                        {{ wtf.render_field(form.submit, button_map={'submit': 'btn-warning w-100'}) }}
+                    </form>
+                </div>
+            </div>
+            <a href="{{ url_for('dot.view_ticket_detail', ticket_id=ticket.id) }}" class="btn btn-secondary mt-3">Cancel and Back to Ticket Details</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

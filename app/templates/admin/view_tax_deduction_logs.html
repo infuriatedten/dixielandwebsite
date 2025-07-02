@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">{{ title }}</h1>
+
+    <table class="table table-striped table-hover table-sm">
+        <thead class="thead-dark">
+            <tr>
+                <th>Log ID</th>
+                <th>Date</th>
+                <th>User</th>
+                <th>Tax Bracket</th>
+                <th>Balance Before</th>
+                <th>Rate Applied</th>
+                <th>Amount Deducted</th>
+                <th>Banking Tx ID</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs.items %}
+            <tr>
+                <td>{{ log.id }}</td>
+                <td>{{ log.deduction_date.strftime('%Y-%m-%d %H:%M:%S') if log.deduction_date else 'N/A' }}</td>
+                <td>{{ log.taxed_user.username if log.taxed_user else 'N/A' }}</td>
+                <td>{{ log.tax_bracket.name if log.tax_bracket else 'N/A' }}</td>
+                <td>{{ "%.2f"|format(log.balance_before_deduction) }}</td>
+                <td>{{ "%.2f"|format(log.tax_rate_applied) }}%</td>
+                <td class="text-danger">{{ "%.2f"|format(log.amount_deducted) }}</td>
+                <td>
+                    <a href="{{ url_for('admin.manage_transactions') }}?transaction_id={{ log.banking_transaction_id }}">
+                        {{ log.banking_transaction_id }}
+                    </a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="8" class="text-center">No tax deduction logs found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <nav aria-label="Log pagination">
+        <ul class="pagination justify-content-center">
+            {% if logs.has_prev %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('admin.view_tax_deduction_logs', page=logs.prev_num) }}">Previous</a></li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+            {% endif %}
+
+            {% for page_num in logs.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+            {% if page_num %}
+            {% if logs.page == page_num %}
+            <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
+            {% else %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('admin.view_tax_deduction_logs', page=page_num) }}">{{ page_num }}</a></li>
+            {% endif %}
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+            {% endfor %}
+
+            {% if logs.has_next %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('admin.view_tax_deduction_logs', page=logs.next_num) }}">Next</a></li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+    <a href="{{ url_for('admin.manage_tax_brackets') }}" class="btn btn-secondary mt-3">Back to Tax Brackets</a>
+</div>
+{% endblock %}

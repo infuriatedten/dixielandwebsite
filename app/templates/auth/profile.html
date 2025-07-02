@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h2>{{ title }} - {{ current_user.username }}</h2>
+            <hr>
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">User Information</h5>
+                    <p class="card-text"><strong>Username:</strong> {{ current_user.username }}</p>
+                    <p class="card-text"><strong>Email:</strong> {{ current_user.email }}</p>
+                    <p class="card-text"><strong>Role:</strong> {{ current_user.role.name.capitalize() }}</p>
+
+                    {# Add more profile information here as needed #}
+                    {# For example, display linked accounts, recent activity, etc. #}
+
+                    <a href="#" class="btn btn-primary">Edit Profile</a> {# Placeholder for edit profile functionality #}
+                </div>
+            </div>
+
+            {% if current_user.role.name == 'ADMIN' %}
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title">Admin Panel</h5>
+                    <p class="card-text">Access administrative functions.</p>
+                    {# Links to admin-specific views will go here #}
+                    <a href="#" class="btn btn-danger">Go to Admin Dashboard</a> {# Placeholder #}
+                </div>
+            </div>
+            {% elif current_user.role.name == 'OFFICER' %}
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title">Officer Tools</h5>
+                    <p class="card-text">Access DOT officer functionalities.</p>
+                    {# Links to officer-specific views will go here #}
+                    <a href="#" class="btn btn-info">Go to Officer Dashboard</a> {# Placeholder #}
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">{{ title }}</h1>
+
+    <div class="alert alert-warning" role="alert">
+        <h4 class="alert-heading">No Bank Account Found!</h4>
+        <p>It appears you do not have a bank account associated with your user profile in our system yet.</p>
+        <hr>
+        <p class="mb-0">Please contact an administrator to have an account set up for you. Once created, you will be able to view your balance, transaction history, and statements here.</p>
+    </div>
+
+    <a href="{{ url_for('main.index') }}" class="btn btn-primary">Back to Home</a>
+</div>
+{% endblock %}

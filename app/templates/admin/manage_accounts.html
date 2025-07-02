@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% import "bootstrap_wtf.html" as wtf %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">{{ title }}</h1>
+
+    <div class="card mb-4">
+        <div class="card-header">Create New Bank Account</div>
+        <div class="card-body">
+            {% if form.user_id.choices|length > 0 %}
+            <form method="POST" action="{{ url_for('admin.manage_accounts') }}" novalidate>
+                {{ form.hidden_tag() }}
+                {{ wtf.render_field(form.user_id) }}
+                {{ wtf.render_field(form.balance) }}
+                {{ wtf.render_field(form.currency) }}
+                {{ wtf.render_field(form.submit, button_map={'submit': 'btn-success'}) }}
+            </form>
+            {% else %}
+            <p class="text-muted">All current users already have bank accounts, or there are no users to create accounts for.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <h2 class="mt-5 mb-3">Existing Accounts</h2>
+    <table class="table table-striped table-hover">
+        <thead class="thead-dark">
+            <tr>
+                <th>Account ID</th>
+                <th>User</th>
+                <th>Balance</th>
+                <th>Currency</th>
+                <th>Last Updated</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for account in accounts %}
+            <tr>
+                <td>{{ account.id }}</td>
+                <td><a href="{{ url_for('admin.manage_users') }}?user_id={{ account.user_id }}">{{ account.owner_user.username }}</a></td> {# Link to user management or user profile #}
+                <td>{{ "%.2f"|format(account.balance) }}</td>
+                <td>{{ account.currency }}</td>
+                <td>{{ account.last_updated_on.strftime('%Y-%m-%d %H:%M:%S') if account.last_updated_on else 'N/A' }}</td>
+                <td>
+                    <a href="{{ url_for('admin.edit_account_balance', account_id=account.id) }}" class="btn btn-sm btn-warning">Edit Balance</a>
+                    <a href="{{ url_for('banking.view_account', account_id=account.id) }}" class="btn btn-sm btn-info">View Transactions</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="text-center">No bank accounts found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
