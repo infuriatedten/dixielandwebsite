@@ -46,9 +46,14 @@ def issue_ticket():
             status=TicketStatus.OUTSTANDING
         )
         db.session.add(new_ticket)
-        db.session.commit()
+        db.session.commit() # Commit first to get new_ticket.id
         flash(f'Ticket #{new_ticket.id} issued successfully to {user_to_ticket.username}. Due by {due_dt.strftime("%Y-%m-%d %H:%M:%S UTC")}.', 'success')
-        # TODO: Notify user (e.g., in-app notification system or email if implemented)
+
+        # Notify user
+        from app.services import notification_service # Ensure import
+        from app.models import NotificationType # Ensure import
+        notification_service.notify_new_ticket_issued(new_ticket) # Use helper from service
+
         return redirect(url_for('dot.list_issued_tickets')) # Or a general DOT dashboard
 
     return render_template('dot/issue_ticket.html', title='Issue New Ticket', form=form)
@@ -366,10 +371,26 @@ def review_permit_application(application_id):
 
         db.session.commit()
         flash(f'Permit Application #{application.id} status updated to "{new_status_enum.value}".', 'success')
-        # TODO: Notify user of status change, especially if requires modification or rejected.
+
+        # Notify user of status change
+        from app.services import notification_service # Ensure import
+        from app.models import NotificationType # Ensure import, PermitApplicationStatus
+        if new_status_enum == PermitApplicationStatus.APPROVED_PENDING_PAYMENT:
+            notification_service.notify_permit_approved(application)
+        elif new_status_enum == PermitApplicationStatus.REJECTED:
+            notification_service.notify_permit_denied(application)
+        elif new_status_enum == PermitApplicationStatus.REQUIRES_MODIFICATION:
+            # Create a generic notification or a specific one for requires modification
+            notification_service.create_notification(
+                user_id=application.user_id,
+                message_text=f"Your Permit Application #{application.id} ('{application.vehicle_type}') requires modification. Officer notes: {application.officer_notes[:100]}...",
+                link_url=url_for('dot.view_permit_application_detail', application_id=application.id, _external=False), # Internal link
+                notification_type=NotificationType.GENERAL_INFO # Or a new specific type
+            )
+
         return redirect(url_for('dot.review_permit_applications_list'))
 
-    return render_template('dot/review_permit_application.html', title=f'Review Permit App #{application.id}',
+    return render_template('dot/process_permit_application.html', title=f'Process Permit App #{application.id}',
                            form=form, application=application, PermitApplicationStatus=PermitApplicationStatus)
 
 
@@ -395,8 +416,8 @@ def issue_final_permit(application_id):
 
 
 # --- DOT Inspection Routes (Officer Facing) ---
-from app.forms import RecordInspectionForm
-from app.models import Inspection # Already imported User, UserRole
+from app.forms import RecordInspectionForm, IssueTicketForm # Added IssueTicketForm
+from app.models import Inspection, UserVehicle # Already imported User, UserRole, Ticket, TicketStatus etc.
 
 @bp.route('/inspections/record', methods=['GET', 'POST'])
 @login_required

@@ -1,0 +1,64 @@
+{% extends "admin/index.html" %} {# Or your admin base template #}
+{% import "bootstrap_wtf.html" as wtf %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-3">Admin View: Conversation with {{ conversation.user_participant.username }}</h2>
+    <p>
+        Subject: <strong>{{ conversation.subject|default('No Subject', True) }}</strong><br>
+        Admin: {{ conversation.admin_participant.username }} | User: {{ conversation.user_participant.username }} <br>
+        Status: <span class="font-weight-bold">{{ conversation.status.value }}</span>
+    </p>
+    <hr>
+
+    <div id="message-list" class="mb-4" style="max-height: 500px; overflow-y: auto; border: 1px solid #eee; padding: 10px;">
+        {% for message in messages %}
+        <div class="card mb-2 {% if message.sender_id == current_user.id %}border-info ml-auto{% else %}border-secondary{% endif %}"
+             style="max-width: 75%; {% if message.sender_id == current_user.id %} align-self: flex-end; background-color: #e1f5fe; {% else %} background-color: #f1f1f1; {% endif %}">
+            <div class="card-body p-2">
+                <p class="card-text">{{ message.body|safe|nl2br }}</p>
+                <p class="card-text small text-muted text-right mb-0">
+                    {{ message.sender.username }} ({{ message.sender.role.name.capitalize() }}) - {{ message.timestamp.strftime('%Y-%m-%d %H:%M') }}
+                </p>
+            </div>
+        </div>
+        {% else %}
+        <p>No messages in this conversation yet.</p>
+        {% endfor %}
+    </div>
+
+    {% if conversation.status == ConversationStatus.OPEN %}
+    <div class="card shadow-sm">
+        <div class="card-header">Send a Reply as Admin ({{ current_user.username }})</div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('messaging.admin_view_conversation', conversation_id=conversation.id) }}" novalidate>
+                {{ form.hidden_tag() }}
+                {{ wtf.render_field(form.body, rows=4, placeholder="Type your reply...") }}
+                {{ wtf.render_field(form.submit, button_map={'submit': 'btn-primary'}) }}
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">This conversation is closed. You cannot send further replies unless it is reopened.</div>
+    {% endif %}
+
+    <div class="mt-3">
+        <a href="{{ url_for('messaging.admin_inbox') }}" class="btn btn-secondary">Back to Admin Inbox</a>
+        {% if conversation.status == ConversationStatus.OPEN %}
+         <form method="POST" action="{{ url_for('messaging.close_admin_conversation', conversation_id=conversation.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to close this conversation?');">
+            <button type="submit" class="btn btn-warning">Close Conversation (Admin)</button>
+        </form>
+        {% endif %}
+        {# TODO: Add "Reopen Conversation" button if status is CLOSED_BY_ADMIN or CLOSED_BY_USER #}
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var messageList = document.getElementById('message-list');
+        if (messageList) {
+            messageList.scrollTop = messageList.scrollHeight;
+        }
+    });
+</script>
+{% endblock %}

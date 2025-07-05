@@ -30,6 +30,10 @@ class User(UserMixin, db.Model):
     discord_user_id = db.Column(db.String(100), nullable=True, unique=True, index=True) # Discord's Snowflake ID for bot interactions
     discord_username = db.Column(db.String(100), nullable=True) # Discord username#discriminator, for display or lookup
 
+    # User Profile Region
+    region = db.Column(db.Enum('US', 'EU', 'OTHER_DEFAULT', name='region_enum'), nullable=True, default='OTHER_DEFAULT')
+
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
@@ -74,6 +78,7 @@ class TransactionType(enum.Enum):
     PERMIT_FEE_PAYMENT = "permit_fee_payment" # For paying vehicle permits. This was already added in the previous step plan.
     AUCTION_WIN_DEBIT = "auction_win_debit" # Deduction from auction winner's account
     AUCTION_SALE_CREDIT = "auction_sale_credit" # Credit to auction seller's account
+    # Add other transaction types as needed for new features
     OTHER = "other"
 
 class Transaction(db.Model):
@@ -370,8 +375,95 @@ class Inspection(db.Model):
 # User.conducted_inspections_collection = db.relationship('Inspection', foreign_keys=[Inspection.officer_user_id], backref='conducting_officer_user_explicit', lazy='dynamic')
 # User.received_inspections_collection = db.relationship('Inspection', foreign_keys=[Inspection.inspected_user_id], backref='inspected_person_user_explicit', lazy='dynamic')
 # Using the backrefs defined in Inspection model (conducted_inspections, received_inspections) is usually sufficient.
-# class Inspection(db.Model): # This was a duplicate definition. The one above this comment block is the correct one.
-#    ... (content of duplicate removed)
+# The Inspection model is defined above this section.
+
+# --- User Vehicle Model ---
+# This was defined below the new models, moving it up for clarity before User relationships are updated.
+class VehicleRegion(enum.Enum):
+    US = "United States"
+    EURO = "Europe"
+
+class UserVehicle(db.Model):
+    __tablename__ = 'user_vehicles'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    make = db.Column(db.String(100), nullable=True) # e.g., "Ford", "Claas"
+    model = db.Column(db.String(100), nullable=True) # e.g., "F-150", "Lexion 8900"
+    vehicle_type = db.Column(db.String(100), nullable=True) # e.g., "Truck", "Combine Harvester", "Sedan"
+    license_plate = db.Column(db.String(20), unique=True, nullable=False, index=True)
+    registration_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    # Add a field for in-game specific ID if needed
+    # game_vehicle_id = db.Column(db.String(100), nullable=True, unique=True)
+
+    user = db.relationship('User', backref=db.backref('vehicles', lazy='dynamic'))
+
+    def __repr__(self):
+        return f'<UserVehicle {self.id}: {self.license_plate} ({self.make} {self.model}) for User {self.user_id}>'
+
+User.vehicles_collection = db.relationship('UserVehicle', backref='owner', lazy='dynamic', foreign_keys=[UserVehicle.user_id])
+
+
+# --- Messaging System Models ---
+class Conversation(db.Model):
+    __tablename__ = 'conversations'
+    id = db.Column(db.Integer, primary_key=True)
+    subject = db.Column(db.String(255), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True) # The user part of the conversation
+    admin_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True) # The admin part of the conversation
+
+    creation_time = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    last_message_time = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, index=True)
+
+    user_unread_count = db.Column(db.Integer, default=0)
+    admin_unread_count = db.Column(db.Integer, default=0)
+
+    # Relationships
+    user = db.relationship('User', foreign_keys=[user_id], backref=db.backref('conversations_as_user_participant', lazy='dynamic'))
+    admin = db.relationship('User', foreign_keys=[admin_id], backref=db.backref('conversations_as_admin_participant', lazy='dynamic'))
+    messages = db.relationship('Message', backref='conversation', lazy='dynamic', cascade="all, delete-orphan", order_by="Message.timestamp")
+
+    def __repr__(self):
+        return f'<Conversation {self.id}: "{self.subject}" between User {self.user_id} and Admin {self.admin_id}>'
+
+class Message(db.Model):
+    __tablename__ = 'messages'
+    id = db.Column(db.Integer, primary_key=True)
+    conversation_id = db.Column(db.Integer, db.ForeignKey('conversations.id'), nullable=False, index=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True) # Could be user or admin
+    # recipient_id implicitly defined by conversation participants and checking sender_id
+    body = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    is_read_by_recipient = db.Column(db.Boolean, default=False) # Generic, actual recipient checks who is not sender
+
+    # Relationships
+    # conversation backref from Conversation.messages
+    sender = db.relationship('User', foreign_keys=[sender_id], backref=db.backref('sent_messages', lazy='dynamic'))
+
+    def __repr__(self):
+        return f'<Message {self.id} in Conv {self.conversation_id} by User {self.sender_id}>'
+
+User.initiated_conversations_as_user = db.relationship('Conversation', foreign_keys=[Conversation.user_id], backref='user_initiator', lazy='dynamic')
+User.participated_conversations_as_admin = db.relationship('Conversation', foreign_keys=[Conversation.admin_id], backref='admin_participant', lazy='dynamic')
+User.all_sent_messages = db.relationship('Message', foreign_keys=[Message.sender_id], backref='message_sender', lazy='dynamic')
+
+
+# --- Notification System Model ---
+class Notification(db.Model):
+    __tablename__ = 'notifications'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True) # User who receives notification
+    text_content = db.Column(db.String(512), nullable=False)
+    link_url = db.Column(db.String(512), nullable=True) # Optional URL to relevant page
+    is_read = db.Column(db.Boolean, default=False, index=True)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+    user = db.relationship('User', backref=db.backref('notifications', lazy='dynamic', order_by="desc(Notification.timestamp)"))
+
+    def __repr__(self):
+        return f'<Notification {self.id} for User {self.user_id}: "{self.text_content[:50]}...">'
+
+User.user_notifications = db.relationship('Notification', backref='notified_user', lazy='dynamic', foreign_keys=[Notification.user_id])
 
 
 # --- Auction House Models ---
@@ -448,5 +540,126 @@ class AuctionBid(db.Model):
 # Explicit User.xyz_collection = ... lines are not strictly necessary if backrefs are well-defined.
 # Example: User will have `user.submitted_auction_items`, `user.approved_auction_items`,
 # `user.auction_bids_placed`, `user.auctions_won` due to the backrefs.
+
+
+# --- Messaging System Models ---
+class ConversationStatus(enum.Enum):
+    OPEN = "Open"
+    CLOSED_BY_USER = "Closed by User"
+    CLOSED_BY_ADMIN = "Closed by Admin"
+
+class Conversation(db.Model):
+    __tablename__ = 'conversations'
+    id = db.Column(db.Integer, primary_key=True)
+    subject = db.Column(db.String(255), default="Message")
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True) # Non-admin participant
+    admin_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True) # Admin participant
+
+    last_message_time = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    user_has_unread = db.Column(db.Boolean, default=False) # True if user has unread messages in this convo
+    admin_has_unread = db.Column(db.Boolean, default=False) # True if admin has unread messages
+    status = db.Column(db.Enum(ConversationStatus), default=ConversationStatus.OPEN, nullable=False)
+
+    # Relationships
+    user_participant = db.relationship('User', foreign_keys=[user_id], backref=db.backref('conversations_as_user_participant', lazy='dynamic'))
+    admin_participant = db.relationship('User', foreign_keys=[admin_id], backref=db.backref('conversations_as_admin_participant', lazy='dynamic'))
+    messages = db.relationship('Message', backref='conversation', lazy='dynamic', cascade="all, delete-orphan", order_by="Message.timestamp")
+
+    def __repr__(self):
+        return f'<Conversation {self.id} between User {self.user_id} and Admin {self.admin_id}>'
+
+class Message(db.Model):
+    __tablename__ = 'messages'
+    id = db.Column(db.Integer, primary_key=True)
+    conversation_id = db.Column(db.Integer, db.ForeignKey('conversations.id'), nullable=False, index=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True) # User who sent this message
+    # recipient_id is implicitly the other party in the conversation.
+    # We can determine recipient by checking sender_id against conversation.user_id and conversation.admin_id
+
+    body = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
+    # is_read_by_recipient is effectively handled by conversation.user_has_unread and conversation.admin_has_unread
+
+    # Relationship
+    sender = db.relationship('User', backref=db.backref('sent_messages', lazy='dynamic'))
+
+    def __repr__(self):
+        return f'<Message {self.id} in Conv {self.conversation_id} by User {self.sender_id}>'
+
+# Update User model for messaging relationships (covered by backrefs)
+# User.conversations_as_user_participant
+# User.conversations_as_admin_participant
+# User.sent_messages
+
+
+# --- Notification System Models ---
+class NotificationType(enum.Enum):
+    NEW_TICKET_ISSUED = "New Ticket Issued"
+    PERMIT_APP_APPROVED = "Permit Application Approved"
+    PERMIT_APP_DENIED = "Permit Application Denied"
+    NEW_MESSAGE_RECEIVED = "New Message Received"
+    # Add more types as needed: AUCTION_OUTBID, AUCTION_WON, AUCTION_SOLD (for seller), etc.
+    GENERAL_INFO = "General Information"
+
+class Notification(db.Model):
+    __tablename__ = 'notifications'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True) # Recipient
+    message_text = db.Column(db.String(512), nullable=False)
+    link_url = db.Column(db.String(512), nullable=True) # e.g., url_for('ticket.view', ticket_id=...)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    is_read = db.Column(db.Boolean, default=False, nullable=False, index=True)
+    notification_type = db.Column(db.Enum(NotificationType), default=NotificationType.GENERAL_INFO, nullable=False)
+
+    user = db.relationship('User', backref=db.backref('notifications', lazy='dynamic', order_by="desc(Notification.created_at)"))
+
+    def __repr__(self):
+        return f'<Notification {self.id} for User {self.user_id} - Read: {self.is_read}>'
+
+# Update User model for notifications (covered by backref)
+# User.notifications
+
+
+# --- User Vehicle Registration Models ---
+class VehicleRegion(enum.Enum):
+    US = "United States" # Format: 123-ABC
+    EURO = "Europe"      # Format: ABC-123
+
+class UserVehicle(db.Model):
+    __tablename__ = 'user_vehicles'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+
+    vehicle_make = db.Column(db.String(100), nullable=True) # e.g., "Ford", "Volvo", "Peterbilt"
+    vehicle_model = db.Column(db.String(100), nullable=True) # e.g., "F-150", "FH16", "379"
+    vehicle_description = db.Column(db.String(255), nullable=True) # e.g., "Red Sports Car", "Log Hauling Truck"
+
+    license_plate = db.Column(db.String(20), unique=True, nullable=False, index=True)
+    region_format = db.Column(db.Enum(VehicleRegion), nullable=False) # Determines plate format
+
+    registration_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False) # If user wants to "deactivate" a vehicle
+
+    # Relationships
+    owner = db.relationship('User', backref=db.backref('vehicles', lazy='dynamic'))
+    # Could link to Tickets, Permits if a vehicle is a central concept there,
+    # but current Ticket/Permit models use a string vehicle_id. This UserVehicle.license_plate could be that ID.
+
+    def __repr__(self):
+        return f'<UserVehicle {self.id}: {self.license_plate} (Owner: {self.user_id})>'
+
+# Update User model for vehicles (covered by backref)
+# User.vehicles
+
+
+# Finalizing User model relationships for this phase
+User.conversations_as_user_participant_rel = db.relationship('Conversation', foreign_keys=[Conversation.user_id], backref='user_conv_obj', lazy='dynamic')
+User.conversations_as_admin_participant_rel = db.relationship('Conversation', foreign_keys=[Conversation.admin_id], backref='admin_conv_obj', lazy='dynamic')
+User.sent_messages_rel = db.relationship('Message', foreign_keys=[Message.sender_id], backref='message_sender_obj', lazy='dynamic')
+User.notifications_rel = db.relationship('Notification', foreign_keys=[Notification.user_id], backref='notified_user_obj', lazy='dynamic', order_by="desc(Notification.created_at)")
+User.user_vehicles_rel = db.relationship('UserVehicle', foreign_keys=[UserVehicle.user_id], backref='vehicle_owner_obj', lazy='dynamic')
+
+# Ensure all backrefs in User for existing models are also consistently named or reviewed
+# (e.g., accounts, tickets_received, tickets_issued, etc. already exist)
 
 # etc.

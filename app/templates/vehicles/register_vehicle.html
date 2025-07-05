@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% import "bootstrap_wtf.html" as wtf %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h1 class="mb-4">{{ title }}</h1>
+            <p class="text-muted">Register your in-game vehicle here. A unique license plate will be generated based on your selected region.</p>
+
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('vehicle.register_vehicle') }}" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        {{ wtf.render_field(form.vehicle_make, placeholder="e.g., Ford, Scania, John Deere") }}
+                        {{ wtf.render_field(form.vehicle_model, placeholder="e.g., F-150, R730, 9RX") }}
+                        {{ wtf.render_field(form.vehicle_description, placeholder="e.g., My primary logging truck, Red sports car with custom rims") }}
+                        {{ wtf.render_field(form.region_format) }}
+
+                        <p class="small text-muted mt-3">
+                            Registering your vehicle can help pre-fill information for DOT services like permits and may be used in future features.
+                        </p>
+                        {{ wtf.render_field(form.submit, button_map={'submit': 'btn-primary btn-block'}) }}
+                    </form>
+                </div>
+            </div>
+            <a href="{{ url_for('vehicle.my_vehicles') }}" class="btn btn-secondary mt-3">View My Registered Vehicles</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

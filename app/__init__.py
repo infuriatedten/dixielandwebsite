@@ -93,12 +93,18 @@ def create_app(config_class=Config):
     from app.routes.marketplace import bp as marketplace_bp
     app.register_blueprint(marketplace_bp, url_prefix='/marketplace')
 
-    from app.routes.livemap import livemap_bp # Corrected import name
+    from app.routes.livemap import livemap_bp
     app.register_blueprint(livemap_bp, url_prefix='/livemap')
 
     from app.routes.auction import auction_bp
-    app.register_blueprint(auction_bp, url_prefix='/auctions') # Public auctions view
-    # Admin auction routes are defined within auction_bp but have /admin prefix in their routes
+    app.register_blueprint(auction_bp, url_prefix='/auctions')
+
+    from app.routes.messaging import messaging_bp
+    app.register_blueprint(messaging_bp, url_prefix='/messages') # For user messages
+    # Admin messaging routes are also in messaging_bp with /admin/messages prefix
+
+    from app.routes.notifications import notifications_bp
+    app.register_blueprint(notifications_bp, url_prefix='/notifications')
 
     # Create database tables if they don't exist
     # This is suitable for development/testing. For production, migrations (e.g. Alembic) are better.

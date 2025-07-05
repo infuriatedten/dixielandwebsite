@@ -219,8 +219,9 @@ def view_tax_deduction_logs():
     return render_template('admin/view_tax_deduction_logs.html', title='Automated Tax Deduction Logs', logs=logs)
 
 # --- DOT Ticket Management (Admin) ---
-from app.models import Ticket, TicketStatus # Already imported User
+from app.models import Ticket, TicketStatus, NotificationType # Already imported User, added NotificationType
 from app.forms import ResolveTicketForm # Create this form
+from app.services import notification_service # For sending notifications
 
 @bp.route('/tickets', methods=['GET'])
 @login_required
@@ -269,6 +270,23 @@ def resolve_ticket(ticket_id):
         db.session.commit()
         flash(f'Ticket #{ticket.id} has been updated to status: {new_status_enum.value}.', 'success')
         # TODO: Notify user of resolution
+    # Example notification for ticket resolution
+    if new_status_enum == TicketStatus.RESOLVED_DISMISSED:
+        notification_service.create_notification(
+            user_id=ticket.issued_to_user_id,
+            message_text=f"Your contested Ticket #{ticket.id} has been Dismissed by an admin.",
+            link_url=url_for('dot.view_ticket_detail', ticket_id=ticket.id, _external=True),
+            notification_type=NotificationType.GENERAL_INFO # Or a more specific type
+        )
+    elif new_status_enum == TicketStatus.RESOLVED_UNPAID:
+         notification_service.create_notification(
+            user_id=ticket.issued_to_user_id,
+            message_text=f"Your contested Ticket #{ticket.id} has been reviewed: Fine Upheld. Please pay the outstanding amount.",
+            link_url=url_for('dot.view_ticket_detail', ticket_id=ticket.id, _external=True),
+            notification_type=NotificationType.GENERAL_INFO # Or a more specific type
+        )
+    # Add notification for CANCELLED if desired
+
         return redirect(url_for('admin.manage_tickets'))
 
     # Pre-fill notes if any exist (e.g. if re-resolving or appending)

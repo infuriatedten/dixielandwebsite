@@ -51,6 +51,25 @@
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('marketplace.index') }}">Marketplace</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('auction.index') }}">Auctions</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('livemap.server_status') }}">Server Status</a></li>
+
+                    {# Notifications and Messaging Links #}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('messaging.list_my_conversations') }}">
+                            Messages
+                            {% if unread_message_count and unread_message_count > 0 %}
+                                <span class="badge badge-pill badge-danger">{{ unread_message_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('notifications.list_notifications') }}"> {# Assuming notifications route is 'notifications.list_notifications' #}
+                            Notifications
+                            {% if unread_notification_count and unread_notification_count > 0 %}
+                                <span class="badge badge-pill badge-warning">{{ unread_notification_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+
                 {% endif %}
             </ul>
             <ul class="navbar-nav">
