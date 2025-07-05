@@ -1,0 +1,43 @@
+{% extends "admin/index.html" %} {# Or your admin base template #}
+{% import "bootstrap_wtf.html" as wtf %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h1 class="mb-4">{{ title }}</h1>
+            {% if target_username %}
+                <p class="lead">Starting conversation with: <strong>{{ target_username }}</strong></p>
+            {% else %}
+                <p class="text-muted">Search for a user to start a new conversation with them.</p>
+            {% endif %}
+
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="POST"
+                          action="{{ url_for('messaging.admin_start_conversation', target_user_id=request.args.get('target_user_id')) if request.args.get('target_user_id') else url_for('messaging.admin_start_conversation') }}"
+                          novalidate>
+                        {{ form.hidden_tag() }}
+
+                        {% if not target_username %}
+                            {{ wtf.render_field(form.user_search, placeholder="Enter username of the user") }}
+                        {% else %}
+                            {# If target_username is pre-filled, the user_search field might be hidden or readonly in the route #}
+                            {# Or simply not displayed if the target_user_id is already in the URL #}
+                            <input type="hidden" name="user_search" value="{{ target_username }}">
+                        {% endif %}
+
+                        {{ wtf.render_field(form.subject, placeholder="Subject of your message") }}
+                        {{ wtf.render_field(form.initial_message_body, rows=6, placeholder="Type your initial message to the user...") }}
+
+                        {{ wtf.render_field(form.submit, button_map={'submit': 'btn-success btn-block'}) }}
+                    </form>
+                </div>
+            </div>
+            <div class="mt-3">
+                <a href="{{ url_for('messaging.admin_list_all_conversations') }}" class="btn btn-outline-secondary">Back to Admin Conversations</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

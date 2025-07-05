@@ -11,11 +11,26 @@
                     <p class="card-text"><strong>Username:</strong> {{ current_user.username }}</p>
                     <p class="card-text"><strong>Email:</strong> {{ current_user.email }}</p>
                     <p class="card-text"><strong>Role:</strong> {{ current_user.role.name.capitalize() }}</p>
-
+                    <p class="card-text"><strong>Region for License Plates:</strong> {{ current_user.region if current_user.region else 'Not Set (Defaults to Other)' }}</p>
                     {# Add more profile information here as needed #}
-                    {# For example, display linked accounts, recent activity, etc. #}
+                </div>
+            </div>
 
-                    <a href="#" class="btn btn-primary">Edit Profile</a> {# Placeholder for edit profile functionality #}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5>Edit Your Profile</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('auth.profile') }}" novalidate>
+                        {{ form.hidden_tag() }}
+                        {{ wtf.render_field(form.email) }}
+                        {% if form.region %}
+                            {{ wtf.render_field(form.region) }}
+                        {% endif %}
+                        {# Add other form fields from EditProfileForm here #}
+                        {# {{ wtf.render_field(form.discord_username) }} #}
+                        {{ wtf.render_field(form.submit, button_map={'submit': 'btn-primary'}) }}
+                    </form>
                 </div>
             </div>
 

@@ -58,8 +58,33 @@ def logout():
     return redirect(url_for('main.index'))
 
 # Example of a protected route
-@bp.route('/profile')
+from app.models import UserRole # Ensure UserRole is imported if not already for other parts of file
+
+@bp.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
-    # This is a placeholder for a user profile page
-    return render_template('auth/profile.html', title='Profile')
+    # Use the updated EditProfileForm
+    form = EditProfileForm(original_email=current_user.email, obj=current_user) # obj=current_user pre-populates form
+
+    if form.validate_on_submit():
+        current_user.email = form.email.data
+        # Update region if field exists and data provided
+        if hasattr(form, 'region') and form.region.data:
+            current_user.region = form.region.data
+
+        # Add other updatable fields here, e.g.:
+        # if hasattr(form, 'discord_username') and form.discord_username.data:
+        #    current_user.discord_username = form.discord_username.data
+
+        db.session.commit()
+        flash('Your profile has been updated successfully!', 'success')
+        return redirect(url_for('auth.profile'))
+    elif request.method == 'GET':
+        # Pre-populate form fields not covered by obj=current_user if needed,
+        # or if obj is not used. For basic fields like email, obj should handle it.
+        # form.email.data = current_user.email (already handled by obj)
+        if hasattr(form, 'region'):
+             form.region.data = current_user.region if current_user.region else 'OTHER_DEFAULT'
+
+
+    return render_template('auth/profile.html', title='My Profile', form=form)

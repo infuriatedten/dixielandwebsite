@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">{{ title }}</h1>
+
+    {% if current_user.role == UserRole.ADMIN %}
+    <div class="mb-3">
+        <a href="{{ url_for('messaging.admin_start_conversation') }}" class="btn btn-success">Start New Conversation</a>
+        {# Link to view ALL conversations if different from this view #}
+        {% if request.endpoint == 'messaging.list_my_conversations' %} {# This means admin is viewing their assigned ones #}
+             <a href="{{ url_for('messaging.admin_list_all_conversations') }}" class="btn btn-info">View All System Conversations</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if conversations_pagination.items %}
+    <div class="list-group">
+        {% for convo in conversations_pagination.items %}
+        <a href="{{ url_for('messaging.view_conversation', conversation_id=convo.id) }}"
+           class="list-group-item list-group-item-action flex-column align-items-start {% if (current_user.role == UserRole.ADMIN and convo.admin_has_unread) or (current_user.role != UserRole.ADMIN and convo.user_has_unread) %}list-group-item-warning font-weight-bold{% endif %}">
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">
+                    {{ convo.subject|truncate(70) }}
+                    {% if current_user.role == UserRole.ADMIN %} (with User: {{ convo.user_participant.username }})
+                    {% else %} (with Admin: {{ convo.admin_participant.username }})
+                    {% endif %}
+                </h5>
+                <small class="text-muted">{{ convo.last_message_time.strftime('%Y-%m-%d %H:%M') }}</small>
+            </div>
+            {% set last_msg = convo.messages.order_by(Message.timestamp.desc()).first() %}
+            <p class="mb-1 text-muted small">
+                {% if last_msg %}
+                    {{ last_msg.sender.username }}: {{ last_msg.body|truncate(100) }}
+                {% else %}
+                    No messages yet.
+                {% endif %}
+            </p>
+            <small>Status: {{ convo.status.value }}</small>
+            {% if (current_user.role == UserRole.ADMIN and convo.admin_has_unread) or \
+                  (current_user.role != UserRole.ADMIN and convo.user_has_unread) %}
+            <span class="badge badge-danger float-right">Unread</span>
+            {% endif %}
+        </a>
+        {% endfor %}
+    </div>
+
+    <nav aria-label="Conversation pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% set endpoint = request.endpoint %}
+            {% if conversations_pagination.has_prev %}
+            <li class="page-item"><a class="page-link" href="{{ url_for(endpoint, page=conversations_pagination.prev_num) }}">Previous</a></li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+            {% endif %}
+            {% for page_num in conversations_pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+            {% if page_num %}
+            {% if conversations_pagination.page == page_num %}
+            <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
+            {% else %}
+            <li class="page-item"><a class="page-link" href="{{ url_for(endpoint, page=page_num) }}">{{ page_num }}</a></li>
+            {% endif %}
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+            {% endfor %}
+            {% if conversations_pagination.has_next %}
+            <li class="page-item"><a class="page-link" href="{{ url_for(endpoint, page=conversations_pagination.next_num) }}">Next</a></li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% else %}
+    <div class="alert alert-info">You have no messages or conversations yet.</div>
+    {% endif %}
+</div>
+{% endblock %}

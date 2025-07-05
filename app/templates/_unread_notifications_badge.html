@@ -1,0 +1,6 @@
+{# This is a partial template, meant to be included in the navbar #}
+{# It relies on `unread_notification_count` being available from a context processor #}
+{% if unread_notification_count and unread_notification_count > 0 %}
+    <span class="badge badge-danger ml-1">{{ unread_notification_count }}</span>
+{% endif %}
+```

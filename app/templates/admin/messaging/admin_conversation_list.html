@@ -1,0 +1,88 @@
+{% extends "admin/index.html" %} {# Or your admin base template #}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">{{ title }}</h1>
+    <p>This page lists all conversations in the system. You can filter by unread messages assigned to you or view all.</p>
+
+    <div class="mb-3">
+        <a href="{{ url_for('messaging.admin_start_conversation') }}" class="btn btn-success">Start New Conversation</a>
+        <a href="{{ url_for('messaging.admin_list_all_conversations', unread='true') }}"
+           class="btn btn-outline-warning {% if filter_unread %}active{% endif %}">
+           Show My Unread Only
+        </a>
+        {% if filter_unread %}
+        <a href="{{ url_for('messaging.admin_list_all_conversations') }}" class="btn btn-outline-info">Show All</a>
+        {% endif %}
+    </div>
+
+    {% if conversations_pagination.items %}
+    <div class="list-group">
+        {% for convo in conversations_pagination.items %}
+        <a href="{{ url_for('messaging.view_conversation', conversation_id=convo.id) }}"
+           class="list-group-item list-group-item-action flex-column align-items-start {% if convo.admin_has_unread and convo.admin_id == current_user.id %}list-group-item-warning font-weight-bold{% endif %}">
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">
+                    {{ convo.subject|truncate(70) }}
+                    <small class="text-muted">(With User: {{ convo.user_participant.username }}, Assigned Admin: {{ convo.admin_participant.username }})</small>
+                </h5>
+                <small class="text-muted">{{ convo.last_message_time.strftime('%Y-%m-%d %H:%M') }}</small>
+            </div>
+            {% set last_msg = convo.messages.order_by(Message.timestamp.desc()).first() %}
+            <p class="mb-1 text-muted small">
+                {% if last_msg %}
+                    {{ last_msg.sender.username }}: {{ last_msg.body|truncate(100) }}
+                {% else %}
+                    No messages yet.
+                {% endif %}
+            </p>
+            <small>Status: {{ convo.status.value }}</small>
+             {% if convo.admin_has_unread and convo.admin_id == current_user.id %}
+                <span class="badge badge-danger float-right">Unread (For You)</span>
+             {% elif convo.admin_has_unread %}
+                <span class="badge badge-secondary float-right">Unread (For {{ convo.admin_participant.username }})</span>
+             {% elif convo.user_has_unread %}
+                 <span class="badge badge-warning float-right">Unread (For User)</span>
+             {% endif %}
+        </a>
+        {% endfor %}
+    </div>
+
+    <nav aria-label="Admin conversation pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% set url_args = {'unread': 'true'} if filter_unread else {} %}
+            {% if conversations_pagination.has_prev %}
+            <li class="page-item"><a class="page-link" href="{{ url_for(request.endpoint, page=conversations_pagination.prev_num, **url_args) }}">Previous</a></li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+            {% endif %}
+            {% for page_num in conversations_pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+            {% if page_num %}
+            {% if conversations_pagination.page == page_num %}
+            <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
+            {% else %}
+            <li class="page-item"><a class="page-link" href="{{ url_for(request.endpoint, page=page_num, **url_args) }}">{{ page_num }}</a></li>
+            {% endif %}
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+            {% endfor %}
+            {% if conversations_pagination.has_next %}
+            <li class="page-item"><a class="page-link" href="{{ url_for(request.endpoint, page=conversations_pagination.next_num, **url_args) }}">Next</a></li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% else %}
+    <div class="alert alert-info">
+        {% if filter_unread %}
+            You have no unread messages in conversations assigned to you.
+        {% else %}
+            No conversations found in the system.
+        {% endif %}
+    </div>
+    {% endif %}
+    <a href="{{ url_for('admin.index') }}" class="btn btn-secondary mt-3">Back to Admin Dashboard</a>
+</div>
+{% endblock %}

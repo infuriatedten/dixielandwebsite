@@ -1,0 +1,50 @@
+{% extends "admin/index.html" %} {# Assuming you have an admin base template #}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">{{ title }}</h1>
+    <p>Manage conversations between administrators and users.</p>
+
+    <a href="{{ url_for('messaging.admin_start_conversation') }}" class="btn btn-primary mb-3">Start New Conversation with User</a>
+
+    {# TODO: Add filtering options: by user, by status (open/closed), by unread for admin #}
+
+    {% if conversations %}
+    <div class="list-group">
+        {% for convo in conversations %}
+        <a href="{{ url_for('messaging.admin_view_conversation', conversation_id=convo.id) }}"
+           class="list-group-item list-group-item-action flex-column align-items-start {% if convo.admin_has_unread %}list-group-item-info font-weight-bold{% endif %}">
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">
+                    Subject: {{ convo.subject|default('No Subject', True) }}
+                    {% if convo.admin_has_unread %}
+                        <span class="badge badge-danger ml-2">Unread Admin Reply</span>
+                    {% elif convo.user_has_unread %}
+                         <span class="badge badge-warning ml-2">Unread User Reply</span>
+                    {% endif %}
+                </h5>
+                <small>Last activity: {{ convo.last_message_time.strftime('%Y-%m-%d %H:%M') if convo.last_message_time else 'N/A' }}</small>
+            </div>
+            <p class="mb-1">
+                User: <strong>{{ convo.user_participant.username if convo.user_participant else 'N/A' }}</strong>
+                | Admin: <strong>{{ convo.admin_participant.username if convo.admin_participant else 'N/A' }}</strong>
+                (Initiator might be different from current admin if multiple admins)
+            </p>
+             <small>Status: {{ convo.status.value }}</small>
+            {% set last_msg = convo.messages.order_by(Message.timestamp.desc()).first() %}
+            {% if last_msg %}
+                <p class="mb-0 mt-1 text-muted small">
+                    <em>Last: {{ last_msg.sender.username }}: {{ last_msg.body|truncate(80) }}</em>
+                </p>
+            {% endif %}
+        </a>
+        {% endfor %}
+    </div>
+    {# Add pagination if this list becomes long #}
+    {% else %}
+    <div class="alert alert-info" role="alert">
+        There are no active conversations. You can start one with a user.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">{{ title }}</h1>
+
+    {% if current_user.role == UserRole.ADMIN %}
+        <p><a href="{{ url_for('messaging.admin_start_conversation') }}" class="btn btn-primary mb-3">Start New Conversation with User</a></p>
+    {% endif %}
+
+    {% if conversations %}
+    <div class="list-group">
+        {% for convo in conversations %}
+        <a href="{{ url_for('messaging.view_conversation', conversation_id=convo.id) }}"
+           class="list-group-item list-group-item-action flex-column align-items-start {% if (current_user.id == convo.user_id and convo.user_has_unread) or (current_user.id == convo.admin_id and convo.admin_has_unread) %}list-group-item-warning font-weight-bold{% endif %}">
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">
+                    Subject: {{ convo.subject|default('No Subject', True) }}
+                    {% if current_user.id == convo.user_id and convo.user_has_unread %}
+                        <span class="badge badge-danger ml-2">New</span>
+                    {% elif current_user.id == convo.admin_id and convo.admin_has_unread %}
+                         <span class="badge badge-danger ml-2">New Reply</span>
+                    {% endif %}
+                </h5>
+                <small>Last message: {{ convo.last_message_time.strftime('%Y-%m-%d %H:%M') if convo.last_message_time else 'N/A' }}</small>
+            </div>
+            <p class="mb-1">
+                {% if current_user.id == convo.user_id %}
+                    Conversation with Admin: {{ convo.admin_participant.username if convo.admin_participant else 'N/A' }}
+                {% elif current_user.id == convo.admin_id %}
+                     Conversation with User: {{ convo.user_participant.username if convo.user_participant else 'N/A' }}
+                {% else %}
+                    {# Fallback for general user if somehow seeing a convo they are not part of #}
+                    Participants: {{ convo.user_participant.username if convo.user_participant else 'User N/A' }} & {{ convo.admin_participant.username if convo.admin_participant else 'Admin N/A' }}
+                {% endif %}
+            </p>
+            <small>Status: {{ convo.status.value }}</small>
+            {% set last_msg = convo.messages.order_by(Message.timestamp.desc()).first() %}
+            {% if last_msg %}
+                <p class="mb-0 mt-1 text-muted small"><em>{{ last_msg.body|truncate(100) }}</em></p>
+            {% endif %}
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info" role="alert">
+        You have no messages in your inbox.
+        {% if current_user.role == UserRole.ADMIN %}
+           You can start a conversation with a user from the button above or from their profile.
+        {% else %}
+            Admins can initiate conversations with you here if needed.
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
