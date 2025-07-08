@@ -14,13 +14,23 @@ bp = Blueprint('admin', __name__)
 def index():
     return render_template('admin/index.html', title='Admin Dashboard')
 
-# Account Management
+from flask import Blueprint, render_template, redirect, url_for, flash
+from flask_login import current_user, login_required
+from app.models import User, Account, Transaction, TransactionType
+from app.forms import AccountForm
+from app import db
+from app.decorators import admin_required  # Assuming you have this decorator
+
+bp = Blueprint('admin', __name__)
+
+# Account Management with admin role assignment
 @bp.route('/accounts', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def manage_accounts():
     form = AccountForm()
-    # Filter out users who already have an account if one account per user rule
+
+    # Populate user dropdown with users who do not already have an account
     form.user_id.choices = [(u.id, u.username) for u in User.query.filter(~User.accounts.any()).order_by(User.username).all()]
 
     if form.validate_on_submit():
@@ -29,17 +39,34 @@ def manage_accounts():
             flash('Invalid user selected.', 'danger')
             return redirect(url_for('admin.manage_accounts'))
 
+        # Check if user already has an account
         if Account.query.filter_by(user_id=user.id).first():
             flash(f'User {user.username} already has an account.', 'warning')
             return redirect(url_for('admin.manage_accounts'))
 
+        make_admin = form.make_admin.data
+
+        # Check if any admins exist
+        admins_exist = User.query.filter_by(role='admin').count() > 0
+
+        # If admin role checkbox checked
+        if make_admin:
+            # Allow only if no admins exist or current user is admin
+            if not admins_exist or current_user.role == 'admin':
+                user.role = 'admin'
+                flash(f'{user.username} has been granted admin privileges.', 'success')
+            else:
+                flash('Only admins can assign admin role.', 'danger')
+                return redirect(url_for('admin.manage_accounts'))
+
+        # Create the account
         account = Account(
-            user_id=form.user_id.data,
+            user_id=user.id,
             balance=form.balance.data,
             currency=form.currency.data
         )
         db.session.add(account)
-        db.session.flush() # To get account.id for the transaction
+        db.session.flush()  # To get account.id
 
         # Log initial balance as a transaction
         initial_transaction = Transaction(
@@ -47,10 +74,10 @@ def manage_accounts():
             type=TransactionType.INITIAL_SETUP,
             amount=form.balance.data,
             description=f"Initial account setup by admin {current_user.username}."
-            # processed_by_admin_id=current_user.id # If you add this field
         )
         db.session.add(initial_transaction)
         db.session.commit()
+
         flash(f'Account created for {user.username} with balance {account.balance} {account.currency}.', 'success')
         return redirect(url_for('admin.manage_accounts'))
 
