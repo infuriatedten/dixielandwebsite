@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, current_app, flash
 from flask_login import login_required
 from app.services import livemap_service # Assuming __init__.py in services makes functions available
-from app.decorators import login_required # Ensure this is the correct import for your decorator
+from flask_login import login_required
 
 livemap_bp = Blueprint('livemap', __name__)
 

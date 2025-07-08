@@ -246,52 +246,63 @@ def manage_tickets():
 @admin_required
 def resolve_ticket(ticket_id):
     ticket = Ticket.query.get_or_404(ticket_id)
-    if ticket.status not in [TicketStatus.CONTESTED, TicketStatus.OUTSTANDING]: # Admins can also resolve outstanding ones directly
-        flash(f'This ticket is not in a state that can be resolved by admin directly (Status: {ticket.status.value}). Consider cancelling if appropriate.', 'warning')
+    if ticket.status not in [TicketStatus.CONTESTED, TicketStatus.OUTSTANDING]:
+        flash(
+            f'This ticket is not in a state that can be resolved by admin directly '
+            f'(Status: {ticket.status.value}). Consider cancelling if appropriate.',
+            'warning'
+        )
         return redirect(url_for('admin.manage_tickets'))
 
     form = ResolveTicketForm()
+
     if form.validate_on_submit():
         new_status_val = form.new_status.data
-        new_status_enum = TicketStatus(new_status_val) # Convert string from form to Enum member
+        new_status_enum = TicketStatus(new_status_val)  # Convert string to Enum
 
         ticket.status = new_status_enum
         ticket.resolution_notes = form.resolution_notes.data
         ticket.resolved_by_admin_id = current_user.id
 
-        # If dismissed or cancelled, and was previously RESOLVED_UNPAID, it might need refund logic if paid.
-        # Current form choices prevent this direct path, but good to keep in mind for complex flows.
-        # If status is RESOLVED_UNPAID, due date might need to be reset or a new one set.
         if new_status_enum == TicketStatus.RESOLVED_UNPAID:
-            # Optionally, reset due date or give a new one from resolution date
             ticket.due_date = datetime.utcnow() + timedelta(hours=72)
-            flash(f'Ticket #{ticket.id} resolved as "Fine Upheld". User notified to pay. New due date: {ticket.due_date.strftime("%Y-%m-%d %H:%M")}', 'info')
+            flash(
+                f'Ticket #{ticket.id} resolved as "Fine Upheld". User notified to pay. '
+                f'New due date: {ticket.due_date.strftime("%Y-%m-%d %H:%M")}',
+                'info'
+            )
 
         db.session.commit()
         flash(f'Ticket #{ticket.id} has been updated to status: {new_status_enum.value}.', 'success')
-        # TODO: Notify user of resolution
-    # Example notification for ticket resolution
-    if new_status_enum == TicketStatus.RESOLVED_DISMISSED:
-        notification_service.create_notification(
-            user_id=ticket.issued_to_user_id,
-            message_text=f"Your contested Ticket #{ticket.id} has been Dismissed by an admin.",
-            link_url=url_for('dot.view_ticket_detail', ticket_id=ticket.id, _external=True),
-            notification_type=NotificationType.GENERAL_INFO # Or a more specific type
-        )
-    elif new_status_enum == TicketStatus.RESOLVED_UNPAID:
-         notification_service.create_notification(
-            user_id=ticket.issued_to_user_id,
-            message_text=f"Your contested Ticket #{ticket.id} has been reviewed: Fine Upheld. Please pay the outstanding amount.",
-            link_url=url_for('dot.view_ticket_detail', ticket_id=ticket.id, _external=True),
-            notification_type=NotificationType.GENERAL_INFO # Or a more specific type
-        )
-    # Add notification for CANCELLED if desired
+
+        # Send notifications based on resolution status
+        if new_status_enum == TicketStatus.RESOLVED_DISMISSED:
+            notification_service.create_notification(
+                user_id=ticket.issued_to_user_id,
+                message_text=f"Your contested Ticket #{ticket.id} has been Dismissed by an admin.",
+                link_url=url_for('dot.view_ticket_detail', ticket_id=ticket.id, _external=True),
+                notification_type=NotificationType.GENERAL_INFO,
+            )
+        elif new_status_enum == TicketStatus.RESOLVED_UNPAID:
+            notification_service.create_notification(
+                user_id=ticket.issued_to_user_id,
+                message_text=f"Your contested Ticket #{ticket.id} has been reviewed: Fine Upheld. Please pay the outstanding amount.",
+                link_url=url_for('dot.view_ticket_detail', ticket_id=ticket.id, _external=True),
+                notification_type=NotificationType.GENERAL_INFO,
+            )
+        # TODO: Add notification handling for CANCELLED if needed
 
         return redirect(url_for('admin.manage_tickets'))
 
-    # Pre-fill notes if any exist (e.g. if re-resolving or appending)
+    # Pre-fill form with existing resolution notes for GET or if validation fails
     form.resolution_notes.data = ticket.resolution_notes
-    return render_template('admin/resolve_ticket.html', title=f'Resolve Ticket #{ticket.id}', form=form, ticket=ticket)
+    return render_template(
+        'admin/resolve_ticket.html',
+        title=f'Resolve Ticket #{ticket.id}',
+        form=form,
+        ticket=ticket
+    )
+
 
 
 @bp.route('/ticket/<int:ticket_id>/cancel_by_admin', methods=['POST'])

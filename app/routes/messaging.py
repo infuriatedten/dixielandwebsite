@@ -4,7 +4,8 @@ from app import db
 from app.models import User, UserRole, Conversation, Message, ConversationStatus, NotificationType
 from app.forms import StartConversationForm, SendMessageForm
 from app.services import messaging_service, notification_service
-from app.decorators import admin_required, login_required # login_required from flask_login usually
+from flask_login import login_required
+from app.decorators import admin_required
 
 messaging_bp = Blueprint('messaging', __name__)
 

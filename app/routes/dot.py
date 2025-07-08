@@ -187,6 +187,8 @@ from app.models import PermitApplication, PermitApplicationStatus # Import new m
 from app.forms import ApplyPermitForm # Import new form
 import uuid # For generating unique permit ID string
 
+from datetime import datetime
+
 @bp.route('/permits/apply', methods=['GET', 'POST'])
 @login_required
 def apply_for_permit():
@@ -199,6 +201,7 @@ def apply_for_permit():
             travel_start_date=form.travel_start_date.data,
             travel_end_date=form.travel_end_date.data,
             user_notes=form.user_notes.data,
+            application_date=datetime.utcnow(),
             status=PermitApplicationStatus.PENDING_REVIEW
         )
         db.session.add(new_application)
@@ -206,103 +209,148 @@ def apply_for_permit():
         flash('Your permit application has been submitted successfully and is pending review.', 'success')
         # TODO: Notify relevant officers/admins
         return redirect(url_for('dot.my_permit_applications'))
+
     return render_template('dot/apply_permit.html', title='Apply for Vehicle Movement Permit', form=form)
+
 
 @bp.route('/permits/my_applications')
 @login_required
 def my_permit_applications():
     page = request.args.get('page', 1, type=int)
     applications_pagination = PermitApplication.query.filter_by(user_id=current_user.id)\
-                                                .order_by(PermitApplication.application_date.desc())\
-                                                .paginate(page=page, per_page=10)
+                                       .order_by(PermitApplication.application_date.desc())\
+                                       .paginate(page=page, per_page=10)
     return render_template('dot/my_permit_applications.html', title='My Permit Applications',
-                           applications_pagination=applications_pagination, PermitApplicationStatus=PermitApplicationStatus)
+                           applications_pagination=applications_pagination,
+                           PermitApplicationStatus=PermitApplicationStatus)
+
 
 @bp.route('/permits/application/<int:application_id>')
 @login_required
 def view_permit_application_detail(application_id):
     application = PermitApplication.query.get_or_404(application_id)
-    if application.user_id != current_user.id and current_user.role not in [UserRole.ADMIN, UserRole.OFFICER]:
-        flash('You are not authorized to view this permit application.', 'danger')
-        return redirect(url_for('dot.my_permit_applications'))
-    # Officers/Admins might have a different view or be redirected to a review page if it's not their own.
-    # For now, let them view it if they have general officer/admin rights.
 
-    return render_template('dot/view_permit_application_detail.html',
-                           title=f'Permit Application #{application.id}',
-                           application=application,
-                           PermitApplicationStatus=PermitApplicationStatus)
+    # Determine permissions
+    is_owner = (application.user_id == current_user.id)
+    is_admin = (current_user.role == UserRole.ADMIN)
+    can_officer_view = (
+        current_user.role == UserRole.OFFICER and
+        (application.reviewed_by_officer_id == current_user.id or application.status == PermitApplicationStatus.PENDING_REVIEW)
+    )
+
+    if not (is_owner or can_officer_view or is_admin):
+        flash('You are not authorized to view this permit application.', 'danger')
+        # Redirect owners to their permit apps, others to main index or dashboard
+        return redirect(url_for('dot.my_permit_applications') if is_owner else url_for('main.index'))
+
+    return render_template(
+        'dot/view_permit_application_detail.html',
+        title=f'Permit Application #{application.id}',
+        application=application,
+        PermitApplicationStatus=PermitApplicationStatus
+    )
+
 
 
 @bp.route('/permits/application/<int:application_id>/pay', methods=['POST'])
 @login_required
 def pay_for_permit(application_id):
     application = PermitApplication.query.get_or_404(application_id)
+
+    # Authorization check
     if application.user_id != current_user.id:
         flash('You are not authorized to pay for this permit.', 'danger')
         return redirect(url_for('dot.my_permit_applications'))
 
+    # Status check
     if application.status != PermitApplicationStatus.APPROVED_PENDING_PAYMENT:
-        flash(f'This permit application is not currently awaiting payment (Status: {application.status.value}).', 'warning')
+        flash(
+            f'This permit application is not currently awaiting payment '
+            f'(Status: {application.status.value}).',
+            'warning'
+        )
         return redirect(url_for('dot.view_permit_application_detail', application_id=application.id))
 
+    # Permit fee validation
     if not application.permit_fee or application.permit_fee <= 0:
-        flash('Permit fee is not set or is invalid. Please contact an administrator.', 'danger')
+        flash('Permit fee is not set or invalid. Please contact an administrator.', 'danger')
         return redirect(url_for('dot.view_permit_application_detail', application_id=application.id))
 
-    user_account = Account.query.filter_by(user_id=current_user.id).first()
+    # Get user account — assume one account per user for consistency
+    user_account = current_user.accounts.first()
     if not user_account:
         flash('You do not have a bank account to make this payment.', 'danger')
         return redirect(url_for('dot.view_permit_application_detail', application_id=application.id))
 
+    # Balance check
     if user_account.balance < application.permit_fee:
-        flash(f'Insufficient funds. You need {application.permit_fee} {user_account.currency}, but have {user_account.balance} {user_account.currency}.', 'danger')
+        flash(
+            f'Insufficient funds. You need {application.permit_fee} {user_account.currency}, '
+            f'but have {user_account.balance} {user_account.currency}.',
+            'danger'
+        )
         return redirect(url_for('dot.view_permit_application_detail', application_id=application.id))
 
     try:
+        # Create transaction record
         payment_transaction = Transaction(
             account_id=user_account.id,
             type=TransactionType.PERMIT_FEE_PAYMENT,
-            amount=-application.permit_fee, # Negative for deduction
+            amount=-application.permit_fee,  # negative to deduct
             description=f"Payment for Permit Application #{application.id}"
         )
         db.session.add(payment_transaction)
 
+        # Deduct fee from account balance
         user_account.balance -= application.permit_fee
         db.session.add(user_account)
 
+        # Update application status & link transaction
         application.status = PermitApplicationStatus.PAID_AWAITING_ISSUANCE
-        # Link transaction after flush/commit to get ID
-        db.session.flush()
+        db.session.flush()  # assign ID to payment_transaction
         application.banking_transaction_id = payment_transaction.id
-        db.session.add(application) # Ensure app is added to session for status/tx_id update
+        db.session.add(application)
 
         db.session.commit()
-        flash(f'Permit Application #{application.id} fee of {application.permit_fee} {user_account.currency} paid successfully. Awaiting final issuance.', 'success')
+        flash(
+            f'Permit fee of {application.permit_fee} {user_account.currency} paid successfully '
+            f'for Application #{application.id}. Awaiting final issuance.',
+            'success'
+        )
     except Exception as e:
         db.session.rollback()
-        flash(f'Error processing payment for permit application #{application.id}: {str(e)}', 'danger')
+        flash(f'Error processing payment: {str(e)}', 'danger')
 
     return redirect(url_for('dot.view_permit_application_detail', application_id=application.id))
+
 
 
 @bp.route('/permits/application/<int:application_id>/cancel_by_user', methods=['POST'])
 @login_required
 def cancel_permit_application_by_user(application_id):
     application = PermitApplication.query.get_or_404(application_id)
+    
     if application.user_id != current_user.id:
         flash('You are not authorized to cancel this application.', 'danger')
         return redirect(url_for('dot.my_permit_applications'))
 
-    if application.status not in [PermitApplicationStatus.PENDING_REVIEW, PermitApplicationStatus.REQUIRES_MODIFICATION]:
-        flash('This application cannot be cancelled by you at its current stage.', 'warning')
+    allowed_statuses = [PermitApplicationStatus.PENDING_REVIEW, PermitApplicationStatus.REQUIRES_MODIFICATION]
+    if application.status not in allowed_statuses:
+        flash(
+            f'This application cannot be cancelled by you at its current status: {application.status.value}.',
+            'warning'
+        )
         return redirect(url_for('dot.view_permit_application_detail', application_id=application.id))
 
     application.status = PermitApplicationStatus.CANCELLED_BY_USER
-    application.officer_notes = (application.officer_notes or "") + f"\nApplication cancelled by user on {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}."
+    application.officer_notes = (
+        (application.officer_notes or "") + 
+        f"\nApplication cancelled by user on {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}."
+    )
     db.session.commit()
-    flash(f"Permit Application #{application.id} has been cancelled.", "info")
+    flash(f'Permit Application #{application.id} has been cancelled.', 'info')
     return redirect(url_for('dot.my_permit_applications'))
+
 
 
 # --- Officer/Admin Permit Management Routes (Placeholder - to be expanded) ---
@@ -399,20 +447,39 @@ def review_permit_application(application_id):
 @officer_required
 def issue_final_permit(application_id):
     application = PermitApplication.query.get_or_404(application_id)
+    
     if application.status != PermitApplicationStatus.PAID_AWAITING_ISSUANCE:
-        flash("This permit is not in the correct state to be issued (must be 'Paid - Awaiting Issuance').", "warning")
-        return redirect(url_for('dot.review_permit_applications_list')) # Or officer's detail view
+        flash(
+            "This permit application is not ready for final issuance (must be 'Paid - Awaiting Issuance').",
+            "warning"
+        )
+        return redirect(url_for('dot.list_permit_applications_for_review'))
 
-    # Generate a unique permit ID string
-    application.issued_permit_id_str = f"PERMIT-{datetime.utcnow().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
+    # Generate Permit ID: Two options:
+    # Option 1: Year + zero-padded application ID + suffix (e.g., 2025-00042-P)
+    year = datetime.utcnow().year
+    sequential_part = str(application.id).zfill(5)
+    permit_id = f"{year}-{sequential_part}-P"
+    
+    # Option 2: Use UUID for uniqueness if you want
+    # permit_id = f"PERMIT-{datetime.utcnow().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
+    
+    application.issued_permit_id_str = permit_id
     application.status = PermitApplicationStatus.ISSUED
     application.issued_on_date = datetime.utcnow()
     application.issued_by_officer_id = current_user.id
 
+    application.officer_notes = (
+        (application.officer_notes or "") + 
+        f"\nPermit issued by {current_user.username} on {application.issued_on_date.strftime('%Y-%m-%d %H:%M')} with ID: {permit_id}."
+    )
+
     db.session.commit()
-    flash(f"Permit #{application.issued_permit_id_str} has been officially issued for Application #{application.id}.", "success")
+    flash(f"Permit #{permit_id} has been officially issued for Application #{application.id}.", "success")
     # TODO: Notify user that their permit is issued and available.
+
     return redirect(url_for('dot.view_permit_application_detail', application_id=application.id))
+
 
 
 # --- DOT Inspection Routes (Officer Facing) ---
@@ -499,129 +566,6 @@ from app.forms import ApplyPermitForm #, ReviewPermitApplicationForm (for office
 from app.models import PermitApplication, PermitApplicationStatus #, Account, Transaction, TransactionType (already imported)
 import uuid # For generating initial unique part of permit ID
 
-@bp.route('/permits/apply', methods=['GET', 'POST'])
-@login_required
-def apply_for_permit():
-    form = ApplyPermitForm()
-    if form.validate_on_submit():
-        new_application = PermitApplication(
-            user_id=current_user.id,
-            vehicle_type=form.vehicle_type.data,
-            route_details=form.route_details.data,
-            travel_start_date=form.travel_start_date.data,
-            travel_end_date=form.travel_end_date.data,
-            user_notes=form.user_notes.data,
-            application_date=datetime.utcnow(),
-            status=PermitApplicationStatus.PENDING_REVIEW
-        )
-        db.session.add(new_application)
-        db.session.commit()
-        flash('Your permit application has been submitted successfully and is pending review.', 'success')
-        return redirect(url_for('dot.my_permit_applications'))
-    return render_template('dot/apply_permit.html', title='Apply for Vehicle Movement Permit', form=form)
-
-@bp.route('/permits/my_applications')
-@login_required
-def my_permit_applications():
-    page = request.args.get('page', 1, type=int)
-    applications = PermitApplication.query.filter_by(user_id=current_user.id)\
-                                       .order_by(PermitApplication.application_date.desc())\
-                                       .paginate(page=page, per_page=10)
-    return render_template('dot/my_permit_applications.html', title='My Permit Applications',
-                           applications_pagination=applications, PermitApplicationStatus=PermitApplicationStatus)
-
-
-@bp.route('/permits/application/<int:application_id>')
-@login_required
-def view_permit_application_detail(application_id):
-    application = PermitApplication.query.get_or_404(application_id)
-
-    # User can view their own applications. Officers/Admins can view based on their roles/assignments.
-    is_owner = application.user_id == current_user.id
-    can_officer_view = (current_user.role == UserRole.OFFICER and (application.reviewed_by_officer_id == current_user.id or application.status == PermitApplicationStatus.PENDING_REVIEW))
-    is_admin = current_user.role == UserRole.ADMIN
-
-    if not (is_owner or can_officer_view or is_admin):
-        flash('You are not authorized to view this permit application.', 'danger')
-        return redirect(url_for('dot.my_permit_applications') if is_owner else url_for('main.index')) # Or officer dashboard
-
-    return render_template('dot/view_permit_application_detail.html',
-                           title=f'Permit Application #{application.id}',
-                           application=application,
-                           PermitApplicationStatus=PermitApplicationStatus)
-
-
-@bp.route('/permits/application/<int:application_id>/pay_fee', methods=['POST'])
-@login_required
-def pay_permit_fee(application_id):
-    application = PermitApplication.query.get_or_404(application_id)
-    if application.user_id != current_user.id:
-        flash('You are not authorized to pay for this permit.', 'danger')
-        return redirect(url_for('dot.my_permit_applications'))
-
-    if application.status != PermitApplicationStatus.APPROVED_PENDING_PAYMENT:
-        flash('This permit application is not currently awaiting payment.', 'warning')
-        return redirect(url_for('dot.view_permit_application_detail', application_id=application.id))
-
-    if not application.permit_fee or application.permit_fee <= 0:
-        flash('Permit fee is not set or is invalid. Please contact support.', 'danger')
-        return redirect(url_for('dot.view_permit_application_detail', application_id=application.id))
-
-    user_account = current_user.accounts.first() # Assuming one account per user
-    if not user_account:
-        flash('You do not have a bank account to make this payment.', 'danger')
-        return redirect(url_for('dot.view_permit_application_detail', application_id=application.id))
-
-    if user_account.balance < application.permit_fee:
-        flash(f'Insufficient funds. You need {application.permit_fee} {user_account.currency}, but have {user_account.balance} {user_account.currency}.', 'danger')
-        return redirect(url_for('dot.view_permit_application_detail', application_id=application.id))
-
-    try:
-        fee_transaction = Transaction(
-            account_id=user_account.id,
-            type=TransactionType.PERMIT_FEE_PAYMENT,
-            amount=-application.permit_fee,
-            description=f"Payment for Permit Application #{application.id}"
-        )
-        db.session.add(fee_transaction)
-
-        user_account.balance -= application.permit_fee
-        db.session.add(user_account)
-
-        application.status = PermitApplicationStatus.PAID_AWAITING_ISSUANCE
-        # Link transaction after flush/commit
-        db.session.flush()
-        application.banking_transaction_id = fee_transaction.id
-        db.session.add(application)
-
-        db.session.commit()
-        flash(f'Permit fee of {application.permit_fee} {user_account.currency} paid successfully for Application #{application.id}. Awaiting final issuance.', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Error processing permit fee payment: {str(e)}', 'danger')
-
-    return redirect(url_for('dot.view_permit_application_detail', application_id=application.id))
-
-
-@bp.route('/permits/application/<int:application_id>/cancel_by_user', methods=['POST'])
-@login_required
-def cancel_permit_application_by_user(application_id):
-    application = PermitApplication.query.get_or_404(application_id)
-    if application.user_id != current_user.id:
-        flash('You are not authorized to cancel this application.', 'danger')
-        return redirect(url_for('dot.my_permit_applications'))
-
-    if application.status not in [PermitApplicationStatus.PENDING_REVIEW, PermitApplicationStatus.REQUIRES_MODIFICATION]:
-        flash(f'This application cannot be cancelled by you at its current status: {application.status.value}.', 'warning')
-        return redirect(url_for('dot.view_permit_application_detail', application_id=application.id))
-
-    application.status = PermitApplicationStatus.CANCELLED_BY_USER
-    application.officer_notes = (application.officer_notes or "") + f"\nApplication cancelled by user on {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}."
-    db.session.commit()
-    flash(f'Permit Application #{application.id} has been cancelled.', 'info')
-    return redirect(url_for('dot.my_permit_applications'))
-
-
 # --- Officer/Admin Permit Management Routes (can be in dot_bp or admin_bp) ---
 # For now, let's add a basic review list here, more advanced admin views can be in admin_bp
 from app.forms import ReviewPermitApplicationForm
@@ -701,33 +645,4 @@ def process_permit_application(application_id):
                            PermitApplicationStatus=PermitApplicationStatus)
 
 
-@bp.route('/permits/issue_final_permit/<int:application_id>', methods=['POST'])
-@login_required
-@officer_required
-def issue_final_permit(application_id):
-    application = PermitApplication.query.get_or_404(application_id)
-    if application.status != PermitApplicationStatus.PAID_AWAITING_ISSUANCE:
-        flash('This permit application is not ready for final issuance (not paid or already processed).', 'warning')
-        return redirect(url_for('dot.list_permit_applications_for_review'))
 
-    # Generate Permit ID: YYYY-{sequential_id}-P
-    # For sequential_id, we can use the application.id for simplicity or implement a yearly counter.
-    # Using application.id ensures uniqueness but isn't strictly sequential *within the year* if IDs are global.
-    # A true sequential yearly counter is more complex (needs its own table/logic).
-    # Let's use YYYY-AppID-P for now.
-    year = datetime.utcnow().year
-    sequential_part = str(application.id).zfill(5) # Pad with zeros to make it look like a sequence
-    application.issued_permit_id_str = f"{year}-{sequential_part}-P"
-
-    application.status = PermitApplicationStatus.ISSUED
-    application.issued_on_date = datetime.utcnow()
-    application.issued_by_officer_id = current_user.id
-
-    # Officer can add final issuance notes if needed, perhaps via a small modal form on the review page.
-    # For now, just update status.
-    application.officer_notes = (application.officer_notes or "") + f"\nPermit issued by {current_user.username} on {application.issued_on_date.strftime('%Y-%m-%d %H:%M')} with ID: {application.issued_permit_id_str}."
-
-    db.session.commit()
-    flash(f'Permit #{application.issued_permit_id_str} has been issued for Application #{application.id}.', 'success')
-    # TODO: Notify user that their permit is issued and available.
-    return redirect(url_for('dot.list_permit_applications_for_review'))

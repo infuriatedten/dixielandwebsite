@@ -188,7 +188,7 @@ class ReviewPermitApplicationForm(FlaskForm):
 
 # Need to import datetime for date validation
 from datetime import datetime
-from app.models import MarketplaceListingStatus # Import for marketplace forms
+from app.models import MarketplaceItemStatus # Import for marketplace forms
 from wtforms import RadioField # For Pass/Fail
 
 # --- Marketplace Forms ---
@@ -439,22 +439,28 @@ class EditListingForm(FlaskForm): # Similar to Create, but might have fewer edit
 #         if field.data is not None and field.data <= 0:
 #             raise ValidationError('Quantity must be a positive value.')
 
-# Import MarketplaceItemStatus if not already available for the form
+from flask_wtf import FlaskForm
+from wtforms import StringField, TextAreaField, DecimalField, SubmitField, SelectField
+from wtforms.validators import DataRequired, Length, Optional, ValidationError
 from app.models import MarketplaceItemStatus
+
+
+class CreateListingForm(FlaskForm):
     item_name = StringField('Item Name', validators=[DataRequired(), Length(max=200)])
     description = TextAreaField('Description (Optional)', validators=[Optional(), Length(max=1000)])
     price = DecimalField('Price', places=2, validators=[DataRequired()])
-    quantity = DecimalField('Quantity', places=2, validators=[DataRequired()]) # Allow partial quantities e.g. 0.5
+    quantity = DecimalField('Quantity', places=2, validators=[DataRequired()])  # Allows partial quantities e.g. 0.5
     unit = StringField('Unit (e.g., items, liters, kg)', validators=[DataRequired(), Length(max=50)])
     submit = SubmitField('Create Listing')
 
-    def validate_price(self, field):
-        if field.data is not None and field.data <= 0:
-            raise ValidationError('Price must be a positive value.')
+from flask_wtf import FlaskForm
+from wtforms import DecimalField, IntegerField
+from app.custom_validators import must_be_positive
 
-    def validate_quantity(self, field):
-        if field.data is not None and field.data <= 0:
-            raise ValidationError('Quantity must be a positive value.')
+class ProductForm(FlaskForm):
+    price = DecimalField('Price', validators=[must_be_positive])
+    quantity = IntegerField('Quantity', validators=[must_be_positive])
+
 
 
 class EditListingForm(FlaskForm):
@@ -463,9 +469,11 @@ class EditListingForm(FlaskForm):
     price = DecimalField('Price', places=2, validators=[DataRequired()])
     quantity = DecimalField('Quantity', places=2, validators=[DataRequired()])
     unit = StringField('Unit', validators=[DataRequired(), Length(max=50)])
-    # Status might be editable here too, or only via Discord bot commands
-    status = SelectField('Status', choices=[(s.value, s.name.replace("_", " ").title()) for s in MarketplaceItemStatus],
-                         validators=[DataRequired()])
+    status = SelectField(
+        'Status',
+        choices=[(s.value, s.name.replace("_", " ").title()) for s in MarketplaceItemStatus],
+        validators=[DataRequired()]
+    )
     submit = SubmitField('Update Listing')
 
     def validate_price(self, field):
@@ -476,5 +484,10 @@ class EditListingForm(FlaskForm):
         if field.data is not None and field.data <= 0:
             raise ValidationError('Quantity must be a positive value.')
 
-# Import MarketplaceItemStatus if not already available for the form
-from app.models import MarketplaceItemStatus
+from flask_wtf import FlaskForm
+from wtforms import StringField, SubmitField
+from wtforms.validators import DataRequired
+
+class EditProfileForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired()])
+    submit = SubmitField('Save Changes')

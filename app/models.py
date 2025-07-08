@@ -1,8 +1,10 @@
+import enum
+from datetime import datetime
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
-import enum
-
+from app.enums import ConversationStatus
+from app.enums import ConversationStatus, MarketplaceListingStatus
 class UserRole(enum.Enum):
     USER = "user"
     OFFICER = "officer"
@@ -74,7 +76,6 @@ class TransactionType(enum.Enum):
     MARKETPLACE_PURCHASE = "marketplace_purchase"
     TAX_PAYMENT = "tax_payment" # User-initiated tax payment (if we had that)
     AUTOMATED_TAX_DEDUCTION = "automated_tax_deduction" # For the new automated system
-    TICKET_PAYMENT = "ticket_payment" # For paying DOT tickets
     PERMIT_FEE_PAYMENT = "permit_fee_payment" # For paying vehicle permits. This was already added in the previous step plan.
     AUCTION_WIN_DEBIT = "auction_win_debit" # Deduction from auction winner's account
     AUCTION_SALE_CREDIT = "auction_sale_credit" # Credit to auction seller's account
@@ -281,9 +282,9 @@ User.permits_issued_collection = db.relationship('PermitApplication', foreign_ke
 # --- Marketplace Models ---
 class MarketplaceItemStatus(enum.Enum):
     AVAILABLE = "Available"
-    SOLD_PENDING_RELIST = "Sold - More Available (Relist Soon)" # User indicated more stock, but this item instance sold
-    SOLD_OUT = "Sold Out" # All stock of this item from this listing is gone
-    CANCELLED = "Cancelled" # Seller removed the listing
+    SOLD_PENDING_RELIST = "Sold - More Available (Relist Soon)"  # User indicated more stock, but this item instance sold
+    SOLD_OUT = "Sold Out"  # All stock sold
+    CANCELLED = "Cancelled"  # Seller removed listing
 
 class MarketplaceListing(db.Model):
     __tablename__ = 'marketplace_listings'
@@ -293,15 +294,15 @@ class MarketplaceListing(db.Model):
     item_name = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=True)
     price = db.Column(db.Numeric(10, 2), nullable=False)
-    quantity = db.Column(db.Numeric(10, 2), nullable=False) # Using Numeric for flexibility (e.g., 0.5 for half liter)
-    unit = db.Column(db.String(50), nullable=False) # e.g., "liters", "item(s)", "kg", "gallons"
+    quantity = db.Column(db.Numeric(10, 2), nullable=False)  # e.g., 0.5 for half liter
+    unit = db.Column(db.String(50), nullable=False)  # e.g., "liters", "item(s)"
 
     status = db.Column(db.Enum(MarketplaceItemStatus), default=MarketplaceItemStatus.AVAILABLE, nullable=False, index=True)
 
     creation_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
     last_update_date = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    discord_message_id = db.Column(db.String(100), nullable=True) # Optional: Store ID of the message posted to Discord
+    discord_message_id = db.Column(db.String(100), nullable=True)  # Optional: Discord message ID
 
     # Relationships
     seller = db.relationship('User', backref=db.backref('marketplace_listings', lazy='dynamic'))
@@ -309,139 +310,134 @@ class MarketplaceListing(db.Model):
     def __repr__(self):
         return f'<MarketplaceListing {self.id}: {self.quantity} {self.unit} of {self.item_name} by User {self.seller_user_id} for {self.price}>'
 
-# Update User model for marketplace listings relationship - This line was duplicated, ensure it's correctly defined once for the User class.
-# User.marketplace_listings_collection = db.relationship('MarketplaceListing', foreign_keys=[MarketplaceListing.seller_user_id], backref='listing_seller_user', lazy='dynamic')
+# Optionally in User model:
+# User.marketplace_listings_collection = db.relationship(
+#     'MarketplaceListing', foreign_keys=[MarketplaceListing.seller_user_id],
+#     backref='listing_seller_user', lazy='dynamic'
+# )
 
 
 # --- DOT Inspection System Models ---
-# This section was already present from a previous step, verifying its contents.
-# class Inspection(db.Model):
-#     __tablename__ = 'inspections'
-#     id = db.Column(db.Integer, primary_key=True)
-#     officer_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True) # Officer performing
-#     inspected_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True) # User whose vehicle/self was inspected (if registered)
-
-#     vehicle_id = db.Column(db.String(100), nullable=False) # e.g., License plate, in-game vehicle ID
-#     timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
-
-#     # True for Pass, False for Fail. Could be an Enum if more states are needed.
-#     pass_status = db.Column(db.Boolean, nullable=False)
-#     notes = db.Column(db.Text, nullable=True) # Details, reasons for failure, etc.
-
-#     # Relationships
-#     officer = db.relationship('User', foreign_keys=[officer_user_id], backref=db.backref('inspections_conducted', lazy='dynamic'))
-#     inspected_user = db.relationship('User', foreign_keys=[inspected_user_id], backref=db.backref('inspections_received', lazy='dynamic'))
-
-#     def __repr__(self):
-#         status_str = "Pass" if self.pass_status else "Fail"
-#         return f'<Inspection {self.id} on Vehicle {self.vehicle_id} by Officer {self.officer_user_id} - Result: {status_str}>'
-
-# # Update User model for inspection relationships
-# User.inspections_conducted_collection = db.relationship('Inspection', foreign_keys=[Inspection.officer_user_id], backref='conducting_officer_user', lazy='dynamic')
-# User.inspections_received_collection = db.relationship('Inspection', foreign_keys=[Inspection.inspected_user_id], backref='inspected_person_user', lazy='dynamic')
-
-
-# etc.
-# Re-affirming the Inspection model as it was defined previously.
-# If it was not actually added, this will add it. If it was, this is just a check.
-# Ensure this is the definitive version.
-
 class Inspection(db.Model):
     __tablename__ = 'inspections'
     id = db.Column(db.Integer, primary_key=True)
-    # Officer performing the inspection
+
     officer_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
-    # User associated with the vehicle/inspection (driver/owner), if they are a registered user
     inspected_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
 
-    vehicle_id = db.Column(db.String(100), nullable=False)  # Vehicle identifier (e.g., license plate)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True) # Time of inspection
+    vehicle_id = db.Column(db.String(100), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
 
-    pass_status = db.Column(db.Boolean, nullable=False)  # True for Pass, False for Fail
-    notes = db.Column(db.Text, nullable=True)  # Officer's notes, details, reasons for fail
+    pass_status = db.Column(db.Boolean, nullable=False)
+    notes = db.Column(db.Text, nullable=True)
 
-    # Relationships
-    # Officer who conducted the inspection
-    officer = db.relationship('User', foreign_keys=[officer_user_id], backref=db.backref('conducted_inspections', lazy='dynamic'))
-    # User who was inspected (if applicable)
-    inspected_user = db.relationship('User', foreign_keys=[inspected_user_id], backref=db.backref('received_inspections', lazy='dynamic'))
+    officer = db.relationship('User', foreign_keys=[officer_user_id], backref=db.backref('inspections_conducted', lazy='dynamic'))
+    inspected_user = db.relationship('User', foreign_keys=[inspected_user_id], backref=db.backref('inspections_received', lazy='dynamic'))
 
     def __repr__(self):
         status_str = "Pass" if self.pass_status else "Fail"
-        return f'<Inspection {self.id} on Vehicle {self.vehicle_id} by Officer {self.officer.username if self.officer else self.officer_user_id} - Result: {status_str}>'
+        return f'<Inspection {self.id} on Vehicle {self.vehicle_id} by Officer {self.officer_user_id} - Result: {status_str}>'
 
-# Ensure User model has these backrefs if not already defined elsewhere.
-# These might conflict if defined differently above, ensure consistency.
-# User.conducted_inspections_collection = db.relationship('Inspection', foreign_keys=[Inspection.officer_user_id], backref='conducting_officer_user_explicit', lazy='dynamic')
-# User.received_inspections_collection = db.relationship('Inspection', foreign_keys=[Inspection.inspected_user_id], backref='inspected_person_user_explicit', lazy='dynamic')
-# Using the backrefs defined in Inspection model (conducted_inspections, received_inspections) is usually sufficient.
-# The Inspection model is defined above this section.
-
-# --- User Vehicle Model ---
-# This was defined below the new models, moving it up for clarity before User relationships are updated.
 class VehicleRegion(enum.Enum):
     US = "United States"
     EURO = "Europe"
 
 class UserVehicle(db.Model):
     __tablename__ = 'user_vehicles'
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
-    make = db.Column(db.String(100), nullable=True) # e.g., "Ford", "Claas"
-    model = db.Column(db.String(100), nullable=True) # e.g., "F-150", "Lexion 8900"
-    vehicle_type = db.Column(db.String(100), nullable=True) # e.g., "Truck", "Combine Harvester", "Sedan"
+
+    vehicle_make = db.Column(db.String(100), nullable=True)   # e.g., "Ford", "Volvo", "Peterbilt"
+    vehicle_model = db.Column(db.String(100), nullable=True)  # e.g., "F-150", "FH16", "379"
+    vehicle_type = db.Column(db.String(100), nullable=True)   # e.g., "Truck", "Combine Harvester", "Sedan"
+    vehicle_description = db.Column(db.String(255), nullable=True)  # e.g., "Red Sports Car", "Log Hauling Truck"
+
     license_plate = db.Column(db.String(20), unique=True, nullable=False, index=True)
+    region_format = db.Column(db.Enum(VehicleRegion), nullable=False)  # Plate formatting region enum
+
     registration_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)   # If user wants to deactivate a vehicle
 
-    # Add a field for in-game specific ID if needed
-    # game_vehicle_id = db.Column(db.String(100), nullable=True, unique=True)
-
-    user = db.relationship('User', backref=db.backref('vehicles', lazy='dynamic'))
+    # Relationship to User (owner)
+    owner = db.relationship('User', backref=db.backref('vehicles', lazy='dynamic'))
 
     def __repr__(self):
-        return f'<UserVehicle {self.id}: {self.license_plate} ({self.make} {self.model}) for User {self.user_id}>'
+        return (
+            f'<UserVehicle {self.id}: {self.license_plate} '
+            f'({self.vehicle_make} {self.vehicle_model}) for User {self.user_id}>'
+        )
 
-User.vehicles_collection = db.relationship('UserVehicle', backref='owner', lazy='dynamic', foreign_keys=[UserVehicle.user_id])
+# No need for a separate User.vehicles_collection relationship since backref 'vehicles' already covers it.
+
 
 
 # --- Messaging System Models ---
+from datetime import datetime
+from app.enums import ConversationStatus  # make sure this enum is defined somewhere
+
 class Conversation(db.Model):
     __tablename__ = 'conversations'
+    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True)
-    subject = db.Column(db.String(255), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True) # The user part of the conversation
-    admin_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True) # The admin part of the conversation
+    subject = db.Column(db.String(255), default="Message", nullable=False)
+    
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)  # Non-admin participant
+    admin_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)  # Admin participant
 
     creation_time = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     last_message_time = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, index=True)
 
+    # Unread status and counts
     user_unread_count = db.Column(db.Integer, default=0)
     admin_unread_count = db.Column(db.Integer, default=0)
+    user_has_unread = db.Column(db.Boolean, default=False)
+    admin_has_unread = db.Column(db.Boolean, default=False)
+
+    # Conversation state
+    status = db.Column(db.Enum(ConversationStatus), default=ConversationStatus.OPEN, nullable=False)
 
     # Relationships
     user = db.relationship('User', foreign_keys=[user_id], backref=db.backref('conversations_as_user_participant', lazy='dynamic'))
     admin = db.relationship('User', foreign_keys=[admin_id], backref=db.backref('conversations_as_admin_participant', lazy='dynamic'))
-    messages = db.relationship('Message', backref='conversation', lazy='dynamic', cascade="all, delete-orphan", order_by="Message.timestamp")
+    messages = db.relationship(
+        'Message',
+        backref='conversation',
+        lazy='dynamic',
+        cascade="all, delete-orphan",
+        order_by="Message.timestamp"
+    )
 
     def __repr__(self):
         return f'<Conversation {self.id}: "{self.subject}" between User {self.user_id} and Admin {self.admin_id}>'
 
+
+from datetime import datetime
+from app import db
+
 class Message(db.Model):
     __tablename__ = 'messages'
+
     id = db.Column(db.Integer, primary_key=True)
     conversation_id = db.Column(db.Integer, db.ForeignKey('conversations.id'), nullable=False, index=True)
-    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True) # Could be user or admin
-    # recipient_id implicitly defined by conversation participants and checking sender_id
+    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)  # User who sent this message
+    
     body = db.Column(db.Text, nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow, index=True)
-    is_read_by_recipient = db.Column(db.Boolean, default=False) # Generic, actual recipient checks who is not sender
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
+    is_read_by_recipient = db.Column(db.Boolean, default=False)  # Optional, if you want to track read status explicitly
+    
+    # Relationship
+    sender = db.relationship(
+        'User',
+        foreign_keys=[sender_id],
+        backref=db.backref('sent_messages', lazy='dynamic')
+    )
 
-    # Relationships
-    # conversation backref from Conversation.messages
-    sender = db.relationship('User', foreign_keys=[sender_id], backref=db.backref('sent_messages', lazy='dynamic'))
+    # Conversation backref assumed defined on Conversation model: messages = db.relationship('Message', backref='conversation')
 
     def __repr__(self):
         return f'<Message {self.id} in Conv {self.conversation_id} by User {self.sender_id}>'
+
 
 User.initiated_conversations_as_user = db.relationship('Conversation', foreign_keys=[Conversation.user_id], backref='user_initiator', lazy='dynamic')
 User.participated_conversations_as_admin = db.relationship('Conversation', foreign_keys=[Conversation.admin_id], backref='admin_participant', lazy='dynamic')
@@ -449,39 +445,46 @@ User.all_sent_messages = db.relationship('Message', foreign_keys=[Message.sender
 
 
 # --- Notification System Model ---
+class NotificationType(enum.Enum):
+    GENERAL_INFO = "general_info"
+    # Add more types here if needed, e.g.:
+    # TICKET_UPDATE = "ticket_update"
+    # ALERT = "alert"
+
 class Notification(db.Model):
     __tablename__ = 'notifications'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True) # User who receives notification
-    text_content = db.Column(db.String(512), nullable=False)
-    link_url = db.Column(db.String(512), nullable=True) # Optional URL to relevant page
-    is_read = db.Column(db.Boolean, default=False, index=True)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
-    user = db.relationship('User', backref=db.backref('notifications', lazy='dynamic', order_by="desc(Notification.timestamp)"))
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)  # Recipient user
+    message_text = db.Column(db.String(512), nullable=False)  # Notification content
+    link_url = db.Column(db.String(512), nullable=True)  # Optional URL to related page
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True, nullable=False)
+    is_read = db.Column(db.Boolean, default=False, nullable=False, index=True)
+    notification_type = db.Column(db.Enum(NotificationType), default=NotificationType.GENERAL_INFO, nullable=False)
+
+    # Relationship to User, with backref 'notifications'
+    user = db.relationship(
+        'User',
+        backref=db.backref('notifications', lazy='dynamic', order_by="desc(Notification.created_at)")
+    )
 
     def __repr__(self):
-        return f'<Notification {self.id} for User {self.user_id}: "{self.text_content[:50]}...">'
+        return f'<Notification {self.id} for User {self.user_id} - Read: {self.is_read}>'
+import enum
 
-User.user_notifications = db.relationship('Notification', backref='notified_user', lazy='dynamic', foreign_keys=[Notification.user_id])
-
-
-# --- Auction House Models ---
 class AuctionStatus(enum.Enum):
-    PENDING_APPROVAL = "Pending Approval"
-    ACTIVE = "Active"
-    # Clarified status names for payment flow
-    SOLD_AWAITING_PAYMENT = "Sold - Awaiting Winner Payment"
-    SOLD_PAYMENT_FAILED = "Sold - Winner Payment Failed"
-    SOLD_PENDING_SELLER_PAYOUT = "Sold - Pending Seller Payout" # Winner paid, seller payout pending
-    COMPLETED = "Completed" # Winner paid, seller paid
-    REJECTED_BY_ADMIN = "Rejected by Admin"
-    EXPIRED_NO_BIDS = "Expired - No Bids"
-    CANCELLED_BY_SUBMITTER = "Cancelled by Submitter"
-    CANCELLED_BY_ADMIN = "Cancelled by Admin"
+    PENDING_APPROVAL = "pending_approval"
+    ACTIVE = "active"
+    CLOSED = "closed"
+    CANCELLED = "cancelled"
+
+
+from datetime import datetime
+from app import db
 
 class AuctionItem(db.Model):
     __tablename__ = 'auction_items'
+
     id = db.Column(db.Integer, primary_key=True)
     submitter_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
     admin_approver_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
@@ -491,8 +494,8 @@ class AuctionItem(db.Model):
     image_url = db.Column(db.String(512), nullable=True)
 
     suggested_starting_bid = db.Column(db.Numeric(10, 2), nullable=True)
-    actual_starting_bid = db.Column(db.Numeric(10, 2), nullable=True) # Nullable until admin sets it
-    minimum_bid_increment = db.Column(db.Numeric(10, 2), default=1.00, nullable=True) # Nullable, admin can set
+    actual_starting_bid = db.Column(db.Numeric(10, 2), nullable=True)
+    minimum_bid_increment = db.Column(db.Numeric(10, 2), default=1.00, nullable=True)
 
     submission_time = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     approval_time = db.Column(db.DateTime, nullable=True)
@@ -512,9 +515,23 @@ class AuctionItem(db.Model):
     # Relationships
     submitter = db.relationship('User', foreign_keys=[submitter_user_id], backref=db.backref('submitted_auction_items', lazy='dynamic'))
     admin_approver = db.relationship('User', foreign_keys=[admin_approver_id], backref=db.backref('approved_auction_items', lazy='dynamic'))
-    bids = db.relationship('AuctionBid', backref='auction_item', lazy='dynamic', cascade="all, delete-orphan", order_by="desc(AuctionBid.bid_amount)") # Order by amount for easy highest
 
-    winning_bid_ref = db.relationship('AuctionBid', foreign_keys=[winning_bid_id], post_update=True, uselist=False)
+    bids = db.relationship(
+        'AuctionBid',
+        back_populates='auction_item',
+        lazy='dynamic',
+        cascade="all, delete-orphan",
+        order_by="desc(AuctionBid.bid_amount)",
+        foreign_keys='AuctionBid.auction_item_id'  # use string to avoid NameError
+    )
+
+    winning_bid_ref = db.relationship(
+        'AuctionBid',
+        foreign_keys=[winning_bid_id],
+        post_update=True,
+        uselist=False
+    )
+
     winner_user_ref = db.relationship('User', foreign_keys=[winner_user_id], backref=db.backref('auctions_won', lazy='dynamic'))
 
     winner_payment_tx = db.relationship('Transaction', foreign_keys=[winner_payment_transaction_id], backref=db.backref('auction_winner_payment_tx', uselist=False))
@@ -523,75 +540,33 @@ class AuctionItem(db.Model):
     def __repr__(self):
         return f'<AuctionItem {self.id}: {self.item_name} - Status: {self.status.value}>'
 
+
 class AuctionBid(db.Model):
     __tablename__ = 'auction_bids'
+
     id = db.Column(db.Integer, primary_key=True)
     auction_item_id = db.Column(db.Integer, db.ForeignKey('auction_items.id'), nullable=False, index=True)
     bidder_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
     bid_amount = db.Column(db.Numeric(10, 2), nullable=False)
     bid_time = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
 
-    bidder = db.relationship('User', backref=db.backref('auction_bids_placed', lazy='dynamic'))
+    # Relationship back to AuctionItem
+    auction_item = db.relationship(
+        'AuctionItem',
+        back_populates='bids',
+        foreign_keys=[auction_item_id]
+    )
+
+    bidder = db.relationship('User', foreign_keys=[bidder_user_id], backref=db.backref('auction_bids_placed', lazy='dynamic'))
 
     def __repr__(self):
         return f'<AuctionBid {self.id} for Item {self.auction_item_id} by User {self.bidder_user_id} for {self.bid_amount}>'
-
-# User model backrefs are implicitly created by the relationships in AuctionItem and AuctionBid.
-# Explicit User.xyz_collection = ... lines are not strictly necessary if backrefs are well-defined.
-# Example: User will have `user.submitted_auction_items`, `user.approved_auction_items`,
-# `user.auction_bids_placed`, `user.auctions_won` due to the backrefs.
-
 
 # --- Messaging System Models ---
 class ConversationStatus(enum.Enum):
     OPEN = "Open"
     CLOSED_BY_USER = "Closed by User"
     CLOSED_BY_ADMIN = "Closed by Admin"
-
-class Conversation(db.Model):
-    __tablename__ = 'conversations'
-    id = db.Column(db.Integer, primary_key=True)
-    subject = db.Column(db.String(255), default="Message")
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True) # Non-admin participant
-    admin_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True) # Admin participant
-
-    last_message_time = db.Column(db.DateTime, default=datetime.utcnow, index=True)
-    user_has_unread = db.Column(db.Boolean, default=False) # True if user has unread messages in this convo
-    admin_has_unread = db.Column(db.Boolean, default=False) # True if admin has unread messages
-    status = db.Column(db.Enum(ConversationStatus), default=ConversationStatus.OPEN, nullable=False)
-
-    # Relationships
-    user_participant = db.relationship('User', foreign_keys=[user_id], backref=db.backref('conversations_as_user_participant', lazy='dynamic'))
-    admin_participant = db.relationship('User', foreign_keys=[admin_id], backref=db.backref('conversations_as_admin_participant', lazy='dynamic'))
-    messages = db.relationship('Message', backref='conversation', lazy='dynamic', cascade="all, delete-orphan", order_by="Message.timestamp")
-
-    def __repr__(self):
-        return f'<Conversation {self.id} between User {self.user_id} and Admin {self.admin_id}>'
-
-class Message(db.Model):
-    __tablename__ = 'messages'
-    id = db.Column(db.Integer, primary_key=True)
-    conversation_id = db.Column(db.Integer, db.ForeignKey('conversations.id'), nullable=False, index=True)
-    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True) # User who sent this message
-    # recipient_id is implicitly the other party in the conversation.
-    # We can determine recipient by checking sender_id against conversation.user_id and conversation.admin_id
-
-    body = db.Column(db.Text, nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
-    # is_read_by_recipient is effectively handled by conversation.user_has_unread and conversation.admin_has_unread
-
-    # Relationship
-    sender = db.relationship('User', backref=db.backref('sent_messages', lazy='dynamic'))
-
-    def __repr__(self):
-        return f'<Message {self.id} in Conv {self.conversation_id} by User {self.sender_id}>'
-
-# Update User model for messaging relationships (covered by backrefs)
-# User.conversations_as_user_participant
-# User.conversations_as_admin_participant
-# User.sent_messages
-
-
 # --- Notification System Models ---
 class NotificationType(enum.Enum):
     NEW_TICKET_ISSUED = "New Ticket Issued"
@@ -601,52 +576,10 @@ class NotificationType(enum.Enum):
     # Add more types as needed: AUCTION_OUTBID, AUCTION_WON, AUCTION_SOLD (for seller), etc.
     GENERAL_INFO = "General Information"
 
-class Notification(db.Model):
-    __tablename__ = 'notifications'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True) # Recipient
-    message_text = db.Column(db.String(512), nullable=False)
-    link_url = db.Column(db.String(512), nullable=True) # e.g., url_for('ticket.view', ticket_id=...)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
-    is_read = db.Column(db.Boolean, default=False, nullable=False, index=True)
-    notification_type = db.Column(db.Enum(NotificationType), default=NotificationType.GENERAL_INFO, nullable=False)
-
-    user = db.relationship('User', backref=db.backref('notifications', lazy='dynamic', order_by="desc(Notification.created_at)"))
-
-    def __repr__(self):
-        return f'<Notification {self.id} for User {self.user_id} - Read: {self.is_read}>'
-
-# Update User model for notifications (covered by backref)
-# User.notifications
-
-
 # --- User Vehicle Registration Models ---
 class VehicleRegion(enum.Enum):
     US = "United States" # Format: 123-ABC
     EURO = "Europe"      # Format: ABC-123
-
-class UserVehicle(db.Model):
-    __tablename__ = 'user_vehicles'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
-
-    vehicle_make = db.Column(db.String(100), nullable=True) # e.g., "Ford", "Volvo", "Peterbilt"
-    vehicle_model = db.Column(db.String(100), nullable=True) # e.g., "F-150", "FH16", "379"
-    vehicle_description = db.Column(db.String(255), nullable=True) # e.g., "Red Sports Car", "Log Hauling Truck"
-
-    license_plate = db.Column(db.String(20), unique=True, nullable=False, index=True)
-    region_format = db.Column(db.Enum(VehicleRegion), nullable=False) # Determines plate format
-
-    registration_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    is_active = db.Column(db.Boolean, default=True, nullable=False) # If user wants to "deactivate" a vehicle
-
-    # Relationships
-    owner = db.relationship('User', backref=db.backref('vehicles', lazy='dynamic'))
-    # Could link to Tickets, Permits if a vehicle is a central concept there,
-    # but current Ticket/Permit models use a string vehicle_id. This UserVehicle.license_plate could be that ID.
-
-    def __repr__(self):
-        return f'<UserVehicle {self.id}: {self.license_plate} (Owner: {self.user_id})>'
 
 # Update User model for vehicles (covered by backref)
 # User.vehicles
