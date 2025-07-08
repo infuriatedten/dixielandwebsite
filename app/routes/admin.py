@@ -1,27 +1,28 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import current_user, login_required
 from app import db
-from app.models import User, UserRole, Account, Transaction, TransactionType
-from app.forms import AccountForm, EditBalanceForm, TransactionForm
+from app.models import (
+    User, UserRole, Account, Transaction, TransactionType,
+    TaxBracket, AutomatedTaxDeductionLog,
+    Ticket, TicketStatus, NotificationType,
+    Inspection,
+    PermitApplication, PermitApplicationStatus
+)
+from app.forms import (
+    AccountForm, EditBalanceForm, TransactionForm,
+    TaxBracketForm, ResolveTicketForm
+)
 from app.decorators import admin_required
-from decimal import Decimal
+from app.services import notification_service
+from datetime import datetime, timedelta
 
-bp = Blueprint('admin', __name__)
-
+# admin.py (line 19)
 @bp.route('/')
 @login_required
-@admin_required
 def index():
     return render_template('admin/index.html', title='Admin Dashboard')
 
-from flask import Blueprint, render_template, redirect, url_for, flash
-from flask_login import current_user, login_required
-from app.models import User, Account, Transaction, TransactionType
-from app.forms import AccountForm
-from app import db
-from app.decorators import admin_required  # Assuming you have this decorator
 
-bp = Blueprint('admin', __name__)
 
 # Account Management with admin role assignment
 @bp.route('/accounts', methods=['GET', 'POST'])
@@ -29,8 +30,7 @@ bp = Blueprint('admin', __name__)
 @admin_required
 def manage_accounts():
     form = AccountForm()
-
-    # Populate user dropdown with users who do not already have an account
+    # Only users without an account can be assigned
     form.user_id.choices = [(u.id, u.username) for u in User.query.filter(~User.accounts.any()).order_by(User.username).all()]
 
     if form.validate_on_submit():
@@ -39,19 +39,14 @@ def manage_accounts():
             flash('Invalid user selected.', 'danger')
             return redirect(url_for('admin.manage_accounts'))
 
-        # Check if user already has an account
         if Account.query.filter_by(user_id=user.id).first():
             flash(f'User {user.username} already has an account.', 'warning')
             return redirect(url_for('admin.manage_accounts'))
 
         make_admin = form.make_admin.data
-
-        # Check if any admins exist
         admins_exist = User.query.filter_by(role='admin').count() > 0
 
-        # If admin role checkbox checked
         if make_admin:
-            # Allow only if no admins exist or current user is admin
             if not admins_exist or current_user.role == 'admin':
                 user.role = 'admin'
                 flash(f'{user.username} has been granted admin privileges.', 'success')
@@ -59,16 +54,10 @@ def manage_accounts():
                 flash('Only admins can assign admin role.', 'danger')
                 return redirect(url_for('admin.manage_accounts'))
 
-        # Create the account
-        account = Account(
-            user_id=user.id,
-            balance=form.balance.data,
-            currency=form.currency.data
-        )
+        account = Account(user_id=user.id, balance=form.balance.data, currency=form.currency.data)
         db.session.add(account)
-        db.session.flush()  # To get account.id
+        db.session.flush()  # To get account.id for transaction
 
-        # Log initial balance as a transaction
         initial_transaction = Transaction(
             account_id=account.id,
             type=TransactionType.INITIAL_SETUP,
@@ -83,6 +72,8 @@ def manage_accounts():
 
     accounts = Account.query.join(User).order_by(User.username).all()
     return render_template('admin/manage_accounts.html', title='Manage Accounts', accounts=accounts, form=form)
+
+
 @bp.route('/toggle_role/<int:user_id>', methods=['POST'])
 @login_required
 @admin_required
@@ -97,6 +88,7 @@ def toggle_user_role(user_id):
     flash(f"{user.username}'s role changed to {user.role}.", "success")
     return redirect(url_for('admin.manage_accounts'))
 
+
 @bp.route('/account/<int:account_id>/edit_balance', methods=['GET', 'POST'])
 @login_required
 @admin_required
@@ -108,26 +100,26 @@ def edit_account_balance(account_id):
         amount_change = form.amount.data
         description = form.description.data
 
-        # Create a transaction record for this change
         transaction_type = TransactionType.ADMIN_DEPOSIT if amount_change > 0 else TransactionType.ADMIN_WITHDRAWAL
-
         transaction = Transaction(
             account_id=account.id,
             type=transaction_type,
-            amount=amount_change, # Store the actual change amount
+            amount=amount_change,
             description=f"{description} (Admin: {current_user.username})"
-            # processed_by_admin_id=current_user.id # If you add this field
         )
 
-        # Update balance
         original_balance = account.balance
-        account.balance += amount_change # amount_change can be negative
+        account.balance += amount_change
 
         db.session.add(transaction)
-        db.session.add(account) # Add account to session to save balance change
+        db.session.add(account)
         db.session.commit()
 
-        flash(f'Balance for account {account.id} ({account.owner_user.username}) updated from {original_balance} to {account.balance}. Change: {amount_change}.', 'success')
+        flash(
+            f'Balance for account {account.id} ({account.owner_user.username}) updated from '
+            f'{original_balance} to {account.balance}. Change: {amount_change}.',
+            'success'
+        )
         return redirect(url_for('admin.manage_accounts'))
 
     return render_template('admin/edit_account_balance.html', title='Edit Account Balance', form=form, account=account)
@@ -139,22 +131,17 @@ def edit_account_balance(account_id):
 @admin_required
 def manage_transactions():
     form = TransactionForm()
+
     if form.validate_on_submit():
         account = Account.query.get(form.account_id.data)
         if not account:
             flash('Invalid account selected.', 'danger')
             return redirect(url_for('admin.manage_transactions'))
 
-        transaction_type_value = form.type.data
-        transaction_type_enum = TransactionType(transaction_type_value) # Convert string value to Enum
-        amount = form.amount.data # This is the direct amount for the transaction type
-                                  # For deposits, it's positive. For withdrawals, it should be entered as positive by admin, then made negative if logic implies.
-                                  # Or, form can have separate deposit/withdrawal fields.
-                                  # Current TransactionForm's amount is just "Amount".
-                                  # Let's assume positive amount for deposit, negative for withdrawal for generic admin types.
-                                  # For simplicity, we'll assume admin enters it correctly or the type implies direction.
+        transaction_type_enum = TransactionType(form.type.data)
+        amount = form.amount.data
 
-        # If it's a withdrawal type, ensure amount is negative if user entered positive
+        # Ensure withdrawal amounts are negative
         if transaction_type_enum == TransactionType.ADMIN_WITHDRAWAL and amount > 0:
             amount = -amount
 
@@ -163,49 +150,49 @@ def manage_transactions():
             type=transaction_type_enum,
             amount=amount,
             description=f"{form.description.data} (Admin: {current_user.username})"
-            # processed_by_admin_id=current_user.id
         )
 
         original_balance = account.balance
-        account.balance += amount # amount can be negative for withdrawals
+        account.balance += amount
 
         db.session.add(transaction)
         db.session.add(account)
         db.session.commit()
-        flash(f'Transaction of {amount} {account.currency} for {account.owner_user.username} recorded. Balance changed from {original_balance} to {account.balance}.', 'success')
+
+        flash(
+            f'Transaction of {amount} {account.currency} for {account.owner_user.username} recorded. '
+            f'Balance changed from {original_balance} to {account.balance}.',
+            'success'
+        )
         return redirect(url_for('admin.manage_transactions'))
 
     page = request.args.get('page', 1, type=int)
     transactions = Transaction.query.join(Account).join(User).order_by(Transaction.timestamp.desc()).paginate(page=page, per_page=15)
     return render_template('admin/manage_transactions.html', title='Manage Transactions', transactions=transactions, form=form)
 
+
 @bp.route('/users')
 @login_required
 @admin_required
 def manage_users():
-    # Basic user listing, can be expanded with edit roles, etc.
     page = request.args.get('page', 1, type=int)
     users = User.query.order_by(User.username).paginate(page=page, per_page=15)
     return render_template('admin/manage_users.html', title='Manage Users', users=users)
 
 
-# --- Tax Bracket Management (Admin) ---
-from app.models import TaxBracket, AutomatedTaxDeductionLog
-from app.forms import TaxBracketForm
-
+# Tax Bracket Management
 @bp.route('/tax_brackets', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def manage_tax_brackets():
     form = TaxBracketForm()
+
     if form.validate_on_submit():
-        # Check for overlapping brackets before saving (basic check, more complex validation might be needed)
-        # For simplicity, admin is responsible for logical tiers. We can add validation later.
         new_bracket = TaxBracket(
             name=form.name.data,
             description=form.description.data,
             min_balance=form.min_balance.data,
-            max_balance=form.max_balance.data if form.max_balance.data is not None else None, # Store None if blank
+            max_balance=form.max_balance.data if form.max_balance.data is not None else None,
             tax_rate=form.tax_rate.data,
             is_active=form.is_active.data
         )
@@ -217,12 +204,13 @@ def manage_tax_brackets():
     brackets = TaxBracket.query.order_by(TaxBracket.min_balance).all()
     return render_template('admin/manage_tax_brackets.html', title='Manage Tax Brackets', form=form, brackets=brackets)
 
+
 @bp.route('/tax_bracket/<int:bracket_id>/edit', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def edit_tax_bracket(bracket_id):
     bracket = TaxBracket.query.get_or_404(bracket_id)
-    form = TaxBracketForm(obj=bracket) # Pre-populate form with existing data
+    form = TaxBracketForm(obj=bracket)
 
     if form.validate_on_submit():
         bracket.name = form.name.data
@@ -237,6 +225,7 @@ def edit_tax_bracket(bracket_id):
 
     return render_template('admin/edit_tax_bracket.html', title='Edit Tax Bracket', form=form, bracket=bracket)
 
+
 @bp.route('/tax_bracket/<int:bracket_id>/toggle_active', methods=['POST'])
 @login_required
 @admin_required
@@ -248,197 +237,128 @@ def toggle_tax_bracket_active(bracket_id):
     flash(f'Tax Bracket "{bracket.name}" has been {status}.', 'info')
     return redirect(url_for('admin.manage_tax_brackets'))
 
+
 @bp.route('/tax_deduction_logs')
 @login_required
 @admin_required
 def view_tax_deduction_logs():
     page = request.args.get('page', 1, type=int)
     logs = AutomatedTaxDeductionLog.query.join(User).join(TaxBracket)\
-                                       .order_by(AutomatedTaxDeductionLog.deduction_date.desc())\
-                                       .paginate(page=page, per_page=20)
+        .order_by(AutomatedTaxDeductionLog.deduction_date.desc())\
+        .paginate(page=page, per_page=20)
     return render_template('admin/view_tax_deduction_logs.html', title='Automated Tax Deduction Logs', logs=logs)
 
-# --- DOT Ticket Management (Admin) ---
-from app.models import Ticket, TicketStatus, NotificationType # Already imported User, added NotificationType
-from app.forms import ResolveTicketForm # Create this form
-from app.services import notification_service # For sending notifications
 
+# DOT Ticket Management
 @bp.route('/tickets', methods=['GET'])
 @login_required
 @admin_required
 def manage_tickets():
     page = request.args.get('page', 1, type=int)
-    status_filter_str = request.args.get('status', None)
+    status_filter = request.args.get('status', None, type=str)
 
-    query = Ticket.query
+    query = Ticket.query.order_by(Ticket.issue_date.desc())
 
-    if status_filter_str and hasattr(TicketStatus, status_filter_str.upper()):
-        query = query.filter_by(status=TicketStatus[status_filter_str.upper()])
+    if status_filter:
+        try:
+            status_enum = TicketStatus(status_filter)
+            query = query.filter(Ticket.status == status_enum)
+        except ValueError:
+            flash('Invalid ticket status filter.', 'warning')
 
-    tickets_pagination = query.order_by(Ticket.issue_date.desc()).paginate(page=page, per_page=15)
-    return render_template('admin/manage_tickets.html', title='Manage All Tickets',
-                           tickets_pagination=tickets_pagination, TicketStatus=TicketStatus,
-                           current_status_filter=status_filter_str)
+    tickets = query.paginate(page=page, per_page=20)
+    return render_template('admin/manage_tickets.html', title='Manage Tickets', tickets=tickets, status_filter=status_filter)
 
 
 @bp.route('/ticket/<int:ticket_id>/resolve', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def resolve_ticket(ticket_id):
-    """
-    Handles the resolution of a ticket by an admin.
-
-    This view function allows an admin to resolve a ticket that is in a contestable or outstanding state.
-    It presents a form for the admin to select a new status and provide resolution notes. Upon submission,
-    the ticket's status and resolution notes are updated, and the admin's user ID is recorded as the resolver.
-    If the ticket is resolved as "Fine Upheld", the due date is extended by 72 hours and the user is notified.
-    If the ticket is dismissed, the user is notified accordingly. Additional notification handling for cancelled
-    tickets can be added as needed.
-
-    Args:
-        ticket_id (int): The ID of the ticket to resolve.
-
-    Returns:
-        Response: A redirect to the ticket management page upon successful resolution,
-                  or a rendered template with the resolution form on GET or validation failure.
-    """
     ticket = Ticket.query.get_or_404(ticket_id)
-    if ticket.status not in [TicketStatus.CONTESTED, TicketStatus.OUTSTANDING]:
-        flash(
-            f'This ticket is not in a state that can be resolved by admin directly '
-            f'(Status: {ticket.status.value}). Consider cancelling if appropriate.',
-            'warning'
-        )
-        return redirect(url_for('admin.manage_tickets'))
-
     form = ResolveTicketForm()
 
     if form.validate_on_submit():
-        new_status_val = form.new_status.data
-        new_status_enum = TicketStatus(new_status_val)  # Convert string to Enum
-
-        ticket.status = new_status_enum
-        ticket.resolution_notes = form.resolution_notes.data
-        ticket.resolved_by_admin_id = current_user.id
-
-        if new_status_enum == TicketStatus.RESOLVED_UNPAID:
-            ticket.due_date = datetime.utcnow() + timedelta(hours=72)
-            flash(
-                f'Ticket #{ticket.id} resolved as "Fine Upheld". User notified to pay. '
-                f'New due date: {ticket.due_date.strftime("%Y-%m-%d %H:%M")}',
-                'info'
-            )
-
+        ticket.status = TicketStatus.RESOLVED
+        ticket.resolution_notes = form.notes.data
+        ticket.resolved_by_id = current_user.id
+        ticket.resolution_date = datetime.utcnow()
         db.session.commit()
-        flash(f'Ticket #{ticket.id} has been updated to status: {new_status_enum.value}.', 'success')
 
-        # Send notifications based on resolution status
-        if new_status_enum == TicketStatus.RESOLVED_DISMISSED:
-            notification_service.create_notification(
-                user_id=ticket.issued_to_user_id,
-                message_text=f"Your contested Ticket #{ticket.id} has been Dismissed by an admin.",
-                link_url=url_for('dot.view_ticket_detail', ticket_id=ticket.id, _external=True),
-                notification_type=NotificationType.GENERAL_INFO,
-            )
-        elif new_status_enum == TicketStatus.RESOLVED_UNPAID:
-            notification_service.create_notification(
-                user_id=ticket.issued_to_user_id,
-                message_text=f"Your contested Ticket #{ticket.id} has been reviewed: Fine Upheld. Please pay the outstanding amount.",
-                link_url=url_for('dot.view_ticket_detail', ticket_id=ticket.id, _external=True),
-                notification_type=NotificationType.GENERAL_INFO,
-            )
-        # TODO: Add notification handling for CANCELLED if needed
+        notification_service.notify_user(
+            user_id=ticket.issued_to_id,
+            notification_type=NotificationType.TICKET_RESOLVED,
+            message=f"Your ticket #{ticket.id} has been resolved."
+        )
 
+        flash(f'Ticket #{ticket.id} marked as resolved.', 'success')
         return redirect(url_for('admin.manage_tickets'))
 
-    # Pre-fill form with existing resolution notes for GET or if validation fails
-    form.resolution_notes.data = ticket.resolution_notes
-    return render_template(
-        'admin/resolve_ticket.html',
-        title=f'Resolve Ticket #{ticket.id}',
-        form=form,
-        ticket=ticket
-    )
+    return render_template('admin/resolve_ticket.html', title='Resolve Ticket', ticket=ticket, form=form)
 
 
-
-@bp.route('/ticket/<int:ticket_id>/cancel_by_admin', methods=['POST'])
-@login_required
-@admin_required
-def cancel_ticket_by_admin(ticket_id):
-
-
-
-    """
-    Cancels a ticket by an admin user if the ticket has not been paid.
-
-    Args:
-        ticket_id (int): The ID of the ticket to be cancelled.
-
-    Returns:
-        Response: A redirect response to the ticket management page with a flash message.
-
-    Behavior:
-        - If the ticket status is 'PAID', prevents cancellation and flashes an error message.
-        - Otherwise, updates the ticket status to 'CANCELLED', logs the admin's username and ID, and commits the change.
-        - Flashes a success message upon successful cancellation.
-    """
-    ticket = Ticket.query.get_or_404(ticket_id)
-    if ticket.status == TicketStatus.PAID:
-        flash("Cannot cancel a ticket that has already been paid. Consider a refund process if needed.", "danger")
-        return redirect(url_for('admin.manage_tickets'))
-
-    # Add cancellation reason, perhaps via a small form or predefined reasons
-    ticket.status = TicketStatus.CANCELLED
-    ticket.resolution_notes = f"Cancelled by Admin {current_user.username} on {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}. Reason: (Admin should add reason if form is implemented)"
-    ticket.resolved_by_admin_id = current_user.id
-    db.session.commit()
-    flash(f"Ticket #{ticket.id} has been cancelled.", "success")
-    return redirect(url_for('admin.manage_tickets'))
-
-# --- DOT Inspection Management (Admin) ---
-from app.models import Inspection # Already imported User, TicketStatus, etc.
-
-@bp.route('/inspections/all', methods=['GET'])
+# DOT Inspection Management
+@bp.route('/inspections', methods=['GET'])
 @login_required
 @admin_required
 def manage_inspections():
     page = request.args.get('page', 1, type=int)
-    # Potential filters: by officer, by pass/fail, by date range
+    inspections = Inspection.query.order_by(Inspection.date.desc()).paginate(page=page, per_page=20)
+    return render_template('admin/manage_inspections.html', title='Manage Inspections', inspections=inspections)
 
-    inspections_pagination = Inspection.query.order_by(Inspection.timestamp.desc()).paginate(page=page, per_page=15)
-    return render_template('admin/manage_inspections.html', title='Manage All Inspections',
-                           inspections_pagination=inspections_pagination)
 
-# --- Permit Application Management (Admin) ---
-from app.models import PermitApplication, PermitApplicationStatus # User, etc. already imported
-
+# Permit Applications Management
 @bp.route('/permits', methods=['GET'])
 @login_required
 @admin_required
-def manage_permit_applications():
+def manage_permits():
     page = request.args.get('page', 1, type=int)
-    status_filter_str = request.args.get('status', None)
-    user_filter = request.args.get('user', None) # Search by username
+    permits = PermitApplication.query.order_by(PermitApplication.application_date.desc()).paginate(page=page, per_page=20)
+    return render_template('admin/manage_permits.html', title='Manage Permit Applications', permits=permits)
 
-    query = PermitApplication.query.join(User, PermitApplication.user_id == User.id) # Join for username sort/filter
 
-    if status_filter_str and hasattr(PermitApplicationStatus, status_filter_str.upper()):
-        query = query.filter(PermitApplication.status == PermitApplicationStatus[status_filter_str.upper()])
+@bp.route('/permit/<int:permit_id>/approve', methods=['POST'])
+@login_required
+@admin_required
+def approve_permit(permit_id):
+    permit = PermitApplication.query.get_or_404(permit_id)
+    if permit.status != PermitApplicationStatus.PENDING:
+        flash('Permit application already processed.', 'warning')
+        return redirect(url_for('admin.manage_permits'))
 
-    if user_filter:
-        query = query.filter(User.username.ilike(f"%{user_filter}%"))
+    permit.status = PermitApplicationStatus.APPROVED
+    permit.reviewed_by_id = current_user.id
+    permit.review_date = datetime.utcnow()
+    db.session.commit()
 
-    applications_pagination = query.order_by(PermitApplication.application_date.desc()).paginate(page=page, per_page=15)
+    notification_service.notify_user(
+        user_id=permit.user_id,
+        notification_type=NotificationType.PERMIT_APPROVED,
+        message=f"Your permit application #{permit.id} has been approved."
+    )
 
-    return render_template('admin/manage_permit_applications.html',
-                           title='Manage All Permit Applications',
-                           applications_pagination=applications_pagination,
-                           PermitApplicationStatus=PermitApplicationStatus, # Pass enum for template use
-                           current_status_filter=status_filter_str,
-                           current_user_filter=user_filter)
+    flash(f'Permit application #{permit.id} approved.', 'success')
+    return redirect(url_for('admin.manage_permits'))
 
-# Admin can also use the processing routes in dot_bp if they have officer role or decorator allows admin.
-# If specific admin overrides or different processing logic is needed, it can be added here.
-# For example, an admin might directly issue a permit without fee, or edit submitted applications.
-# For now, admin uses the same review/process views as officers via dot_bp, but this admin list gives full overview.
+
+@bp.route('/permit/<int:permit_id>/reject', methods=['POST'])
+@login_required
+@admin_required
+def reject_permit(permit_id):
+    permit = PermitApplication.query.get_or_404(permit_id)
+    if permit.status != PermitApplicationStatus.PENDING:
+        flash('Permit application already processed.', 'warning')
+        return redirect(url_for('admin.manage_permits'))
+
+    permit.status = PermitApplicationStatus.REJECTED
+    permit.reviewed_by_id = current_user.id
+    permit.review_date = datetime.utcnow()
+    db.session.commit()
+
+    notification_service.notify_user(
+        user_id=permit.user_id,
+        notification_type=NotificationType.PERMIT_REJECTED,
+        message=f"Your permit application #{permit.id} has been rejected."
+    )
+
+    flash(f'Permit application #{permit.id} rejected.', 'info')
+    return redirect(url_for('admin.manage_permits'))

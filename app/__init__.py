@@ -6,37 +6,37 @@ from flask_apscheduler import APScheduler
 from whitenoise import WhiteNoise
 
 from config import Config
-from app.scheduler_config import SchedulerConfig
 
-# Initialize extensions
+# Initialize extensions globally (so they can be imported elsewhere)
 db = SQLAlchemy()
 login_manager = LoginManager()
 scheduler = APScheduler()
 
-# Configure login manager
+# Configure login manager defaults
 login_manager.login_view = 'auth.login'
 login_manager.login_message_category = 'info'
+
 
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
-    # Check and fallback for DATABASE_URL placeholder or missing
+    # Check and fallback for placeholder or missing DATABASE_URL
     db_uri = app.config.get('SQLALCHEMY_DATABASE_URI', '')
     if not db_uri or 'user:password@host/dbname' in db_uri or 'sqlite:///:memory:' in db_uri:
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
         print("INFO: Using in-memory SQLite for application initialization in sandbox mode.")
 
-    # Warn if SECRET_KEY is default or not set
+    # Warn if SECRET_KEY is default or missing
     if app.config.get('SECRET_KEY') in (None, '', 'your_secret_key'):
         print("WARNING: Using default or missing SECRET_KEY. Set a strong SECRET_KEY in your environment or config.py for production.")
 
-    # Initialize Flask extensions
+    # Initialize Flask extensions with app
     db.init_app(app)
     login_manager.init_app(app)
+    scheduler.init_app(app)  # If you plan to use scheduler
 
-    # Import all models so SQLAlchemy recognizes them,
-    # including UserRole enum/class for template use
+    # Import models here to register with SQLAlchemy
     from app.models import (
         User, Account, Transaction, TransactionType,
         TaxBracket, AutomatedTaxDeductionLog,
@@ -44,24 +44,24 @@ def create_app(config_class=Config):
         PermitApplication, PermitApplicationStatus,
         MarketplaceListing, MarketplaceItemStatus,
         Inspection,
-        UserRole   # <-- Add this import
+        UserRole  # For injecting into templates
     )
 
-    # Inject UserRole into all Jinja templates automatically
+    # Inject UserRole enum/class into all Jinja templates
     @app.context_processor
     def inject_user_role():
         return dict(UserRole=UserRole)
 
-    # Set up WhiteNoise for static files
+    # Setup WhiteNoise for static file serving
     static_dir = os.path.join(os.path.dirname(__file__), 'static')
     app.wsgi_app = WhiteNoise(app.wsgi_app, root=static_dir, prefix='static/')
 
-    # User loader for Flask-Login
+    # User loader callback for Flask-Login
     @login_manager.user_loader
     def load_user(user_id):
         return User.query.get(int(user_id))
 
-    # Register blueprints
+    # Register Blueprints with URL prefixes where needed
     from app.routes.auth import bp as auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
 
@@ -95,7 +95,7 @@ def create_app(config_class=Config):
     from app.routes.notifications import notifications_bp
     app.register_blueprint(notifications_bp, url_prefix='/notifications')
 
-    # Create tables if they don't exist
+    # Create tables on startup (handle exceptions gracefully)
     with app.app_context():
         print(f"Current DB URI for table creation: {app.config['SQLALCHEMY_DATABASE_URI']}")
         try:

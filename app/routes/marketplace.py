@@ -1,10 +1,14 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app as app_flask # For app.logger
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app as app_flask
 from flask_login import current_user, login_required
 from app import db
-from app.models import User, UserRole, MarketplaceListing, MarketplaceListingStatus, Account
+from app.models import (
+    User, UserRole, MarketplaceListing,
+    MarketplaceListingStatus, Account
+)
 from app.forms import CreateListingForm, EditListingForm
-from app.services.discord_webhook_service import post_listing_to_discord, update_listing_on_discord
-from flask_login import login_required
+from app.services.discord_webhook_service import (
+    post_listing_to_discord, update_listing_on_discord
+)
 
 bp = Blueprint('marketplace', __name__)
 
@@ -12,14 +16,21 @@ bp = Blueprint('marketplace', __name__)
 def index():
     """Public view of available marketplace listings."""
     page = request.args.get('page', 1, type=int)
-    listings_pagination = MarketplaceListing.query\
-        .filter(MarketplaceListing.status.in_([MarketplaceListingStatus.AVAILABLE, MarketplaceListingStatus.SOLD_MORE_AVAILABLE]))\
-        .order_by(MarketplaceListing.creation_date.desc())\
+
+    listings_pagination = MarketplaceListing.query \
+        .filter(MarketplaceListing.status.in_([
+            MarketplaceListingStatus.AVAILABLE,
+            MarketplaceListingStatus.SOLD_MORE_AVAILABLE
+        ])) \
+        .order_by(MarketplaceListing.creation_date.desc()) \
         .paginate(page=page, per_page=12)
 
-    return render_template('marketplace/index.html', title='Marketplace',
-                           listings_pagination=listings_pagination,
-                           MarketplaceListingStatus=MarketplaceListingStatus)
+    return render_template(
+        'marketplace/index.html',
+        title='Marketplace',
+        listings_pagination=listings_pagination,
+        MarketplaceListingStatus=MarketplaceListingStatus
+    )
 
 
 @bp.route('/new', methods=['GET', 'POST'])
