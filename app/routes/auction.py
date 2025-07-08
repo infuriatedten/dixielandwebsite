@@ -4,7 +4,8 @@ from app import db
 from app.models import User, UserRole, Account, Transaction, TransactionType, \
                      AuctionItem, AuctionBid, AuctionStatus
 from app.forms import SubmitAuctionItemForm, ApproveAuctionItemForm, PlaceBidForm
-from app.decorators import admin_required, login_required # Ensure login_required is consistently used
+from flask_login import login_required
+from app.decorators import admin_required
 from datetime import datetime, timedelta
 from decimal import Decimal
 

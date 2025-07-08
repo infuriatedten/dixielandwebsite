@@ -4,7 +4,7 @@ from app import db
 from app.models import User, UserRole, MarketplaceListing, MarketplaceListingStatus, Account
 from app.forms import CreateListingForm, EditListingForm
 from app.services.discord_webhook_service import post_listing_to_discord, update_listing_on_discord
-from app.decorators import login_required
+from flask_login import login_required
 
 bp = Blueprint('marketplace', __name__)
 
