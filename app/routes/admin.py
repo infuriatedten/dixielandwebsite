@@ -83,6 +83,19 @@ def manage_accounts():
 
     accounts = Account.query.join(User).order_by(User.username).all()
     return render_template('admin/manage_accounts.html', title='Manage Accounts', accounts=accounts, form=form)
+@bp.route('/toggle_role/<int:user_id>', methods=['POST'])
+@login_required
+@admin_required
+def toggle_user_role(user_id):
+    user = User.query.get_or_404(user_id)
+    if user.id == current_user.id:
+        flash("You cannot change your own role.", "warning")
+        return redirect(url_for('admin.manage_accounts'))
+
+    user.role = 'admin' if user.role != 'admin' else 'user'
+    db.session.commit()
+    flash(f"{user.username}'s role changed to {user.role}.", "success")
+    return redirect(url_for('admin.manage_accounts'))
 
 @bp.route('/account/<int:account_id>/edit_balance', methods=['GET', 'POST'])
 @login_required
@@ -272,6 +285,23 @@ def manage_tickets():
 @login_required
 @admin_required
 def resolve_ticket(ticket_id):
+    """
+    Handles the resolution of a ticket by an admin.
+
+    This view function allows an admin to resolve a ticket that is in a contestable or outstanding state.
+    It presents a form for the admin to select a new status and provide resolution notes. Upon submission,
+    the ticket's status and resolution notes are updated, and the admin's user ID is recorded as the resolver.
+    If the ticket is resolved as "Fine Upheld", the due date is extended by 72 hours and the user is notified.
+    If the ticket is dismissed, the user is notified accordingly. Additional notification handling for cancelled
+    tickets can be added as needed.
+
+    Args:
+        ticket_id (int): The ID of the ticket to resolve.
+
+    Returns:
+        Response: A redirect to the ticket management page upon successful resolution,
+                  or a rendered template with the resolution form on GET or validation failure.
+    """
     ticket = Ticket.query.get_or_404(ticket_id)
     if ticket.status not in [TicketStatus.CONTESTED, TicketStatus.OUTSTANDING]:
         flash(
@@ -336,6 +366,23 @@ def resolve_ticket(ticket_id):
 @login_required
 @admin_required
 def cancel_ticket_by_admin(ticket_id):
+
+
+
+    """
+    Cancels a ticket by an admin user if the ticket has not been paid.
+
+    Args:
+        ticket_id (int): The ID of the ticket to be cancelled.
+
+    Returns:
+        Response: A redirect response to the ticket management page with a flash message.
+
+    Behavior:
+        - If the ticket status is 'PAID', prevents cancellation and flashes an error message.
+        - Otherwise, updates the ticket status to 'CANCELLED', logs the admin's username and ID, and commits the change.
+        - Flashes a success message upon successful cancellation.
+    """
     ticket = Ticket.query.get_or_404(ticket_id)
     if ticket.status == TicketStatus.PAID:
         flash("Cannot cancel a ticket that has already been paid. Consider a refund process if needed.", "danger")
