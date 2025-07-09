@@ -218,11 +218,12 @@ def apply_for_permit():
 def my_permit_applications():
     page = request.args.get('page', 1, type=int)
     applications_pagination = PermitApplication.query.filter_by(user_id=current_user.id)\
-                                       .order_by(PermitApplication.application_date.desc())\
+                                       .order_by(PermitApplication.created_at.desc())\
                                        .paginate(page=page, per_page=10)
     return render_template('dot/my_permit_applications.html', title='My Permit Applications',
                            applications_pagination=applications_pagination,
                            PermitApplicationStatus=PermitApplicationStatus)
+
 
 
 @bp.route('/permits/application/<int:application_id>')

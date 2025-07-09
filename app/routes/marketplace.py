@@ -20,7 +20,6 @@ def index():
     listings_pagination = MarketplaceListing.query \
         .filter(MarketplaceListing.status.in_([
             MarketplaceListingStatus.AVAILABLE,
-            MarketplaceListingStatus.SOLD_MORE_AVAILABLE
         ])) \
         .order_by(MarketplaceListing.creation_date.desc()) \
         .paginate(page=page, per_page=12)

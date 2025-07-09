@@ -5,6 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
 from app.enums import ConversationStatus
 from app.enums import ConversationStatus, MarketplaceListingStatus
+
 class UserRole(enum.Enum):
     USER = "user"
     OFFICER = "officer"
@@ -241,6 +242,10 @@ class PermitApplicationStatus(Enum):
     CANCELLED_BY_USER = "Cancelled by User"
     CANCELLED_BY_ADMIN = "Cancelled by Admin"
 
+from datetime import datetime
+from app import db
+from app.enums import PermitApplicationStatus  # Ensure this enum is imported properly
+
 class PermitApplication(db.Model):
     __tablename__ = 'permit_applications'
 
@@ -248,22 +253,23 @@ class PermitApplication(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
 
     vehicle_type = db.Column(db.String(150), nullable=False)
-    route_details = db.Column(db.Text, nullable=False)  # E.g., From X, via Y, to Z
+    route_details = db.Column(db.Text, nullable=False)
+
     travel_start_date = db.Column(db.Date, nullable=False)
     travel_end_date = db.Column(db.Date, nullable=False)
 
-    user_notes = db.Column(db.Text, nullable=True)  # Additional info from user
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)  # renamed from application_date
+    user_notes = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)  # Correct name
 
     status = db.Column(db.Enum(PermitApplicationStatus), default=PermitApplicationStatus.PENDING_REVIEW, nullable=False, index=True)
 
-    permit_fee = db.Column(db.Numeric(10, 2), nullable=True)  # Set by admin upon approval
-    officer_notes = db.Column(db.Text, nullable=True)  # Feedback/notes from officer/admin reviewing
+    permit_fee = db.Column(db.Numeric(10, 2), nullable=True)
+    officer_notes = db.Column(db.Text, nullable=True)
+
     reviewed_by_officer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    banking_transaction_id = db.Column(db.Integer, db.ForeignKey('transactions.id'), unique=True, nullable=True)
 
-    banking_transaction_id = db.Column(db.Integer, db.ForeignKey('transactions.id'), unique=True, nullable=True)  # Link to fee payment
-
-    issued_permit_id_str = db.Column(db.String(100), nullable=True, unique=True)  # The actual permit number/ID string, generated on issuance
+    issued_permit_id_str = db.Column(db.String(100), nullable=True, unique=True)
     issued_on_date = db.Column(db.DateTime, nullable=True)
     issued_by_officer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
 
@@ -275,6 +281,7 @@ class PermitApplication(db.Model):
 
     def __repr__(self):
         return f'<PermitApplication {self.id} for User {self.user_id} - Status: {self.status.value}>'
+
 
 # Add relationships to User model (assuming User is defined elsewhere)
 User.permit_applications_collection = db.relationship(

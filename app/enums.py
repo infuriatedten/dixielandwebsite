@@ -9,7 +9,15 @@ class ConversationStatus(Enum):
     CLOSED = "closed"
 
 class MarketplaceListingStatus(Enum):
-    ACTIVE = "active"
-    INACTIVE = "inactive"
-    SOLD = "sold"
-    AVAILABLE = "available"  # Only if you really need it
+    AVAILABLE = "AVAILABLE"
+    SOLD_PENDIN = "SOLD_PENDING"  # fix spelling exactly as in DB
+    SOLD_OUT = "SOLD_OUT"
+    CANCELLED = "CANCELLED"
+
+
+
+
+class PermitApplicationStatus(Enum):
+    PENDING_REVIEW = "PENDING_REVIEW"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
