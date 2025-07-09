@@ -2,7 +2,9 @@ from enum import Enum
 
 class UserRole(Enum):
     USER = "user"
+    OFFICER = "officer"
     ADMIN = "admin"
+
 
 class ConversationStatus(Enum):
     OPEN = "open"
@@ -14,8 +16,11 @@ class MarketplaceListingStatus(Enum):
     SOLD_OUT = "SOLD_OUT"
     CANCELLED = "CANCELLED"
 
-
-
+class NotificationType(Enum):
+    GENERAL_INFO = "GENERAL_INFO"
+    WARNING = "WARNING"
+    ERROR = "ERROR"
+    SUCCESS = "SUCCESS"
 
 class PermitApplicationStatus(Enum):
     PENDING_REVIEW = "PENDING_REVIEW"
