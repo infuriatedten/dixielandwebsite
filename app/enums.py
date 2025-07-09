@@ -10,7 +10,7 @@ class ConversationStatus(Enum):
 
 class MarketplaceListingStatus(Enum):
     AVAILABLE = "AVAILABLE"
-    SOLD_PENDIN = "SOLD_PENDING"  # fix spelling exactly as in DB
+    SOLD_PENDING = "SOLD_PENDING"
     SOLD_OUT = "SOLD_OUT"
     CANCELLED = "CANCELLED"
 
