@@ -305,35 +305,40 @@ class MarketplaceItemStatus(enum.Enum):
     SOLD_OUT = "Sold Out"  # All stock sold
     CANCELLED = "Cancelled"  # Seller removed listing
 
+from datetime import datetime
+from sqlalchemy import Enum as SqlEnum
+
 class MarketplaceListing(db.Model):
     __tablename__ = 'marketplace_listings'
+    
     id = db.Column(db.Integer, primary_key=True)
     seller_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
-
+    
     item_name = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=True)
     price = db.Column(db.Numeric(10, 2), nullable=False)
     quantity = db.Column(db.Numeric(10, 2), nullable=False)  # e.g., 0.5 for half liter
     unit = db.Column(db.String(50), nullable=False)  # e.g., "liters", "item(s)"
-
-    status = db.Column(db.Enum(MarketplaceItemStatus), default=MarketplaceItemStatus.AVAILABLE, nullable=False, index=True)
-
+    
+    # Use SQLAlchemy Enum with explicit type name for PostgreSQL
+    status = db.Column(
+        SqlEnum(MarketplaceListingStatus, name="marketplaceitemstatus"),
+        default=MarketplaceListingStatus.AVAILABLE,
+        nullable=False,
+        index=True
+    )
+    
     creation_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
     last_update_date = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
+    
     discord_message_id = db.Column(db.String(100), nullable=True)  # Optional: Discord message ID
-
+    
     # Relationships
     seller = db.relationship('User', backref=db.backref('marketplace_listings', lazy='dynamic'))
-
+    
     def __repr__(self):
         return f'<MarketplaceListing {self.id}: {self.quantity} {self.unit} of {self.item_name} by User {self.seller_user_id} for {self.price}>'
 
-# Optionally in User model:
-# User.marketplace_listings_collection = db.relationship(
-#     'MarketplaceListing', foreign_keys=[MarketplaceListing.seller_user_id],
-#     backref='listing_seller_user', lazy='dynamic'
-# )
 
 
 # --- DOT Inspection System Models ---
