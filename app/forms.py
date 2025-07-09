@@ -1,6 +1,12 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField
-from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError
+from wtforms import (
+    StringField, PasswordField, BooleanField, SubmitField,
+    SelectField, DecimalField, TextAreaField
+)
+from wtforms.validators import (
+    DataRequired, Email, EqualTo, Length, ValidationError, NumberRange
+)
+
 from app.models import User, UserRole
 
 class LoginForm(FlaskForm):
@@ -55,19 +61,20 @@ class EditBalanceForm(FlaskForm):
     submit = SubmitField('Update Balance')
 
 from flask_wtf import FlaskForm
-from wtforms import DecimalField, StringField, SelectField, TextAreaField, SubmitField, IntegerField
+from wtforms import IntegerField, DecimalField, SelectField, StringField, SubmitField
 from wtforms.validators import DataRequired, NumberRange
+from app.models import TransactionType
 
 class TransactionForm(FlaskForm):
     sender_account_id = IntegerField('Sender Account ID', validators=[DataRequired()])
     receiver_account_id = IntegerField('Receiver Account ID', validators=[DataRequired()])
-    amount = DecimalField('Amount', places=2, validators=[DataRequired(), NumberRange(min=0.01)])
+    amount = DecimalField('Amount', validators=[DataRequired(), NumberRange(min=0.01)])
     transaction_type = SelectField(
         'Transaction Type',
-        choices=[('TRANSFER', 'Transfer'), ('AUTOMATED_TAX_DEDUCTION', 'Automated Tax Deduction')],
+        choices=[(t.name, t.value) for t in TransactionType],
         validators=[DataRequired()]
     )
-    description = TextAreaField('Description')
+    description = StringField('Description')
     submit = SubmitField('Submit')
 
 

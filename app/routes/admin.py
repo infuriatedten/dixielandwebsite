@@ -1,12 +1,25 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
-from app import db
 from sqlalchemy import func
-from app.models import User, PermitApplication, Ticket
+from datetime import datetime
+
+from app import db
+from app.models import (
+    User, Account, Transaction, TransactionType, TaxBracket,
+    AutomatedTaxDeductionLog, Ticket, TicketStatus,
+    PermitApplication, PermitApplicationStatus,
+    Inspection, NotificationType
+)
+from app.forms import (
+    TransactionForm, AccountForm, EditBalanceForm,
+    TaxBracketForm, ResolveTicketForm
+)
 from app.decorators import admin_required
+from app.services import notification_service  # Assuming this exists
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
+# Admin Dashboard Home
 @admin_bp.route('/')
 @login_required
 @admin_required
@@ -20,7 +33,7 @@ def dashboard():
     total_users = User.query.count()
     pending_permits = PermitApplication.query.filter_by(status='PENDING_REVIEW').count()
     open_tickets = Ticket.query.filter_by(status='open').count()
-    
+
     revenue = db.session.query(func.coalesce(func.sum(PermitApplication.permit_fee), 0)).scalar()
 
     stats = {
@@ -31,7 +44,7 @@ def dashboard():
     }
     return render_template('admin/dashboard.html', stats=stats)
 
-
+# Account Management
 @admin_bp.route('/accounts', methods=['GET', 'POST'])
 @login_required
 @admin_required
@@ -52,13 +65,10 @@ def accounts():
         else:
             flash('User not found.', 'danger')
         return redirect(url_for('admin.accounts'))
+
     accounts = Account.query.all()
     return render_template('admin/accounts.html', accounts=accounts, form=form)
-@admin_bp.route('/users')
-def users():
-    # Example: Fetch all users from database
-    users = User.query.all()
-    return render_template('admin/users.html', users=users)
+
 @admin_bp.route('/accounts/<int:account_id>/edit', methods=['GET', 'POST'])
 @login_required
 @admin_required
@@ -72,6 +82,15 @@ def edit_account(account_id):
         return redirect(url_for('admin.accounts'))
     return render_template('admin/edit_account.html', account=account, form=form)
 
+# User Management
+@admin_bp.route('/users')
+@login_required
+@admin_required
+def users():
+    users = User.query.all()
+    return render_template('admin/users.html', users=users)
+
+# Transactions
 @admin_bp.route('/transactions', methods=['GET', 'POST'])
 @login_required
 @admin_required
@@ -103,6 +122,7 @@ def transactions():
     transactions = Transaction.query.order_by(Transaction.timestamp.desc()).all()
     return render_template('admin/transactions.html', transactions=transactions, form=form)
 
+# Tax Brackets
 @admin_bp.route('/tax', methods=['GET', 'POST'])
 @login_required
 @admin_required
@@ -118,7 +138,7 @@ def tax():
         db.session.commit()
         flash('Tax bracket added.', 'success')
         return redirect(url_for('admin.tax'))
-    
+
     tax_brackets = TaxBracket.query.order_by(TaxBracket.min_balance).all()
     return render_template('admin/tax.html', form=form, tax_brackets=tax_brackets)
 
@@ -139,6 +159,7 @@ def tax_deductions():
     logs = AutomatedTaxDeductionLog.query.order_by(AutomatedTaxDeductionLog.timestamp.desc()).limit(100).all()
     return render_template('admin/tax_deductions.html', logs=logs)
 
+# Tickets
 @admin_bp.route('/tickets')
 @login_required
 @admin_required
@@ -162,6 +183,7 @@ def resolve_ticket(ticket_id):
         return redirect(url_for('admin.tickets'))
     return render_template('admin/resolve_ticket.html', ticket=ticket, form=form)
 
+# Inspections
 @admin_bp.route('/inspections')
 @login_required
 @admin_required
@@ -169,6 +191,7 @@ def inspections():
     inspections = Inspection.query.order_by(Inspection.timestamp.desc()).limit(100).all()
     return render_template('admin/inspections.html', inspections=inspections)
 
+# Notifications
 @admin_bp.route('/notifications/send', methods=['POST'])
 @login_required
 @admin_required
@@ -186,6 +209,7 @@ def send_notification():
         flash('Missing message or user ID.', 'danger')
     return redirect(url_for('admin.index'))
 
+# Permits
 @admin_bp.route('/permits')
 @login_required
 @admin_required
