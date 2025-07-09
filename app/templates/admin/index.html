@@ -11,7 +11,8 @@
                 <div class="card-body">
                     <h5 class="card-title">User Management</h5>
                     <p class="card-text">View and manage user accounts and roles.</p>
-                    <a href="{{ url_for('admin.manage_users') }}" class="btn btn-primary">Manage Users</a>
+                    <!-- No user management route in your blueprint code, so keeping placeholder -->
+                    <a href="#" class="btn btn-primary disabled" title="Not implemented yet">Manage Users</a>
                 </div>
             </div>
         </div>
@@ -20,7 +21,7 @@
                 <div class="card-body">
                     <h5 class="card-title">Bank Account Management</h5>
                     <p class="card-text">Create accounts, adjust balances, and view all accounts.</p>
-                    <a href="{{ url_for('admin.manage_accounts') }}" class="btn btn-primary">Manage Bank Accounts</a>
+                    <a href="{{ url_for('admin.accounts') }}" class="btn btn-primary">Manage Bank Accounts</a>
                 </div>
             </div>
         </div>
@@ -29,7 +30,7 @@
                 <div class="card-body">
                     <h5 class="card-title">Transaction Management</h5>
                     <p class="card-text">Record manual transactions and view transaction history.</p>
-                    <a href="{{ url_for('admin.manage_transactions') }}" class="btn btn-primary">Manage Transactions</a>
+                    <a href="{{ url_for('admin.transactions') }}" class="btn btn-primary">Manage Transactions</a>
                 </div>
             </div>
         </div>
@@ -41,7 +42,7 @@
                 <div class="card-body">
                     <h5 class="card-title">Tax System Management</h5>
                     <p class="card-text">Define tax brackets for automated weekly deductions and view logs.</p>
-                    <a href="{{ url_for('admin.manage_tax_brackets') }}" class="btn btn-info">Manage Tax Brackets</a>
+                    <a href="{{ url_for('admin.tax') }}" class="btn btn-info">Manage Tax Brackets</a>
                 </div>
             </div>
         </div>
@@ -51,7 +52,7 @@
                 <div class="card-body">
                     <h5 class="card-title">DOT Ticket Management</h5>
                     <p class="card-text">View all issued tickets, resolve contested tickets, and manage statuses.</p>
-                    <a href="{{ url_for('admin.manage_tickets') }}" class="btn btn-warning">Manage All Tickets</a>
+                    <a href="{{ url_for('admin.tickets') }}" class="btn btn-warning">Manage All Tickets</a>
                 </div>
             </div>
         </div>
@@ -61,7 +62,7 @@
                 <div class="card-body">
                     <h5 class="card-title">DOT Permit Management</h5>
                     <p class="card-text">Oversee all permit applications and their statuses.</p>
-                    <a href="{{ url_for('admin.manage_permit_applications') }}" class="btn btn-info">Manage All Permits</a>
+                    <a href="{{ url_for('admin.permits') }}" class="btn btn-info">Manage All Permits</a>
                 </div>
             </div>
         </div>
@@ -93,7 +94,7 @@
                 <div class="card-body">
                     <h5 class="card-title">DOT Inspection Oversight</h5>
                     <p class="card-text">View all recorded vehicle inspections.</p>
-                    <a href="{{ url_for('admin.manage_inspections') }}" class="btn btn-secondary">View All Inspections</a>
+                    <a href="{{ url_for('admin.inspections') }}" class="btn btn-secondary">View All Inspections</a>
                 </div>
             </div>
         </div>

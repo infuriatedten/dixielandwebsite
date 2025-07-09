@@ -1,23 +1,18 @@
 from flask import Blueprint, render_template
-from flask_login import current_user
+from app.decorators import admin_required, officer_required  # import decorators
 
-bp = Blueprint('main', __name__)
+main_bp = Blueprint('main', __name__)
 
-@bp.route('/')
-@bp.route('/index')
-def index():
-    return render_template('main/index.html', title='Home')
-from flask import Blueprint, render_template
-from flask_login import login_required, current_user
-
-# main.py (line 13)
-@bp.route('/')
-@bp.route('/index')
-def index():
+@main_bp.route('/', endpoint='index')
+def main_index():
     return render_template('main/index.html', title='Home')
 
+@main_bp.route('/admin-dashboard')
+@admin_required
+def admin_dashboard():
+    return render_template('admin/dashboard.html', title='Admin Dashboard')
 
-@bp.route('/')
-@login_required
-def index():
-    return render_template('admin/index.html', title='Admin Dashboard')
+@main_bp.route('/officer-area')
+@officer_required
+def officer_area():
+    return render_template('officer/area.html', title='Officer Area')

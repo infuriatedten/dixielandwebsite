@@ -38,9 +38,6 @@ def index():
 def create_listing():
     form = CreateListingForm()
     if form.validate_on_submit():
-        # Ensure user has a linked Discord account if required for seller name, or default.
-        # For now, we use website username if Discord username is not available.
-
         new_listing = MarketplaceListing(
             seller_user_id=current_user.id,
             item_name=form.item_name.data,
@@ -53,15 +50,9 @@ def create_listing():
         db.session.add(new_listing)
         db.session.commit()
 
-        # Post to Discord (Phase 1 - Webhook)
-        # The post_listing_to_discord function needs access to the listing.seller relationship
-        # which should be available after commit or by querying new_listing again.
-        # For safety, query it again if issues, but usually relationships load.
+        db.session.refresh(new_listing)
 
-        # Ensure the relationship is loaded for the service function
-        db.session.refresh(new_listing) # Or query it: new_listing = MarketplaceListing.query.get(new_listing.id)
-
-        discord_post_success = post_listing_to_discord(new_listing) # Pass the committed object
+        discord_post_success = post_listing_to_discord(new_listing)
 
         if discord_post_success:
             flash('Listing created successfully and an attempt was made to post it to Discord!', 'success')
@@ -89,13 +80,12 @@ def my_listings():
             query = query.filter_by(status=active_filter_enum)
         except KeyError:
             flash(f"Invalid status filter: {status_filter_str}", "warning")
-            # No filter applied or redirect, up to preference
 
     listings_pagination = query.order_by(MarketplaceListing.creation_date.desc()).paginate(page=page, per_page=10)
 
     return render_template('marketplace/my_listings.html', title='My Marketplace Listings',
                            listings_pagination=listings_pagination,
-                           MarketplaceListingStatus=MarketplaceListingStatus, # Pass enum for template
+                           MarketplaceListingStatus=MarketplaceListingStatus,
                            current_status_filter_str=status_filter_str)
 
 
@@ -104,7 +94,7 @@ def view_listing_detail(listing_id):
     listing = MarketplaceListing.query.get_or_404(listing_id)
     if listing.status == MarketplaceListingStatus.CANCELLED and \
        (not current_user.is_authenticated or \
-        (current_user.id != listing.seller_user_id and (not hasattr(current_user, 'role') or current_user.role != UserRole.ADMIN))): # Check for role existence
+        (current_user.id != listing.seller_user_id and (not hasattr(current_user, 'role') or current_user.role != UserRole.ADMIN))):
         flash("This listing has been cancelled by the seller.", "info")
         return redirect(url_for('marketplace.index'))
 
@@ -158,11 +148,9 @@ def update_listing_status(listing_id):
         flash('Invalid status update.', 'danger')
         return redirect(url_for('marketplace.view_listing_detail', listing_id=listing.id))
 
-    # Prevent invalid transitions
     if listing.status == MarketplaceListingStatus.CANCELLED:
          flash('Cannot change status of a "Cancelled" listing.', 'warning')
          return redirect(url_for('marketplace.view_listing_detail', listing_id=listing.id))
-    # Add more transition logic if needed, e.g. from SOLD_OUT
 
     listing.status = new_status
     db.session.commit()
@@ -171,10 +159,19 @@ def update_listing_status(listing_id):
     flash(f'Listing status updated to "{new_status.value}". Discord update attempted.', 'info')
     return redirect(url_for('marketplace.view_listing_detail', listing_id=listing.id))
 
-# Placeholder for Discord OAuth routes (Phase 2)
-# @bp.route('/discord/link')
-# @login_required
-# def link_discord(): ...
 
-# @bp.route('/discord/callback')
-# def discord_callback(): ...
+# ======= NEW ADMIN ROUTE TO FIX THE ERROR =======
+@bp.route('/admin/all_listings')
+@login_required
+def admin_all_listings():
+    if current_user.role != UserRole.ADMIN:
+        flash('Unauthorized access.', 'danger')
+        return redirect(url_for('marketplace.index'))
+
+    page = request.args.get('page', 1, type=int)
+    listings_pagination = MarketplaceListing.query.order_by(MarketplaceListing.creation_date.desc()).paginate(page=page, per_page=20)
+
+    return render_template('marketplace/admin_all_listings.html',
+                           title='All Marketplace Listings (Admin)',
+                           listings_pagination=listings_pagination,
+                           MarketplaceListingStatus=MarketplaceListingStatus)

@@ -48,7 +48,6 @@ class User(UserMixin, db.Model):
 from datetime import datetime
 
 # Placeholder for other models to be added in future steps
-
 class Account(db.Model):
     __tablename__ = 'accounts'
     id = db.Column(db.Integer, primary_key=True)
@@ -228,39 +227,43 @@ User.tickets_issued_collection = db.relationship('Ticket', foreign_keys=[Ticket.
 User.tickets_resolved_collection = db.relationship('Ticket', foreign_keys=[Ticket.resolved_by_admin_id], backref='resolving_admin_user', lazy='dynamic')
 
 
-# --- DOT Permit System Models ---
-class PermitApplicationStatus(enum.Enum):
-    PENDING_REVIEW = "Pending Review"                 # User submitted, awaiting officer/admin action
-    REQUIRES_MODIFICATION = "Requires Modification"   # Officer/Admin sent back to user for changes
-    APPROVED_PENDING_PAYMENT = "Approved - Pending Payment" # Officer/Admin approved, fee set, awaiting user payment
-    PAID_AWAITING_ISSUANCE = "Paid - Awaiting Issuance" # User paid, awaiting final issuance by officer/admin
-    ISSUED = "Issued"                                 # Permit fee paid and permit officially issued
-    REJECTED = "Rejected"                             # Application denied
-    CANCELLED_BY_USER = "Cancelled by User"           # User withdrew the application
-    CANCELLED_BY_ADMIN = "Cancelled by Admin"         # Admin cancelled it (e.g. due to non-payment after approval)
+from datetime import datetime
+from enum import Enum
+from app import db
+
+class PermitApplicationStatus(Enum):
+    PENDING_REVIEW = "Pending Review"
+    REQUIRES_MODIFICATION = "Requires Modification"
+    APPROVED_PENDING_PAYMENT = "Approved - Pending Payment"
+    PAID_AWAITING_ISSUANCE = "Paid - Awaiting Issuance"
+    ISSUED = "Issued"
+    REJECTED = "Rejected"
+    CANCELLED_BY_USER = "Cancelled by User"
+    CANCELLED_BY_ADMIN = "Cancelled by Admin"
 
 class PermitApplication(db.Model):
     __tablename__ = 'permit_applications'
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
 
     vehicle_type = db.Column(db.String(150), nullable=False)
-    route_details = db.Column(db.Text, nullable=False) # E.g., From X, via Y, to Z
+    route_details = db.Column(db.Text, nullable=False)  # E.g., From X, via Y, to Z
     travel_start_date = db.Column(db.Date, nullable=False)
     travel_end_date = db.Column(db.Date, nullable=False)
 
-    user_notes = db.Column(db.Text, nullable=True) # Additional info from user
-    application_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    user_notes = db.Column(db.Text, nullable=True)  # Additional info from user
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)  # renamed from application_date
 
     status = db.Column(db.Enum(PermitApplicationStatus), default=PermitApplicationStatus.PENDING_REVIEW, nullable=False, index=True)
 
-    permit_fee = db.Column(db.Numeric(10, 2), nullable=True) # Set by admin upon approval
-    officer_notes = db.Column(db.Text, nullable=True) # Feedback/notes from officer/admin reviewing
+    permit_fee = db.Column(db.Numeric(10, 2), nullable=True)  # Set by admin upon approval
+    officer_notes = db.Column(db.Text, nullable=True)  # Feedback/notes from officer/admin reviewing
     reviewed_by_officer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
 
-    banking_transaction_id = db.Column(db.Integer, db.ForeignKey('transactions.id'), unique=True, nullable=True) # Link to fee payment
+    banking_transaction_id = db.Column(db.Integer, db.ForeignKey('transactions.id'), unique=True, nullable=True)  # Link to fee payment
 
-    issued_permit_id_str = db.Column(db.String(100), nullable=True, unique=True) # The actual permit number/ID string, generated on issuance
+    issued_permit_id_str = db.Column(db.String(100), nullable=True, unique=True)  # The actual permit number/ID string, generated on issuance
     issued_on_date = db.Column(db.DateTime, nullable=True)
     issued_by_officer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
 
@@ -273,10 +276,19 @@ class PermitApplication(db.Model):
     def __repr__(self):
         return f'<PermitApplication {self.id} for User {self.user_id} - Status: {self.status.value}>'
 
-# Update User model for permit relationships
-User.permit_applications_collection = db.relationship('PermitApplication', foreign_keys=[PermitApplication.user_id], backref='applicant_user', lazy='dynamic')
-User.permits_reviewed_collection = db.relationship('PermitApplication', foreign_keys=[PermitApplication.reviewed_by_officer_id], backref='reviewing_officer_user', lazy='dynamic')
-User.permits_issued_collection = db.relationship('PermitApplication', foreign_keys=[PermitApplication.issued_by_officer_id], backref='issuing_permit_officer_user', lazy='dynamic')
+# Add relationships to User model (assuming User is defined elsewhere)
+User.permit_applications_collection = db.relationship(
+    'PermitApplication', foreign_keys=[PermitApplication.user_id],
+    backref='applicant_user', lazy='dynamic'
+)
+User.permits_reviewed_collection = db.relationship(
+    'PermitApplication', foreign_keys=[PermitApplication.reviewed_by_officer_id],
+    backref='reviewing_officer_user', lazy='dynamic'
+)
+User.permits_issued_collection = db.relationship(
+    'PermitApplication', foreign_keys=[PermitApplication.issued_by_officer_id],
+    backref='issuing_permit_officer_user', lazy='dynamic'
+)
 
 
 # --- Marketplace Models ---

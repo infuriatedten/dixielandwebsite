@@ -1,0 +1,45 @@
+<!-- app/templates/admin/transactions.html -->
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Transactions</h1>
+
+  <form method="POST">
+    {{ form.hidden_tag() }}
+    <div>
+      {{ form.sender_account_id.label }}<br>
+      {{ form.sender_account_id(size=32) }}
+    </div>
+    <div>
+      {{ form.receiver_account_id.label }}<br>
+      {{ form.receiver_account_id(size=32) }}
+    </div>
+    <div>
+      {{ form.amount.label }}<br>
+      {{ form.amount() }}
+    </div>
+    <div>
+      {{ form.transaction_type.label }}<br>
+      {{ form.transaction_type() }}
+    </div>
+    <div>
+      {{ form.description.label }}<br>
+      {{ form.description(rows=3) }}
+    </div>
+    <div>
+      {{ form.submit() }}
+    </div>
+  </form>
+
+  <hr>
+
+  <h2>Recent Transactions</h2>
+  <ul>
+    {% for txn in transactions %}
+      <li>
+        {{ txn.timestamp }}: {{ txn.transaction_type.name }} - 
+        From {{ txn.sender_account_id }} to {{ txn.receiver_account_id }}: ${{ txn.amount }}
+      </li>
+    {% endfor %}
+  </ul>
+{% endblock %}

@@ -12,7 +12,6 @@
                     <p class="card-text"><strong>Email:</strong> {{ current_user.email }}</p>
                     <p class="card-text"><strong>Role:</strong> {{ current_user.role.name.capitalize() }}</p>
                     <p class="card-text"><strong>Region for License Plates:</strong> {{ current_user.region if current_user.region else 'Not Set (Defaults to Other)' }}</p>
-                    {# Add more profile information here as needed #}
                 </div>
             </div>
 
@@ -23,13 +22,28 @@
                 <div class="card-body">
                     <form method="POST" action="{{ url_for('auth.profile') }}" novalidate>
                         {{ form.hidden_tag() }}
-                        {{ wtf.render_field(form.email) }}
+
+                        <div class="mb-3">
+                            {{ form.email.label(class="form-label") }}
+                            {{ form.email(class="form-control") }}
+                            {% for error in form.email.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
                         {% if form.region %}
-                            {{ wtf.render_field(form.region) }}
+                        <div class="mb-3">
+                            {{ form.region.label(class="form-label") }}
+                            {{ form.region(class="form-control") }}
+                            {% for error in form.region.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
                         {% endif %}
-                        {# Add other form fields from EditProfileForm here #}
-                        {# {{ wtf.render_field(form.discord_username) }} #}
-                        {{ wtf.render_field(form.submit, button_map={'submit': 'btn-primary'}) }}
+
+                        {# Add other form fields similarly #}
+
+                        {{ form.submit(class="btn btn-primary") }}
                     </form>
                 </div>
             </div>
@@ -39,7 +53,6 @@
                 <div class="card-body">
                     <h5 class="card-title">Admin Panel</h5>
                     <p class="card-text">Access administrative functions.</p>
-                    {# Links to admin-specific views will go here #}
                     <a href="#" class="btn btn-danger">Go to Admin Dashboard</a> {# Placeholder #}
                 </div>
             </div>
@@ -48,12 +61,10 @@
                 <div class="card-body">
                     <h5 class="card-title">Officer Tools</h5>
                     <p class="card-text">Access DOT officer functionalities.</p>
-                    {# Links to officer-specific views will go here #}
                     <a href="#" class="btn btn-info">Go to Officer Dashboard</a> {# Placeholder #}
                 </div>
             </div>
             {% endif %}
-
         </div>
     </div>
 {% endblock %}

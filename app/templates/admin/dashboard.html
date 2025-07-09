@@ -1,0 +1,51 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Dashboard</h1>
+
+<div class="row g-4">
+  <div class="col-md-3">
+    <div class="card text-bg-primary">
+      <div class="card-body">
+        <h5 class="card-title">Total Users</h5>
+        <p class="card-text display-5">{{ stats.total_users }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card text-bg-warning">
+      <div class="card-body">
+        <h5 class="card-title">Pending Permits</h5>
+        <p class="card-text display-5">{{ stats.pending_permits }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card text-bg-danger">
+      <div class="card-body">
+        <h5 class="card-title">Open Tickets</h5>
+        <p class="card-text display-5">{{ stats.open_tickets }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card text-bg-success">
+      <div class="card-body">
+        <h5 class="card-title">Total Revenue</h5>
+        <p class="card-text display-5">${{ "%.2f"|format(stats.revenue) }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr />
+
+<h3>Recent Activity</h3>
+<p>Show recent permits, tickets, or user activity here — customize as needed.</p>
+
+{% endblock %}

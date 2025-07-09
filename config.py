@@ -1,10 +1,13 @@
 import os
 
+import os
+
 class Config:
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'your_secret_key' # Replace with a real secret key in production
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'mysql+pymysql://user:password@host/dbname' # Replace with your MySQL connection string
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'fallback-secret-key-for-dev-only'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('postgresql://dixielandwebsite_user:gKeSGCTQcARpwDXW4k7CGpOlkDegi2KW@dpg-d1mouvje5dus73dq5p00-a.virginia-postgres.render.com/dixielandwebsite') or 'postgresql://dixielandwebsite_user:gKeSGCTQcARpwDXW4k7CGpOlkDegi2KW@dpg-d1mouvje5dus73dq5p00-a.virginia-postgres.render.com/dixielandwebsite'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    WTF_CSRF_ENABLED = True # For CSRF protection with Flask-WTF if we add forms
+    WTF_CSRF_ENABLED = True
+    # For CSRF protection with Flask-WTF if we add forms
     # For Render.com, DATABASE_URL will be set by Render's MySQL service
     # Example for local development: 'mysql+pymysql://root:your_local_password@localhost/game_website_db'
     # Ensure the database 'game_website_db' (or your chosen name) is created in MySQL first.
@@ -33,9 +36,9 @@ class Config:
         print("WARNING: SECRET_KEY is not configured or using default placeholder. Please set a strong secret key.")
 
     # Discord Integration Settings
-    DISCORD_WEBHOOK_URL = os.environ.get('DISCORD_WEBHOOK_URL') # For marketplace listings
+    DISCORD_WEBHOOK_URL = os.environ.get('https://discord.com/api/webhooks/1388710143289593967/nrq_UJVcp-Oc6qm63UjntdNm2EThlqzjmb6UthKDiGBp47PSJlYfRodJK7uTBFBCol5i') # For marketplace listings
     DISCORD_BOT_TOKEN = os.environ.get('DISCORD_BOT_TOKEN') # For bot commands (Phase 2)
-    DISCORD_MARKETPLACE_CHANNEL_ID = os.environ.get('DISCORD_MARKETPLACE_CHANNEL_ID') # For bot reference (Phase 2)
+    DISCORD_MARKETPLACE_CHANNEL_ID = os.environ.get('https://discord.com/api/webhooks/1388710156275023903/22kqpaQpXC1YqccksvUxg_xJmN-uJaXUz5sXe2VTcwBVH3qhn-u2bbylYcEs5bQW6X30') # For bot reference (Phase 2)
 
     # Example Webhook URL (replace with your actual webhook)
     # DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/your_webhook_id/your_webhook_token"

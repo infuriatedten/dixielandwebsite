@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Tax Brackets{% endblock %}
+
+{% block content %}
+  <h1>Manage Tax Brackets</h1>
+
+  <form method="POST" action="{{ url_for('admin.tax') }}">
+    {{ form.hidden_tag() }}
+
+    <p>
+      {{ form.name.label }}<br>
+      {{ form.name(size=40) }}<br>
+      {% for error in form.name.errors %}
+        <span style="color: red;">{{ error }}</span>
+      {% endfor %}
+    </p>
+
+    <p>
+      {{ form.description.label }}<br>
+      {{ form.description(rows=3, cols=40) }}<br>
+      {% for error in form.description.errors %}
+        <span style="color: red;">{{ error }}</span>
+      {% endfor %}
+    </p>
+
+    <p>
+      {{ form.min_balance.label }}<br>
+      {{ form.min_balance() }}<br>
+      {% for error in form.min_balance.errors %}
+        <span style="color: red;">{{ error }}</span>
+      {% endfor %}
+    </p>
+
+    <p>
+      {{ form.max_balance.label }}<br>
+      {{ form.max_balance() }}<br>
+      {% for error in form.max_balance.errors %}
+        <span style="color: red;">{{ error }}</span>
+      {% endfor %}
+    </p>
+
+    <p>
+      {{ form.tax_rate.label }}<br>
+      {{ form.tax_rate() }}<br>
+      {% for error in form.tax_rate.errors %}
+        <span style="color: red;">{{ error }}</span>
+      {% endfor %}
+    </p>
+
+    <p>
+      {{ form.is_active() }} {{ form.is_active.label }}
+    </p>
+
+    <p>{{ form.submit() }}</p>
+  </form>
+
+  <h2>Existing Tax Brackets</h2>
+  <ul>
+    {% for bracket in tax_brackets %}
+      <li>
+        {{ bracket.name }}: {{ bracket.min_balance }} to {{ bracket.max_balance or '∞' }} at {{ bracket.tax_rate }}%
+        {% if not bracket.is_active %}(Inactive){% endif %}
+      </li>
+    {% else %}
+      <li>No tax brackets defined yet.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

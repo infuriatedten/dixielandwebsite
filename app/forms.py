@@ -54,29 +54,35 @@ class EditBalanceForm(FlaskForm):
     description = TextAreaField('Reason/Description', validators=[DataRequired(), Length(min=5, max=255)])
     submit = SubmitField('Update Balance')
 
-class TransactionForm(FlaskForm):
-    account_id = SelectField('Account', coerce=int, validators=[DataRequired()])
-    # For admin manual transactions, type might be limited, or pre-filled
-    type = SelectField('Transaction Type', choices=[(t.value, t.name.replace("_", " ").title()) for t in TransactionType if "ADMIN" in t.name or "INITIAL" in t.name], validators=[DataRequired()])
-    amount = DecimalField('Amount', places=2, validators=[DataRequired()])
-    description = TextAreaField('Description', validators=[DataRequired(), Length(min=5, max=255)])
-    submit = SubmitField('Record Transaction')
+from flask_wtf import FlaskForm
+from wtforms import DecimalField, StringField, SelectField, TextAreaField, SubmitField, IntegerField
+from wtforms.validators import DataRequired, NumberRange
 
-    def __init__(self, *args, **kwargs):
-        super(TransactionForm, self).__init__(*args, **kwargs)
-        # Populate account choices
-        self.account_id.choices = [(acc.id, f"{acc.owner_user.username} (ID: {acc.id}, Bal: {acc.balance} {acc.currency})")
-                                   for acc in Account.query.join(User).order_by(User.username).all()]
+class TransactionForm(FlaskForm):
+    sender_account_id = IntegerField('Sender Account ID', validators=[DataRequired()])
+    receiver_account_id = IntegerField('Receiver Account ID', validators=[DataRequired()])
+    amount = DecimalField('Amount', places=2, validators=[DataRequired(), NumberRange(min=0.01)])
+    transaction_type = SelectField(
+        'Transaction Type',
+        choices=[('TRANSFER', 'Transfer'), ('AUTOMATED_TAX_DEDUCTION', 'Automated Tax Deduction')],
+        validators=[DataRequired()]
+    )
+    description = TextAreaField('Description')
+    submit = SubmitField('Submit')
+
 
 # --- Tax Bracket Forms (Admin) ---
+from wtforms.validators import DataRequired, Length, Optional
+
 class TaxBracketForm(FlaskForm):
     name = StringField('Bracket Name', validators=[DataRequired(), Length(min=3, max=100)])
     description = TextAreaField('Description', validators=[Length(max=255)])
     min_balance = DecimalField('Minimum Balance (Inclusive)', places=2, validators=[DataRequired()])
-    max_balance = DecimalField('Maximum Balance (Exclusive, leave blank for top tier)', places=2, validators=[]) # Optional
+    max_balance = DecimalField('Maximum Balance (Exclusive, leave blank for top tier)', places=2, validators=[Optional()])
     tax_rate = DecimalField('Tax Rate (Percentage, e.g., 1.5 for 1.5%)', places=2, validators=[DataRequired()])
     is_active = BooleanField('Active', default=True)
     submit = SubmitField('Save Tax Bracket')
+
 
     def validate_max_balance(self, field):
         if field.data is not None and self.min_balance.data is not None:
@@ -463,31 +469,23 @@ class ProductForm(FlaskForm):
 
 
 
-class EditListingForm(FlaskForm):
-    item_name = StringField('Item Name', validators=[DataRequired(), Length(max=200)])
-    description = TextAreaField('Description (Optional)', validators=[Optional(), Length(max=1000)])
-    price = DecimalField('Price', places=2, validators=[DataRequired()])
-    quantity = DecimalField('Quantity', places=2, validators=[DataRequired()])
-    unit = StringField('Unit', validators=[DataRequired(), Length(max=50)])
-    status = SelectField(
-        'Status',
-        choices=[(s.value, s.name.replace("_", " ").title()) for s in MarketplaceItemStatus],
-        validators=[DataRequired()]
-    )
-    submit = SubmitField('Update Listing')
-
-    def validate_price(self, field):
-        if field.data is not None and field.data <= 0:
-            raise ValidationError('Price must be a positive value.')
-
-    def validate_quantity(self, field):
-        if field.data is not None and field.data <= 0:
-            raise ValidationError('Quantity must be a positive value.')
-
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField
-from wtforms.validators import DataRequired
+from wtforms import StringField, TextAreaField, SubmitField
+from wtforms.validators import DataRequired, Email, Length, ValidationError
+from app.models import User  # import User model to query in validator
 
 class EditProfileForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
-    submit = SubmitField('Save Changes')
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    about_me = TextAreaField('About me', validators=[Length(min=0, max=140)])
+    submit = SubmitField('Save')
+
+    def __init__(self, original_email, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.original_email = original_email
+
+    def validate_email(self, email):
+        if email.data != self.original_email:
+            user = User.query.filter_by(email=email.data).first()
+            if user:
+                raise ValidationError('This email is already in use.')

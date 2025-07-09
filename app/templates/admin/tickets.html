@@ -1,0 +1,39 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Admin - Tickets{% endblock %}
+
+{% block content %}
+<h1>Tickets</h1>
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>User</th>
+      <th>Issue Date</th>
+      <th>Status</th>
+      <th>Amount</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for ticket in tickets %}
+    <tr>
+      <td>{{ ticket.id }}</td>
+      <td>{{ ticket.user_id }}</td>
+      <td>{{ ticket.issue_date.strftime('%Y-%m-%d') if ticket.issue_date else 'N/A' }}</td>
+      <td>{{ ticket.status.value if ticket.status else 'N/A' }}</td>
+      <td>{{ ticket.amount }}</td>
+      <td>
+        <a href="{{ url_for('admin.resolve_ticket', ticket_id=ticket.id) }}" class="btn btn-primary btn-sm">Resolve</a>
+      </td>
+    </tr>
+    {% else %}
+    <tr>
+      <td colspan="6">No tickets found.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}
