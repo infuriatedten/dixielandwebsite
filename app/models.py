@@ -259,7 +259,7 @@ class PermitApplication(db.Model):
     travel_end_date = db.Column(db.Date, nullable=False)
 
     user_notes = db.Column(db.Text, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)  # Correct name
+    application_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)  # renamed here
 
     status = db.Column(db.Enum(PermitApplicationStatus), default=PermitApplicationStatus.PENDING_REVIEW, nullable=False, index=True)
 

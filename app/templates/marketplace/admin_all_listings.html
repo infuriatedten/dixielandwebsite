@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}All Marketplace Listings - Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">All Marketplace Listings (Admin View)</h2>
+
+    {% if listings %}
+        <table class="table table-bordered table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Seller</th>
+                    <th>Item Name</th>
+                    <th>Description</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Unit</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Updated</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for listing in listings %}
+                    <tr>
+                        <td>{{ listing.id }}</td>
+                        <td>{{ listing.seller.username if listing.seller else 'N/A' }}</td>
+                        <td>{{ listing.item_name }}</td>
+                        <td>{{ listing.description }}</td>
+                        <td>${{ listing.price }}</td>
+                        <td>{{ listing.quantity }}</td>
+                        <td>{{ listing.unit }}</td>
+                        <td>{{ listing.status }}</td>
+                        <td>{{ listing.creation_date.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ listing.last_update_date.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            <a href="{{ url_for('marketplace.edit_listing', listing_id=listing.id) }}" class="btn btn-sm btn-primary">Edit</a>
+                            <a href="{{ url_for('marketplace.delete_listing', listing_id=listing.id) }}" class="btn btn-sm btn-danger">Delete</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-info">No marketplace listings found.</div>
+    {% endif %}
+</div>
+{% endblock %}
