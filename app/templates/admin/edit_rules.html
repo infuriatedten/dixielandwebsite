@@ -1,10 +1,8 @@
 {% extends "admin/base.html" %}
 {% import "bootstrap_wtf.html" as wtf %}
 
-{% block admin_content %}
-<p style="background-color: yellow; color: black; padding: 10px; font-weight: bold;">
-    DEBUG: INSIDE ADMIN CONTENT BLOCK. Form is: {{ form }} --- Title is: {{ title }} --- Rules Entry is: {{ rules_entry }}
-</p>
+{% block content %} {# Changed from admin_content to content #}
+{# Main debug banner removed #}
 <div class="container mt-4">
     <h2>{{ title }}</h2>
 
@@ -15,13 +13,25 @@
                     Edit Rules Content (Markdown Supported)
                 </div>
                 <div class="card-body">
-                    <p>Debug: Form object is: {{ form }}</p>
-                    <p>Debug: Form CSRF token is: {{ form.csrf_token }}</p>
-                    <p>Debug: Form content_markdown field is: {{ form.content_markdown }}</p>
-                    <p>Debug: Form submit field is: {{ form.submit }}</p>
-                    <hr>
-                    <p>Attempting to render content_markdown label: {{ form.content_markdown.label }}</p>
-                    <p>Attempting to render content_markdown field: {{ form.content_markdown() }}</p>
+                    <form method="POST" action="" novalidate>
+                        {{ form.hidden_tag() }} {# For CSRF token #}
+                        
+                        <div class="form-group">
+                            {{ form.content_markdown.label(class="form-control-label") }}<br>
+                            {{ form.content_markdown(class="form-control", rows=25, style="font-family: monospace;") }}
+                            {% if form.content_markdown.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.content_markdown.errors %}
+                                        <span>{{ error }}</span><br>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    
+                        <div class="form-group mt-3">
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
                 </div>
                 <div class="card-footer text-muted small">
                     {% if rules_entry and rules_entry.last_edited_on %}

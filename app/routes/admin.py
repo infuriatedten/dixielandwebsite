@@ -31,8 +31,8 @@ def index():
 @admin_required
 def dashboard():
     total_users = User.query.count()
-    pending_permits = PermitApplication.query.filter_by(status='PENDING_REVIEW').count()
-    open_tickets = Ticket.query.filter_by(status='open').count()
+    pending_permits = PermitApplication.query.filter_by(status=PermitApplicationStatus.PENDING_REVIEW).count()
+    open_tickets = Ticket.query.filter_by(status=TicketStatus.OUTSTANDING).count()
 
     revenue = db.session.query(func.coalesce(func.sum(PermitApplication.permit_fee), 0)).scalar()
 
@@ -248,18 +248,23 @@ import mistune # For rendering Markdown to HTML, if needed on admin side (usuall
 @login_required
 @admin_required
 def edit_rules():
-    # --- TEMPORARY DIAGNOSTIC ---
-    # Attempt to render a blank form first to isolate issues.
-    form = EditRulesForm() 
-    rules_entry = None # For now, don't pass rules_entry to avoid issues with it
+    rules_entry = RulesContent.query.first()
+    if not rules_entry:
+        # Create a default entry if none exists
+        rules_entry = RulesContent(content_markdown="## Default Rules\n\n1. Be excellent to each other.\n2. Follow all server guidelines.")
+        db.session.add(rules_entry)
+        db.session.commit() 
+        rules_entry = RulesContent.query.first() # Re-fetch to ensure we have the ID and defaults
 
-    # Simplified processing for diagnostic - will be restored
-    if request.method == 'POST' and form.validate_on_submit():
-        flash('Form submitted (diagnostic mode - no save).', 'info')
-        # In a real scenario with a blank form, you'd create a new RulesContent entry here
-        # For now, just redirect to illustrate form submission.
-        return redirect(url_for('admin.edit_rules'))
+    form = EditRulesForm(obj=rules_entry) # Pre-populate form with existing data
+
+    if form.validate_on_submit():
+        rules_entry.content_markdown = form.content_markdown.data
+        rules_entry.last_edited_by_id = current_user.id
+        rules_entry.last_edited_on = datetime.utcnow() 
+        db.session.commit()
+        flash('Rules updated successfully!', 'success')
+        return redirect(url_for('admin.edit_rules')) 
     
-    # If GET request or form validation fails for POST
-    return render_template('admin/edit_rules.html', title='EDIT RULES TEST 12345', form=form, rules_entry=rules_entry)
+    return render_template('admin/edit_rules.html', title='Edit Site Rules', form=form, rules_entry=rules_entry)
 

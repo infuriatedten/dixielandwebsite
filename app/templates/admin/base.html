@@ -13,40 +13,28 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      padding-top: 56px; /* Adjust based on actual navbar height if different */
     }
-    .sidebar {
-      height: 100vh;
-      width: 220px;
-      position: fixed;
-      top: 0;
-      left: 0;
-      padding-top: 60px;
-      background-color: #343a40;
-      color: white;
-      overflow-y: auto;
-    }
-    .sidebar a {
-      color: white;
-      display: block;
-      padding: 12px 20px;
-      text-decoration: none;
-    }
-    .sidebar a:hover,
-    .sidebar a.active {
-      background-color: #495057;
-    }
+    /* Sidebar styles removed */
     .content {
-      margin-left: 220px;
+      /* margin-left: 220px; removed */
       padding: 20px;
       flex-grow: 1;
+      /* padding-top: 20px; /* Added to ensure content is below fixed-top navbar if body padding isn't enough */
+      /* The body padding-top should handle this, but can be added here if needed */
     }
     .navbar-brand {
       font-weight: bold;
+    }
+    .navbar-nav .nav-link.active { /* Style for active link in top nav */
+        font-weight: bold;
+        /* color: #0d6efd; Bootstrap's default active color might be fine */
     }
   </style>
   {% block head %}{% endblock %}
 </head>
 <body>
+  {# Lime green debug banner removed #}
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
     <div class="container-fluid">
       <a class="navbar-brand" href="{{ url_for('admin.dashboard') }}">Admin Panel</a>
@@ -63,7 +51,19 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav me-auto">
-          <!-- You can add some top nav links here if desired -->
+          <li class="nav-item">
+            <a href="{{ url_for('admin.dashboard') }}" class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">Dashboard</a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('admin.permits') }}" class="nav-link {% if request.endpoint == 'admin.permits' %}active{% endif %}">Permits</a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('admin.tickets') }}" class="nav-link {% if request.endpoint == 'admin.tickets' %}active{% endif %}">Tickets</a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('admin.users') }}" class="nav-link {% if request.endpoint == 'admin.users' %}active{% endif %}">Users</a>
+          </li>
+          <!-- Add more admin menu links here as nav-item > nav-link -->
         </ul>
         <span class="navbar-text me-3">Logged in as {{ current_user.username }}</span>
         <a class="btn btn-outline-light" href="{{ url_for('auth.logout') }}">Logout</a>
@@ -71,13 +71,7 @@
     </div>
   </nav>
 
-  <div class="sidebar">
-    <a href="{{ url_for('admin.dashboard') }}" class="{% if request.endpoint == 'admin.dashboard' %}active{% endif %}">Dashboard</a>
-    <a href="{{ url_for('admin.permits') }}" class="{% if request.endpoint == 'admin.permits' %}active{% endif %}">Permits</a>
-    <a href="{{ url_for('admin.tickets') }}" class="{% if request.endpoint == 'admin.tickets' %}active{% endif %}">Tickets</a>
-    <a href="{{ url_for('admin.users') }}" class="{% if request.endpoint == 'admin.users' %}active{% endif %}">Users</a>
-    <!-- Add more admin menu links here -->
-  </div>
+  {# Sidebar div removed #}
 
   <main class="content">
     <div class="container-fluid">
