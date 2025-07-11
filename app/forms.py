@@ -4,7 +4,7 @@ from wtforms import (
     SelectField, DecimalField, TextAreaField
 )
 from wtforms.validators import (
-    DataRequired, Email, EqualTo, Length, ValidationError, NumberRange
+    DataRequired, Email, EqualTo, Length, ValidationError, NumberRange, Optional # Added Optional here
 )
 
 from app.models import User, UserRole
@@ -42,7 +42,9 @@ from app.models import TransactionType
 
 class AccountForm(FlaskForm):
     user_id = SelectField('User', coerce=int, validators=[DataRequired()])
+    name = StringField('Account Name (Optional)', validators=[Optional(), Length(max=100)]) # Added
     balance = DecimalField('Initial Balance', places=2, validators=[DataRequired()])
+    is_company = BooleanField('Is Company Account?', default=False) # Added
     currency = StringField('Currency', default='GDC', validators=[DataRequired(), Length(min=3, max=10)])
     submit = SubmitField('Create Account')
 
@@ -499,7 +501,7 @@ class EditProfileForm(FlaskForm):
 
 # --- Rules Editing Form (Admin) ---
 class EditRulesForm(FlaskForm):
-    content_markdown = TextAreaField('Rules Content (Markdown Format)',
-                                     validators=[DataRequired(), Length(min=20)],
+    content_markdown = TextAreaField('Rules Content (Markdown Format)', 
+                                     validators=[DataRequired(), Length(min=20)], 
                                      render_kw={'rows': 25, 'class': 'form-control'})
     submit = SubmitField('Save Rules')

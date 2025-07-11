@@ -12,46 +12,30 @@ class UserRole(enum.Enum):
     ADMIN = "admin"
 
 class User(UserMixin, db.Model):
-    __tablename__ = 'users'
+    __tablename__ = 'users' # Explicitly naming the table
 
     id = db.Column(db.Integer, primary_key=True)
-
     username = db.Column(db.String(64), index=True, unique=True, nullable=False)
-    email = db.Column(db.String(120), index=True, unique=True, nullable=False)
-    password_hash = db.Column(db.String(256), nullable=False)
+    email = db.Column(db.String(120), index=True, unique=True, nullable=False) # Added email
+    password_hash = db.Column(db.String(256), nullable=False) # Increased length for future hash algorithms
+    role = db.Column(db.Enum(UserRole), default=UserRole.USER, nullable=False)
 
-    role = db.Column(
-        db.Enum(
-            UserRole,
-            name='userrole',
-            native_enum=False,
-            values_callable=lambda enum_cls: [e.value for e in enum_cls]
-        ),
-        default=UserRole.USER.value,
-        nullable=False
-    )
+    # Relationships (examples, will be built out in respective modules)
+    # accounts = db.relationship('Account', backref='owner', lazy='dynamic')
+    # tickets_issued = db.relationship('Ticket', foreign_keys='Ticket.issued_by_officer_id', backref='issuer', lazy='dynamic')
+    # tickets_received = db.relationship('Ticket', foreign_keys='Ticket.issued_to_user_id', backref='recipient', lazy='dynamic')
+    # permit_applications = db.relationship('PermitApplication', backref='applicant', lazy='dynamic')
+    # marketplace_listings = db.relationship('MarketplaceListing', backref='seller', lazy='dynamic')
+    # inspections_conducted = db.relationship('Inspection', foreign_keys='Inspection.officer_user_id', backref='inspecting_officer', lazy='dynamic')
+    # inspections_on_user = db.relationship('Inspection', foreign_keys='Inspection.inspected_user_id', backref='inspected_party', lazy='dynamic')
 
-    # PermitApplication relationships
-    permit_applications = db.relationship(
-        'PermitApplication',
-        foreign_keys='PermitApplication.user_id',
-        back_populates='applicant',
-        lazy='dynamic'
-    )
+    # Discord Integration fields
+    discord_user_id = db.Column(db.String(100), nullable=True, unique=True, index=True) # Discord's Snowflake ID for bot interactions
+    discord_username = db.Column(db.String(100), nullable=True) # Discord username#discriminator, for display or lookup
 
-    permits_reviewed = db.relationship(
-        'PermitApplication',
-        foreign_keys='PermitApplication.reviewed_by_officer_id',
-        back_populates='reviewer_officer',
-        lazy='dynamic'
-    )
+    # User Profile Region
+    region = db.Column(db.Enum('US', 'EU', 'OTHER_DEFAULT', name='region_enum'), nullable=True, default='OTHER_DEFAULT')
 
-    permits_issued = db.relationship(
-        'PermitApplication',
-        foreign_keys='PermitApplication.issued_by_officer_id',
-        back_populates='issuer_officer',
-        lazy='dynamic'
-    )
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -60,34 +44,27 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
-        return f'<User {self.username} ({self.role})>'
-
-
+        return f'<User {self.username} ({self.role.value})>'
 
 from datetime import datetime
 
 # Placeholder for other models to be added in future steps
 class Account(db.Model):
     __tablename__ = 'accounts'
-    
     id = db.Column(db.Integer, primary_key=True)
-    
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    balance = db.Column(db.Numeric(10, 2), default=0.00, nullable=False)  # Using Numeric for currency
-    currency = db.Column(db.String(10), default="GDC", nullable=False)  # Game Dollar Credits
+    balance = db.Column(db.Numeric(10, 2), default=0.00, nullable=False) # Using Numeric for currency
+    currency = db.Column(db.String(10), default="GDC", nullable=False) # Game Dollar Credits
+    name = db.Column(db.String(100), nullable=True) # Optional account name
+    is_company = db.Column(db.Boolean, default=False, nullable=False) # Is this a company account?
     last_updated_on = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # Relationships
+
+    # Potentially: admin_id who last updated, if needed for audit.
+    # last_updated_by_admin_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+
     user = db.relationship('User', backref=db.backref('accounts', lazy='dynamic'))
-    
-    # Use back_populates to explicitly link both sides OR backref for implicit bidirectional
-    transactions = db.relationship(
-        'Transaction',
-        back_populates='account',
-        lazy='dynamic',
-        cascade="all, delete-orphan"
-    )
-    
+    transactions = db.relationship('Transaction', backref='account', lazy='dynamic', cascade="all, delete-orphan")
+
     def __repr__(self):
         return f'<Account {self.id} for User {self.user_id} - {self.balance} {self.currency}>'
 
@@ -109,26 +86,25 @@ class TransactionType(enum.Enum):
 
 class Transaction(db.Model):
     __tablename__ = 'transactions'
-
     id = db.Column(db.Integer, primary_key=True)
-    amount = db.Column(db.Numeric(10, 2), nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-
-    # Foreign key linking to Account
     account_id = db.Column(db.Integer, db.ForeignKey('accounts.id'), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    type = db.Column(db.Enum(TransactionType), nullable=False)
+    amount = db.Column(db.Numeric(10, 2), nullable=False) # Positive for deposits/credits, negative for withdrawals/debits
+    description = db.Column(db.String(255))
 
-    # Relationship back to Account
-    account = db.relationship('Account', back_populates='transactions')
-
-    # One-to-one relationship back to PermitApplication payment_transaction
-    permit_fee_payment_entry = db.relationship(
-        'PermitApplication',
-        back_populates='payment_transaction',
-        uselist=False
-    )
+    # Potentially: admin_id who processed this, if it's an admin-initiated one
+    # processed_by_admin_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
     def __repr__(self):
-        return f'<Transaction {self.id} - Amount: {self.amount}>'
+        return f'<Transaction {self.id} ({self.type.value}) of {self.amount} for Account {self.account_id}>'
+
+
+# Update User model to have a backref to accounts
+User.accounts_collection = db.relationship('Account', backref='owner_user', lazy='dynamic', foreign_keys=[Account.user_id])
+# If using admin_id fields in Account/Transaction:
+# User.admin_account_updates = db.relationship('Account', backref='admin_updater', lazy='dynamic', foreign_keys=[Account.last_updated_by_admin_id])
+# User.admin_transactions_processed = db.relationship('Transaction', backref='admin_processor', lazy='dynamic', foreign_keys=[Transaction.processed_by_admin_id])
 
 
 # --- Tax System Models ---
@@ -272,10 +248,6 @@ from datetime import datetime
 from app import db
 from app.enums import PermitApplicationStatus  # Ensure this enum is imported properly
 
-from datetime import datetime
-from app import db
-from app.enums import PermitApplicationStatus, MarketplaceListingStatus, UserRole
-
 class PermitApplication(db.Model):
     __tablename__ = 'permit_applications'
 
@@ -289,14 +261,9 @@ class PermitApplication(db.Model):
     travel_end_date = db.Column(db.Date, nullable=False)
 
     user_notes = db.Column(db.Text, nullable=True)
-    application_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    application_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)  # renamed here
 
-    status = db.Column(
-        db.Enum(PermitApplicationStatus),
-        default=PermitApplicationStatus.PENDING_REVIEW,
-        nullable=False,
-        index=True
-    )
+    status = db.Column(db.Enum(PermitApplicationStatus), default=PermitApplicationStatus.PENDING_REVIEW, nullable=False, index=True)
 
     permit_fee = db.Column(db.Numeric(10, 2), nullable=True)
     officer_notes = db.Column(db.Text, nullable=True)
@@ -308,40 +275,14 @@ class PermitApplication(db.Model):
     issued_on_date = db.Column(db.DateTime, nullable=True)
     issued_by_officer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
 
-    # Relationships with back_populates
-    applicant = db.relationship(
-        'User',
-        foreign_keys=[user_id],
-        back_populates='permit_applications',
-        lazy='joined'
-    )
-    reviewer_officer = db.relationship(
-        'User',
-        foreign_keys=[reviewed_by_officer_id],
-        back_populates='permits_reviewed',
-        lazy='joined'
-    )
-    issuer_officer = db.relationship(
-        'User',
-        foreign_keys=[issued_by_officer_id],
-        back_populates='permits_issued',
-        lazy='joined'
-    )
-    payment_transaction = db.relationship(
-        'Transaction',
-        back_populates='permit_fee_payment_entry',
-        uselist=False
-    )
-
-    @property
-    def created_at(self):
-        return self.application_date
+    # Relationships
+    applicant = db.relationship('User', foreign_keys=[user_id], backref=db.backref('permit_applications', lazy='dynamic'))
+    reviewer_officer = db.relationship('User', foreign_keys=[reviewed_by_officer_id], backref=db.backref('permits_reviewed', lazy='dynamic'))
+    issuer_officer = db.relationship('User', foreign_keys=[issued_by_officer_id], backref=db.backref('permits_issued', lazy='dynamic'))
+    payment_transaction = db.relationship('Transaction', backref=db.backref('permit_fee_payment_entry', uselist=False))
 
     def __repr__(self):
         return f'<PermitApplication {self.id} for User {self.user_id} - Status: {self.status.value}>'
-
-
-
 
 
 # Add relationships to User model (assuming User is defined elsewhere)
@@ -547,20 +488,14 @@ class Notification(db.Model):
     is_read = db.Column(db.Boolean, default=False, nullable=False, index=True)
     notification_type = db.Column(db.Enum(NotificationType), default=NotificationType.GENERAL_INFO, nullable=False)
 
-    # Fixed relationship with overlaps
+    # Relationship to User, with backref 'notifications'
     user = db.relationship(
         'User',
-        backref=db.backref(
-            'notifications',
-            lazy='dynamic',
-            order_by="desc(Notification.created_at)"
-        ),
-        overlaps="notifications_rel,notified_user_obj"
+        backref=db.backref('notifications', lazy='dynamic', order_by="desc(Notification.created_at)")
     )
 
     def __repr__(self):
         return f'<Notification {self.id} for User {self.user_id} - Read: {self.is_read}>'
-
 import enum
 
 class AuctionStatus(enum.Enum):

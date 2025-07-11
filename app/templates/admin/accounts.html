@@ -1,35 +1,131 @@
-{% extends "base.html" %}
+{% extends "admin/base.html" %}
+{% import "bootstrap_wtf.html" as wtf %} {# Assuming you have bootstrap_wtf.html for quick_form or will render manually #}
+
+{% block title %}Admin - Bank Accounts{% endblock %}
 
 {% block content %}
-<h1>Admin: Accounts</h1>
+<div class="container-fluid">
+    <h1>Bank Account Management</h1>
 
-<table class="table table-striped">
-  <thead>
-    <tr>
-      <th>User ID</th>
-      <th>Username</th>
-      <th>Email</th>
-      <th>Role</th>
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for user in users %}
-    <tr>
-      <td>{{ user.id }}</td>
-      <td>{{ user.username }}</td>
-      <td>{{ user.email }}</td>
-      <td>{{ user.role.name }}</td>
-      <td>
-        <!-- Example edit link -->
-        <a href="{{ url_for('admin.edit_account', user_id=user.id) }}" class="btn btn-sm btn-primary">Edit</a>
-      </td>
-    </tr>
-    {% else %}
-    <tr>
-      <td colspan="5">No users found.</td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <h2>Create New Account</h2>
+            <div class="card">
+                <div class="card-body">
+                    {# Option 1: Using wtf.quick_form if available and working #}
+                    {# {{ wtf.quick_form(form, button_map={'submit': 'primary'}) }} #}
+
+                    {# Option 2: Manual/explicit form rendering for more control #}
+                    <form method="POST" action="{{ url_for('admin.accounts') }}" novalidate>
+                        {{ form.hidden_tag() }} {# CSRF token #}
+                        
+                        <div class="form-group mb-3">
+                            {{ form.user_id.label(class="form-label") }}
+                            {{ form.user_id(class="form-select") }}
+                            {% if form.user_id.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.user_id.errors %}<span>{{ error }}</span><br>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group mb-3">
+                            {{ form.balance.label(class="form-label") }}
+                            {{ form.balance(class="form-control") }}
+                            {% if form.balance.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.balance.errors %}<span>{{ error }}</span><br>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        {# Assuming AccountForm has is_company and name fields based on route logic #}
+                        {# If these fields are not in your AccountForm, remove them or add them to the form #}
+                        {% if form.is_company %}
+                        <div class="form-group mb-3">
+                            {{ form.is_company.label(class="form-check-label") }}
+                            {{ form.is_company(class="form-check-input") }}
+                            {% if form.is_company.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.is_company.errors %}<span>{{ error }}</span><br>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        {% if form.name %}
+                        <div class="form-group mb-3">
+                            {{ form.name.label(class="form-label") }}
+                            {{ form.name(class="form-control") }}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.name.errors %}<span>{{ error }}</span><br>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
+                        {# The currency field was in an older version of AccountForm, ensure it exists or remove #}
+                        {% if form.currency %}
+                        <div class="form-group mb-3">
+                            {{ form.currency.label(class="form-label") }}
+                            {{ form.currency(class="form-control") }}
+                            {% if form.currency.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.currency.errors %}<span>{{ error }}</span><br>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <div class="form-group">
+                            {{ form.submit(class="btn btn-success") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <h2>Existing Accounts</h2>
+            {% if accounts %}
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Account ID</th>
+                        <th>Owner (User ID)</th>
+                        <th>Owner Username</th>
+                        <th>Account Name</th>
+                        <th>Balance</th>
+                        <th>Currency</th>
+                        <th>Is Company</th>
+                        <th>Last Updated</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for acc in accounts %}
+                    <tr>
+                        <td>{{ acc.id }}</td>
+                        <td>{{ acc.user_id }}</td>
+                        <td>{{ acc.owner_user.username if acc.owner_user else 'N/A' }}</td>
+                        <td>{{ acc.name if acc.name else 'N/A' }}</td>
+                        <td>{{ "%.2f"|format(acc.balance) }}</td>
+                        <td>{{ acc.currency }}</td>
+                        <td>{{ 'Yes' if acc.is_company else 'No' }}</td>
+                        <td>{{ acc.last_updated_on.strftime('%Y-%m-%d %H:%M') if acc.last_updated_on else 'N/A' }}</td>
+                        <td>
+                            <a href="{{ url_for('admin.edit_account', account_id=acc.id) }}" class="btn btn-sm btn-primary">Edit Balance</a>
+                            {# Add other actions like delete if needed #}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="alert alert-info">No bank accounts found.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
 {% endblock %}
