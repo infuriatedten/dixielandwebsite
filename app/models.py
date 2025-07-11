@@ -620,3 +620,17 @@ User.user_vehicles_rel = db.relationship('UserVehicle', foreign_keys=[UserVehicl
 # (e.g., accounts, tickets_received, tickets_issued, etc. already exist)
 
 # etc.
+
+
+# --- Rules Content Model ---
+class RulesContent(db.Model):
+    __tablename__ = 'rules_content'
+    id = db.Column(db.Integer, primary_key=True) # Should only ever be one row, e.g., id=1
+    content_markdown = db.Column(db.Text, nullable=False, default="Rules have not been set yet.")
+    last_edited_on = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_edited_by_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+
+    last_edited_by = db.relationship('User', foreign_keys=[last_edited_by_id])
+
+    def __repr__(self):
+        return f'<RulesContent last updated on {self.last_edited_on} by User ID {self.last_edited_by_id}>'

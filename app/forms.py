@@ -496,3 +496,10 @@ class EditProfileForm(FlaskForm):
             user = User.query.filter_by(email=email.data).first()
             if user:
                 raise ValidationError('This email is already in use.')
+
+# --- Rules Editing Form (Admin) ---
+class EditRulesForm(FlaskForm):
+    content_markdown = TextAreaField('Rules Content (Markdown Format)',
+                                     validators=[DataRequired(), Length(min=20)],
+                                     render_kw={'rows': 25, 'class': 'form-control'})
+    submit = SubmitField('Save Rules')
