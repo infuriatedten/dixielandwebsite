@@ -188,8 +188,10 @@ def resolve_ticket(ticket_id):
 @login_required
 @admin_required
 def inspections():
-    inspections = Inspection.query.order_by(Inspection.timestamp.desc()).limit(100).all()
-    return render_template('admin/inspections.html', inspections=inspections)
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int) # Or a fixed number like 10
+    inspections_pagination = Inspection.query.order_by(Inspection.timestamp.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    return render_template('admin/manage_inspections.html', inspections_pagination=inspections_pagination)
 
 # Notifications
 @admin_bp.route('/notifications/send', methods=['POST'])
@@ -214,7 +216,7 @@ def send_notification():
 @login_required
 @admin_required
 def permits():
-    permits = PermitApplication.query.order_by(PermitApplication.created_at.desc()).all()
+    permits = PermitApplication.query.order_by(PermitApplication.application_date.desc()).all()
     return render_template('admin/permits.html', permits=permits)
 
 @admin_bp.route('/permits/<int:permit_id>/approve')
@@ -246,31 +248,18 @@ import mistune # For rendering Markdown to HTML, if needed on admin side (usuall
 @login_required
 @admin_required
 def edit_rules():
-    # There should ideally be only one rules entry, e.g., with id=1
-    # Or use RulesContent.query.first() if you ensure only one row exists.
-    rules_entry = RulesContent.query.first()
-    if not rules_entry:
-        # Create a default entry if none exists
-        rules_entry = RulesContent(content_markdown="## Default Rules\n\n1. Be excellent to each other.\n2. Follow all server guidelines.")
-        db.session.add(rules_entry)
-        # Commit here or before form processing, depending on desired workflow
-        # For now, let's assume we always want an entry to exist for the form
-        db.session.commit()
-        # Re-fetch after commit if ID or other defaults are set by DB
-        rules_entry = RulesContent.query.first()
+    # --- TEMPORARY DIAGNOSTIC ---
+    # Attempt to render a blank form first to isolate issues.
+    form = EditRulesForm() 
+    rules_entry = None # For now, don't pass rules_entry to avoid issues with it
 
+    # Simplified processing for diagnostic - will be restored
+    if request.method == 'POST' and form.validate_on_submit():
+        flash('Form submitted (diagnostic mode - no save).', 'info')
+        # In a real scenario with a blank form, you'd create a new RulesContent entry here
+        # For now, just redirect to illustrate form submission.
+        return redirect(url_for('admin.edit_rules'))
+    
+    # If GET request or form validation fails for POST
+    return render_template('admin/edit_rules.html', title='EDIT RULES TEST 12345', form=form, rules_entry=rules_entry)
 
-    form = EditRulesForm(obj=rules_entry) # Pre-populate form with existing data
-
-    if form.validate_on_submit():
-        rules_entry.content_markdown = form.content_markdown.data
-        rules_entry.last_edited_by_id = current_user.id
-        rules_entry.last_edited_on = datetime.utcnow() # Explicitly set, though onupdate might also work
-        db.session.commit()
-        flash('Rules updated successfully!', 'success')
-        return redirect(url_for('admin.edit_rules')) # Redirect back to edit page, or to view_rules
-
-    # For previewing markdown, if desired on the admin page itself
-    # preview_html = mistune.html(form.content_markdown.data) if form.content_markdown.data else ""
-
-    return render_template('admin/edit_rules.html', title='Edit Site Rules', form=form, rules_entry=rules_entry) #, preview_html=preview_html)

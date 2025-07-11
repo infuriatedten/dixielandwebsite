@@ -163,7 +163,13 @@ def update_listing_status(listing_id):
 @bp.route('/admin/all_listings')
 @login_required
 def admin_all_listings():
-    if current_user.role != UserRole.ADMIN:
+    # Corrected role check using .value and hasattr for robustness
+    is_admin = (
+        hasattr(current_user, 'role') and
+        hasattr(current_user.role, 'value') and
+        current_user.role.value == UserRole.ADMIN.value
+    )
+    if not is_admin:
         flash('Unauthorized access.', 'danger')
         return redirect(url_for('marketplace.index'))
 

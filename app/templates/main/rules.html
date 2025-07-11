@@ -4,10 +4,10 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1>{{ title }}</h1>
-        {# Check if user is authenticated, is an admin, and UserRole is available #}
-        {% if current_user and current_user.is_authenticated and UserRole and current_user.role == UserRole.ADMIN %}
+        {# "Edit Rules" button temporarily removed as rules are hardcoded and edit page is problematic #}
+        {# {% if current_user and current_user.is_authenticated and UserRole and current_user.role is defined and current_user.role.value is defined and current_user.role.value == UserRole.ADMIN.value %}
             <a href="{{ url_for('admin.edit_rules') }}" class="btn btn-primary">Edit Rules</a>
-        {% endif %}
+        {% endif %} #}
     </div>
 
     <div class="card">
