@@ -236,3 +236,41 @@ def reject_permit(permit_id):
     db.session.commit()
     flash('Permit rejected.', 'danger')
     return redirect(url_for('admin.permits'))
+
+# --- Rules Management ---
+from app.forms import EditRulesForm # Add this import
+from app.models import RulesContent # Add this import
+import mistune # For rendering Markdown to HTML, if needed on admin side (usually for preview)
+
+@admin_bp.route('/rules/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_rules():
+    # There should ideally be only one rules entry, e.g., with id=1
+    # Or use RulesContent.query.first() if you ensure only one row exists.
+    rules_entry = RulesContent.query.first()
+    if not rules_entry:
+        # Create a default entry if none exists
+        rules_entry = RulesContent(content_markdown="## Default Rules\n\n1. Be excellent to each other.\n2. Follow all server guidelines.")
+        db.session.add(rules_entry)
+        # Commit here or before form processing, depending on desired workflow
+        # For now, let's assume we always want an entry to exist for the form
+        db.session.commit()
+        # Re-fetch after commit if ID or other defaults are set by DB
+        rules_entry = RulesContent.query.first()
+
+
+    form = EditRulesForm(obj=rules_entry) # Pre-populate form with existing data
+
+    if form.validate_on_submit():
+        rules_entry.content_markdown = form.content_markdown.data
+        rules_entry.last_edited_by_id = current_user.id
+        rules_entry.last_edited_on = datetime.utcnow() # Explicitly set, though onupdate might also work
+        db.session.commit()
+        flash('Rules updated successfully!', 'success')
+        return redirect(url_for('admin.edit_rules')) # Redirect back to edit page, or to view_rules
+
+    # For previewing markdown, if desired on the admin page itself
+    # preview_html = mistune.html(form.content_markdown.data) if form.content_markdown.data else ""
+
+    return render_template('admin/edit_rules.html', title='Edit Site Rules', form=form, rules_entry=rules_entry) #, preview_html=preview_html)
