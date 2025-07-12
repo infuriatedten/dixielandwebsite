@@ -74,6 +74,7 @@ def create_app(config_class=Config):
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(main_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(vehicle_bp, url_prefix='/vehicle')
     app.register_blueprint(banking_bp, url_prefix='/banking')
     app.register_blueprint(taxes_bp, url_prefix='/taxes')
     app.register_blueprint(dot_bp, url_prefix='/dot')
@@ -82,7 +83,6 @@ def create_app(config_class=Config):
     app.register_blueprint(auction_bp, url_prefix='/auctions')
     app.register_blueprint(messaging_bp, url_prefix='/messages')
     app.register_blueprint(notifications_bp, url_prefix='/notifications')
-    app.register_blueprint(vehicle_bp, url_prefix='/vehicle')
 
     # Auto-create tables (dev only — use migrations in prod)
     with app.app_context():

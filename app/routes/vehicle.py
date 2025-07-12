@@ -4,12 +4,13 @@ from app import db
 from app.models import UserVehicle, VehicleRegion # User model is available via current_user
 from app.forms import RegisterVehicleForm
 from app.services import vehicle_service # Import your service
+from flask_login import login_required
 
 bp = Blueprint('vehicle', __name__)
 
 @bp.route('/register', methods=['GET', 'POST'])
 @login_required
-def register_vehicle():
+def register_vehicle_route(): # Renamed to avoid conflict
     form = RegisterVehicleForm()
     if form.validate_on_submit():
         # The service function now takes region_name_from_form (string)
@@ -28,7 +29,8 @@ def register_vehicle():
         else:
             flash(f'Vehicle registration failed: {error_message}', 'danger')
 
-    return render_template('vehicle/register_vehicle.html', title='Register New Vehicle', form=form)
+    print(f"Rendering template: vehicles/register_vehicle.html")
+    return render_template('vehicles/register_vehicle.html', title='Register New Vehicle', form=form)
 
 
 @bp.route('/my_vehicles')
@@ -36,7 +38,7 @@ def register_vehicle():
 def my_vehicles():
     page = request.args.get('page', 1, type=int)
     vehicles_pagination = vehicle_service.get_user_vehicles_paginated(current_user.id, page=page, per_page=10)
-    return render_template('vehicle/my_vehicles.html', title='My Registered Vehicles',
+    return render_template('vehicles/my_vehicles.html', title='My Registered Vehicles',
                            vehicles_pagination=vehicles_pagination)
 
 
@@ -45,12 +47,12 @@ def my_vehicles():
 def view_vehicle(vehicle_id):
     vehicle = UserVehicle.query.filter_by(id=vehicle_id, user_id=current_user.id, is_active=True).first_or_404()
     # TODO: Later, admins/officers might be able to view vehicles not their own.
-    return render_template('vehicle/view_vehicle.html', title=f'Vehicle: {vehicle.license_plate}', vehicle=vehicle)
+    return render_template('vehicles/view_vehicle.html', title=f'Vehicle: {vehicle.license_plate}', vehicle=vehicle)
 
 
 @bp.route('/<int:vehicle_id>/deactivate', methods=['POST'])
 @login_required
-def deactivate_vehicle(vehicle_id):
+def deactivate_vehicle_route(vehicle_id): # Renamed
     success, message = vehicle_service.deactivate_vehicle(vehicle_id, current_user.id)
     if success:
         flash(message, 'success')
