@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>My Registered Vehicles</h1>
+    <hr>
+    {% if vehicles %}
+        <div class="list-group">
+            {% for vehicle in vehicles %}
+                <a href="{{ url_for('vehicle.view_vehicle', vehicle_id=vehicle.id) }}" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">{{ vehicle.vehicle_make }} {{ vehicle.vehicle_model }}</h5>
+                        <small>Registered: {{ vehicle.registration_date.strftime('%Y-%m-%d') }}</small>
+                    </div>
+                    <p class="mb-1">License Plate: <strong>{{ vehicle.license_plate }}</strong></p>
+                    <small>Region: {{ vehicle.region.name }}</small>
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info" role="alert">
+            You have no registered vehicles. <a href="{{ url_for('vehicle.register_vehicle') }}" class="alert-link">Register one now</a>.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

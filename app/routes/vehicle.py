@@ -4,13 +4,12 @@ from app import db
 from app.models import UserVehicle, VehicleRegion # User model is available via current_user
 from app.forms import RegisterVehicleForm
 from app.services import vehicle_service # Import your service
-from app.decorators import login_required # Assuming this is flask_login's
 
-vehicle_bp = Blueprint('vehicle', __name__)
+bp = Blueprint('vehicle', __name__)
 
-@vehicle_bp.route('/register', methods=['GET', 'POST'])
+@bp.route('/register', methods=['GET', 'POST'])
 @login_required
-def register_vehicle_route(): # Renamed to avoid conflict
+def register_vehicle():
     form = RegisterVehicleForm()
     if form.validate_on_submit():
         # The service function now takes region_name_from_form (string)
@@ -32,7 +31,7 @@ def register_vehicle_route(): # Renamed to avoid conflict
     return render_template('vehicle/register_vehicle.html', title='Register New Vehicle', form=form)
 
 
-@vehicle_bp.route('/my_vehicles')
+@bp.route('/my_vehicles')
 @login_required
 def my_vehicles():
     page = request.args.get('page', 1, type=int)
@@ -41,7 +40,7 @@ def my_vehicles():
                            vehicles_pagination=vehicles_pagination)
 
 
-@vehicle_bp.route('/<int:vehicle_id>/view') # More RESTful
+@bp.route('/<int:vehicle_id>/view') # More RESTful
 @login_required
 def view_vehicle(vehicle_id):
     vehicle = UserVehicle.query.filter_by(id=vehicle_id, user_id=current_user.id, is_active=True).first_or_404()
@@ -49,9 +48,9 @@ def view_vehicle(vehicle_id):
     return render_template('vehicle/view_vehicle.html', title=f'Vehicle: {vehicle.license_plate}', vehicle=vehicle)
 
 
-@vehicle_bp.route('/<int:vehicle_id>/deactivate', methods=['POST'])
+@bp.route('/<int:vehicle_id>/deactivate', methods=['POST'])
 @login_required
-def deactivate_vehicle_route(vehicle_id): # Renamed
+def deactivate_vehicle(vehicle_id):
     success, message = vehicle_service.deactivate_vehicle(vehicle_id, current_user.id)
     if success:
         flash(message, 'success')

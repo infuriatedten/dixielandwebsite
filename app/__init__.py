@@ -69,6 +69,7 @@ def create_app(config_class=Config):
     from app.routes.auction import auction_bp
     from app.routes.messaging import messaging_bp
     from app.routes.notifications import notifications_bp
+    from app.routes.vehicle import bp as vehicle_bp
 
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(main_bp)
@@ -81,6 +82,7 @@ def create_app(config_class=Config):
     app.register_blueprint(auction_bp, url_prefix='/auctions')
     app.register_blueprint(messaging_bp, url_prefix='/messages')
     app.register_blueprint(notifications_bp, url_prefix='/notifications')
+    app.register_blueprint(vehicle_bp, url_prefix='/vehicle')
 
     # Auto-create tables (dev only — use migrations in prod)
     with app.app_context():

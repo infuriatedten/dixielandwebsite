@@ -356,6 +356,13 @@ def cancel_permit_application_by_user(application_id):
 
 # --- Officer/Admin Permit Management Routes (Placeholder - to be expanded) ---
 from app.forms import ReviewPermitApplicationForm
+from app.models import UserVehicle
+
+@bp.route('/vehicles', methods=['GET'])
+@login_required
+def registered_vehicles():
+    vehicles = UserVehicle.query.filter_by(user_id=current_user.id).all()
+    return render_template('vehicles/my_vehicles.html', vehicles=vehicles)
 
 @bp.route('/permits/review_list')
 @login_required

@@ -4,8 +4,8 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
 from sqlalchemy import select
-from dixielandwebsite import db
-from dixielandwebsite.models import MarketplaceListing, MarketplaceListingStatus
+from app import db
+from app.models import MarketplaceListing, MarketplaceListingStatus
 
 def test_marketplace_enum():
     try:

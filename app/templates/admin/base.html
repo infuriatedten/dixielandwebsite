@@ -1,96 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{% block title %}Admin Panel{% endblock %}</title>
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-  />
-  <style>
-    body {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      padding-top: 56px; /* Adjust based on actual navbar height if different */
-    }
-    /* Sidebar styles removed */
-    .content {
-      /* margin-left: 220px; removed */
-      padding: 20px;
-      flex-grow: 1;
-      /* padding-top: 20px; /* Added to ensure content is below fixed-top navbar if body padding isn't enough */
-      /* The body padding-top should handle this, but can be added here if needed */
-    }
-    .navbar-brand {
-      font-weight: bold;
-    }
-    .navbar-nav .nav-link.active { /* Style for active link in top nav */
-        font-weight: bold;
-        /* color: #0d6efd; Bootstrap's default active color might be fine */
-    }
-  </style>
-  {% block head %}{% endblock %}
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ title or "Game Website" }} - My Application</title>
+    <!-- Add any CSS frameworks or custom stylesheets here -->
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
 </head>
 <body>
-  {# Lime green debug banner removed #}
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="{{ url_for('admin.dashboard') }}">Admin Panel</a>
-      <button
-        class="navbar-toggler"
-        type="button"
-        data-bs-toggle="collapse"
-        data-bs-target="#navbarNav"
-        aria-controls="navbarNav"
-        aria-expanded="false"
-        aria-label="Toggle navigation"
-      >
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav me-auto">
-          <li class="nav-item">
-            <a href="{{ url_for('admin.dashboard') }}" class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">Dashboard</a>
-          </li>
-          <li class="nav-item">
-            <a href="{{ url_for('admin.permits') }}" class="nav-link {% if request.endpoint == 'admin.permits' %}active{% endif %}">Permits</a>
-          </li>
-          <li class="nav-item">
-            <a href="{{ url_for('admin.tickets') }}" class="nav-link {% if request.endpoint == 'admin.tickets' %}active{% endif %}">Tickets</a>
-          </li>
-          <li class="nav-item">
-            <a href="{{ url_for('admin.users') }}" class="nav-link {% if request.endpoint == 'admin.users' %}active{% endif %}">Users</a>
-          </li>
-          <!-- Add more admin menu links here as nav-item > nav-link -->
-        </ul>
-        <span class="navbar-text me-3">Logged in as {{ current_user.username }}</span>
-        <a class="btn btn-outline-light" href="{{ url_for('auth.logout') }}">Logout</a>
-      </div>
+    {% import "macros/nav_macros.html" as nav %}
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="{{ url_for('main.index') }}">Game Portal</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-toggle="collapse"
+          data-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('main.index') }}">Home</a>
+                </li>
+                {% if current_user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.profile') }}">Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('banking.dashboard') }}">Banking</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('taxes.tax_info') }}">Tax Info</a>
+                    </li>
+
+                    {{ nav.dot_services_dropdown(current_user, UserRole) }}
+
+                    {% if current_user.is_authenticated and current_user.role is defined and current_user.role.value is defined and current_user.role.value == UserRole.ADMIN.value %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin.index') }}">Admin Panel</a>
+                        </li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('marketplace.index') }}">Marketplace</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auction.index') }}">Auctions</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('vehicle.my_vehicles') }}">My Vehicles</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('livemap.server_status') }}">Server Status</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.view_rules') }}">Rules</a> {# Placeholder link, will be updated #}
+                    </li>
+
+                    <!-- Notifications and Messaging Links -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('messaging.list_my_conversations') }}">
+                            Messages
+                            {% if unread_message_count and unread_message_count > 0 %}
+                                <span class="badge badge-pill badge-danger" aria-label="{{ unread_message_count }} unread messages">{{ unread_message_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('notifications.list_notifications') }}">
+                            Notifications
+                            {% if unread_notification_count and unread_notification_count > 0 %}
+                                <span class="badge badge-pill badge-warning" aria-label="{{ unread_notification_count }} unread notifications">{{ unread_notification_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+
+            <ul class="navbar-nav ml-auto">
+                {% if current_user.is_authenticated %}
+                    <li class="nav-item nav-link text-dark">
+                        Welcome, {{ current_user.username }} ({{ current_user.role.name.capitalize() }})
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-outline-secondary btn-sm" href="{{ url_for('auth.logout') }}">Logout</a>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.register') }}">Register</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button
+                          type="button"
+                          class="close"
+                          data-dismiss="alert"
+                          aria-label="Close"
+                        >
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
     </div>
-  </nav>
 
-  {# Sidebar div removed #}
+    <footer class="footer mt-auto py-3 bg-light">
+        <div class="container">
+            <span class="text-muted">© {{ SCRIPT_YEAR }} Game Website Project</span>
+        </div>
+    </footer>
 
-  <main class="content">
-    <div class="container-fluid">
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          {% for category, message in messages %}
-            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-              {{ message }}
-              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-          {% endfor %}
-        {% endif %}
-      {% endwith %}
-
-      {% block content %}{% endblock %}
-    </div>
-  </main>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  {% block scripts %}{% endblock %}
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js v1, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>
