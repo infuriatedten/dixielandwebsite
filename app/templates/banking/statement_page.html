@@ -6,7 +6,7 @@
         <h1>Account Statement</h1>
         <p class="lead"><strong>User:</strong> {{ account.owner_user.username }}</p>
         <p><strong>Account ID:</strong> {{ account.id }} | <strong>Currency:</strong> {{ account.currency }}</p>
-        <p><strong>Statement Generated:</strong> {{ "now"|datetimeformat('%Y-%m-%d %H:%M:%S') }}</p> {# Requires datetimeformat filter, or pass from view #}
+        <p><strong>Statement Generated:</strong> {{ generation_time.strftime('%Y-%m-%d %H:%M:%S') if generation_time else 'N/A' }}</p>
     </div>
 
     <div class="card mb-3">

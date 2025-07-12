@@ -88,7 +88,7 @@ def edit_account(account_id):
         new_transaction = Transaction(
             account_id=account.id,
             amount=adjustment_amount,
-            transaction_type=transaction_type,
+            type=transaction_type, # Corrected from transaction_type to type
             description=f"Admin adjustment: {form.description.data}"
         )
         db.session.add(new_transaction)

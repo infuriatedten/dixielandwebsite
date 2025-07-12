@@ -3,6 +3,7 @@ from flask_login import current_user, login_required
 from app import db
 from app.models import User, Account, Transaction
 from app.decorators import admin_required # If any admin-specific banking views were here
+from datetime import datetime # Added import
 
 bp = Blueprint('banking', __name__)
 
@@ -64,7 +65,8 @@ def download_statement(account_id):
     return render_template('banking/statement_page.html',
                            title=f'Statement for Account {account.id}',
                            account=account,
-                           transactions=all_transactions)
+                           transactions=all_transactions,
+                           generation_time=datetime.utcnow())
 
 # Note: Actual "download" would involve generating a file (CSV, PDF).
 # This is a simplified "view statement" page.
