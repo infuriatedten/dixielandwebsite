@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "admin/base.html" %}
 {% import "bootstrap_wtf.html" as wtf %}
 
 {% block content %}
@@ -70,7 +70,7 @@
                 <td>{{ account.currency }}</td>
                 <td>{{ account.last_updated_on.strftime('%Y-%m-%d %H:%M:%S') if account.last_updated_on else 'N/A' }}</td>
                 <td>
-                    <a href="{{ url_for('admin.edit_account_balance', account_id=account.id) }}" class="btn btn-sm btn-warning">Edit Balance</a>
+                    <a href="{{ url_for('admin.edit_account', account_id=account.id) }}" class="btn btn-sm btn-warning">Edit Balance</a>
                     <a href="{{ url_for('banking.view_account', account_id=account.id) }}" class="btn btn-sm btn-info">View Transactions</a>
     
                     <form method="POST" action="{{ url_for('admin.toggle_user_role', user_id=account.owner_user.id) }}" style="display:inline-block;" onsubmit="return confirm('Are you sure you want to toggle this user\'s role?');">

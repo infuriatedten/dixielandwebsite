@@ -67,18 +67,37 @@ def accounts():
         return redirect(url_for('admin.accounts'))
 
     accounts = Account.query.all()
-    return render_template('admin/accounts.html', accounts=accounts, form=form)
+    return render_template('admin/manage_accounts.html', accounts=accounts, form=form, title="Bank Account Management")
 
 @admin_bp.route('/accounts/<int:account_id>/edit', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def edit_account(account_id):
     account = Account.query.get_or_404(account_id)
-    form = EditBalanceForm(obj=account)
+    form = EditBalanceForm(obj=account) # obj=account pre-fills fields if names match, but they don't for balance/amount.
+                                        # It's kept here in case other fields are added later.
     if form.validate_on_submit():
-        account.balance = form.balance.data
+        # Correct logic: Add/subtract the 'amount' from the form to the existing balance.
+        # Also create a transaction record for this manual adjustment.
+        adjustment_amount = form.amount.data
+        
+        # Determine transaction type based on adjustment amount
+        transaction_type = TransactionType.ADMIN_DEPOSIT if adjustment_amount > 0 else TransactionType.ADMIN_WITHDRAWAL
+
+        # Create a transaction record for the adjustment
+        new_transaction = Transaction(
+            account_id=account.id,
+            amount=adjustment_amount,
+            transaction_type=transaction_type,
+            description=f"Admin adjustment: {form.description.data}"
+        )
+        db.session.add(new_transaction)
+        
+        # Update the account balance
+        account.balance += adjustment_amount
         db.session.commit()
-        flash('Account updated.', 'success')
+        
+        flash(f'Account balance updated by {adjustment_amount}. A transaction has been logged.', 'success')
         return redirect(url_for('admin.accounts'))
     return render_template('admin/edit_account_balance.html', account=account, form=form)
 
