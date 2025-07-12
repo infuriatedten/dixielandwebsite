@@ -80,7 +80,7 @@ def edit_account(account_id):
         db.session.commit()
         flash('Account updated.', 'success')
         return redirect(url_for('admin.accounts'))
-    return render_template('admin/edit_account.html', account=account, form=form)
+    return render_template('admin/edit_account_balance.html', account=account, form=form)
 
 # User Management
 @admin_bp.route('/users')
