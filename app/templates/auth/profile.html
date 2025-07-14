@@ -48,6 +48,74 @@
                 </div>
             </div>
 
+            {% if not current_user.company %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5>Add a Company</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('auth.profile') }}" novalidate>
+                        {{ company_form.hidden_tag() }}
+                        <div class="mb-3">
+                            {{ company_form.name.label(class="form-label") }}
+                            {{ company_form.name(class="form-control") }}
+                            {% for error in company_form.name.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="mb-3">
+                            {{ company_form.details.label(class="form-label") }}
+                            {{ company_form.details(class="form-control") }}
+                            {% for error in company_form.details.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        {{ company_form.submit(class="btn btn-primary") }}
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if not current_user.farmer %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5>Register as a Farmer</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('auth.profile') }}" novalidate>
+                        {{ farmer_form.hidden_tag() }}
+                        {{ farmer_form.submit(class="btn btn-primary") }}
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5>Add a Parcel</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('auth.profile') }}" novalidate>
+                        {{ parcel_form.hidden_tag() }}
+                        <div class="mb-3">
+                            {{ parcel_form.location.label(class="form-label") }}
+                            {{ parcel_form.location(class="form-control") }}
+                            {% for error in parcel_form.location.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="mb-3">
+                            {{ parcel_form.size.label(class="form-label") }}
+                            {{ parcel_form.size(class="form-control") }}
+                            {% for error in parcel_form.size.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        {{ parcel_form.submit(class="btn btn-primary") }}
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
             {% if current_user.role.name == 'ADMIN' %}
             <div class="card mt-4">
                 <div class="card-body">

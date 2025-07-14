@@ -1,0 +1,32 @@
+{% extends "admin/base.html" %}
+
+{% block admin_content %}
+    <h2>Validate Parcels</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Location</th>
+                <th>Size</th>
+                <th>Farmer</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for parcel in parcels %}
+                <tr>
+                    <td>{{ parcel.id }}</td>
+                    <td>{{ parcel.location }}</td>
+                    <td>{{ parcel.size }}</td>
+                    <td>{{ parcel.farmer.user.username }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('admin.validate_parcels') }}">
+                            <input type="hidden" name="parcel_id" value="{{ parcel.id }}">
+                            <button type="submit" class="btn btn-success">Validate</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

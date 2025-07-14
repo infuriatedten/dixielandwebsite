@@ -416,3 +416,16 @@ class EditRulesForm(FlaskForm):
 class EditUserRoleForm(FlaskForm):
     role = SelectField('Role', choices=[(role.name, role.value) for role in UserRole], validators=[DataRequired()])
     submit = SubmitField('Update Role')
+
+class CompanyForm(FlaskForm):
+    name = StringField('Company Name', validators=[DataRequired(), Length(min=3, max=128)])
+    details = TextAreaField('Company Details', validators=[Optional(), Length(max=1024)])
+    submit = SubmitField('Add Company')
+
+class FarmerForm(FlaskForm):
+    submit = SubmitField('Register as Farmer')
+
+class ParcelForm(FlaskForm):
+    location = StringField('Parcel Location', validators=[DataRequired(), Length(min=3, max=256)])
+    size = DecimalField('Parcel Size (in acres)', validators=[DataRequired()])
+    submit = SubmitField('Add Parcel')

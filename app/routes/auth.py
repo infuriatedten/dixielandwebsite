@@ -62,12 +62,16 @@ from flask import render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from app import db
 from app.routes.auth import bp
-from app.forms import EditProfileForm  # Ensure this is imported
+from app.forms import EditProfileForm, CompanyForm, FarmerForm, ParcelForm
+from app.models import Company, Farmer, Parcel
 
 @bp.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
     form = EditProfileForm(original_email=current_user.email, obj=current_user)
+    company_form = CompanyForm()
+    farmer_form = FarmerForm()
+    parcel_form = ParcelForm()
 
     if form.validate_on_submit():
         current_user.username = form.username.data
@@ -82,8 +86,31 @@ def profile():
         flash('Your profile has been updated.', 'success')
         return redirect(url_for('auth.profile'))
 
+    if company_form.validate_on_submit() and company_form.submit.data:
+        company = Company(name=company_form.name.data, details=company_form.details.data, user_id=current_user.id)
+        db.session.add(company)
+        db.session.commit()
+        flash('Company added to your profile.', 'success')
+        return redirect(url_for('auth.profile'))
+
+    if farmer_form.validate_on_submit() and farmer_form.submit.data:
+        farmer = Farmer(user_id=current_user.id)
+        db.session.add(farmer)
+        db.session.commit()
+        flash('You have been registered as a farmer.', 'success')
+        return redirect(url_for('auth.profile'))
+
+    if parcel_form.validate_on_submit() and parcel_form.submit.data:
+        parcel = Parcel(location=parcel_form.location.data, size=parcel_form.size.data, farmer_id=current_user.farmer.id)
+        db.session.add(parcel)
+        db.session.commit()
+        flash('Parcel added to your profile.', 'success')
+        return redirect(url_for('auth.profile'))
+
     # Pre-fill region manually only on GET
     if request.method == 'GET' and hasattr(form, 'region'):
         form.region.data = current_user.region if current_user.region else 'OTHER_DEFAULT'
 
-    return render_template('auth/profile.html', title='My Profile', form=form, user=current_user)
+    return render_template('auth/profile.html', title='My Profile', form=form,
+                           company_form=company_form, farmer_form=farmer_form,
+                           parcel_form=parcel_form, user=current_user)
