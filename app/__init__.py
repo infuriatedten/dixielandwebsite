@@ -99,13 +99,4 @@ def create_app(config_class=Config):
     app.register_blueprint(messaging_bp, url_prefix='/messages')
     app.register_blueprint(notifications_bp, url_prefix='/notifications')
 
-    # Auto-create tables (dev only — use migrations in prod)
-    with app.app_context():
-        print(f"Current DB URI: {app.config['SQLALCHEMY_DATABASE_URI']}")
-        try:
-            db.create_all()
-            print("INFO: Database tables created or already exist.")
-        except Exception as e:
-            print(f"ERROR during db.create_all(): {e}")
-
     return app
