@@ -99,7 +99,6 @@ def admin_list_all_conversations(): # Renamed for clarity
     conversations_pagination = messaging_service.get_admin_conversations_list(
         admin_user_id=None, # Pass None to indicate all for any admin if service supports it
         page=page,
-        show_all_admin=True, # Add this flag to service if needed, or adjust service
         filter_unread=filter_unread
     )
     # If get_admin_conversations_list doesn't have show_all_admin, it will only show where current_user is admin_id

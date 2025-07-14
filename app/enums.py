@@ -6,9 +6,6 @@ class UserRole(Enum):
     ADMIN = "admin"
 
 
-class ConversationStatus(Enum):
-    OPEN = "open"
-    CLOSED = "closed"
 
 class MarketplaceListingStatus(Enum):
     AVAILABLE = "AVAILABLE"

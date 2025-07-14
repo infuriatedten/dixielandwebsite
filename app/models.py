@@ -3,8 +3,7 @@ from datetime import datetime
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
-from app.enums import ConversationStatus
-from app.enums import ConversationStatus, MarketplaceListingStatus
+from app.enums import MarketplaceListingStatus
 
 class UserRole(enum.Enum):
     USER = "user"
@@ -399,8 +398,10 @@ class UserVehicle(db.Model):
 
 
 # --- Messaging System Models ---
-from datetime import datetime
-from app.enums import ConversationStatus  # make sure this enum is defined somewhere
+class ConversationStatus(enum.Enum):
+    OPEN = "Open"
+    CLOSED_BY_USER = "Closed by User"
+    CLOSED_BY_ADMIN = "Closed by Admin"
 
 class Conversation(db.Model):
     __tablename__ = 'conversations'

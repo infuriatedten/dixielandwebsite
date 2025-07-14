@@ -102,10 +102,11 @@ class TaxBracketForm(FlaskForm):
         # Check if name is unique, excluding current bracket if editing
         existing_bracket = TaxBracket.query.filter_by(name=name.data).first()
         if existing_bracket:
-            # If 'obj' is in form, we are editing. Check if the found bracket is not the one being edited.
-            if hasattr(self.obj, 'id') and existing_bracket.id != self.obj.id:
+            # If 'obj' is in form and has an id, we are editing. Check if the found bracket is not the one being edited.
+            if hasattr(self, 'obj') and self.obj and hasattr(self.obj, 'id') and existing_bracket.id != self.obj.id:
                  raise ValidationError('This tax bracket name is already in use.')
-            elif not hasattr(self.obj, 'id'): # New bracket, name must be unique
+            # If we are not editing (no obj or no obj.id), then any existing bracket is a conflict.
+            elif not (hasattr(self, 'obj') and self.obj and hasattr(self.obj, 'id')):
                  raise ValidationError('This tax bracket name is already in use.')
 
 # Need to import TaxBracket if not already

@@ -156,7 +156,7 @@ def transactions():
 @login_required
 @admin_required
 def tax():
-    form = TaxBracketForm()
+    form = TaxBracketForm(obj=None)
     if form.validate_on_submit():
         bracket = TaxBracket(
             name=form.name.data,
