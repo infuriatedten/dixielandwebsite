@@ -99,7 +99,7 @@
                  {% endif %}
             {# Admin viewing their own application (edge case, admin usually doesn't apply for self) #}
             {% elif current_user.role == UserRole.ADMIN and application.user_id == current_user.id %}
-                 <a href="{{ url_for('admin.index') }}" class="btn btn-secondary">Back to Admin Panel</a>
+                 <a href="{{ url_for('main.admin_dashboard') }}" class="btn btn-secondary">Back to Admin Panel</a>
                  {% if application.status in [PermitApplicationStatus.PENDING_REVIEW, PermitApplicationStatus.REQUIRES_MODIFICATION, PermitApplicationStatus.PAID_AWAITING_ISSUANCE] %}
                     <span class="text-muted small"> (As admin, manage this application via Officer Review List if needed)</span>
                  {% endif %}

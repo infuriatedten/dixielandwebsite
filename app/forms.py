@@ -1,44 +1,21 @@
 from flask_wtf import FlaskForm
 from wtforms import (
     StringField, PasswordField, BooleanField, SubmitField,
-    SelectField, DecimalField, TextAreaField
+    SelectField, DecimalField, TextAreaField, IntegerField,
+    RadioField
 )
+from wtforms.fields import DateField
 from wtforms.validators import (
-    DataRequired, Email, EqualTo, Length, ValidationError, NumberRange, Optional # Added Optional here
+    DataRequired, Email, EqualTo, Length, ValidationError, NumberRange, Optional, URL
 )
+from datetime import datetime
+from decimal import Decimal
+from app.models import (
+    User, UserRole, TransactionType, TaxBracket, TicketStatus,
+    PermitApplicationStatus, MarketplaceItemStatus, VehicleRegion
+)
+from app.custom_validators import must_be_positive
 
-from app.models import User, UserRole
-
-class LoginForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired(), Length(min=4, max=64)])
-    password = PasswordField('Password', validators=[DataRequired()])
-    remember_me = BooleanField('Remember Me')
-    submit = SubmitField('Sign In')
-
-class RegistrationForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired(), Length(min=4, max=64)])
-    email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
-    password = PasswordField('Password', validators=[DataRequired(), Length(min=8)])
-    password2 = PasswordField(
-        'Repeat Password', validators=[DataRequired(), EqualTo('password')])
-    # In a real app, role assignment would be more controlled, perhaps admin-only
-    # For now, allowing selection, but default should be 'USER' or this field removed for self-registration.
-    # role = SelectField('Role', choices=[(role.value, role.name.capitalize()) for role in UserRole],
-    #                    default=UserRole.USER.value, validators=[DataRequired()])
-    submit = SubmitField('Register')
-
-    def validate_username(self, username):
-        user = User.query.filter_by(username=username.data).first()
-        if user is not None:
-            raise ValidationError('Please use a different username.')
-
-    def validate_email(self, email):
-        user = User.query.filter_by(email=email.data).first()
-        if user is not None:
-            raise ValidationError('Please use a different email address.')
-
-from wtforms import DecimalField, TextAreaField
-from app.models import TransactionType
 
 class AccountForm(FlaskForm):
     user_id = SelectField('User', coerce=int, validators=[DataRequired()])
@@ -50,107 +27,8 @@ class AccountForm(FlaskForm):
 
     def __init__(self, *args, **kwargs):
         super(AccountForm, self).__init__(*args, **kwargs)
-        # Populate user choices - only users without an account yet, or for editing.
-        # This might need adjustment based on how accounts are managed (e.g., one per user or multiple)
         self.user_id.choices = [(u.id, u.username) for u in User.query.order_by(User.username).all()]
-        # If users can only have one account, filter out users who already have one:
-        # self.user_id.choices = [(u.id, u.username) for u in User.query.filter(~User.accounts.any()).order_by(User.username).all()]
 
-
-class EditBalanceForm(FlaskForm):
-    amount = DecimalField('Amount to Add/Subtract (+/-)', places=2, validators=[DataRequired()])
-    description = TextAreaField('Reason/Description', validators=[DataRequired(), Length(min=5, max=255)])
-    submit = SubmitField('Update Balance')
-
-from flask_wtf import FlaskForm
-from wtforms import IntegerField, DecimalField, SelectField, StringField, SubmitField
-from wtforms.validators import DataRequired, NumberRange
-from app.models import TransactionType
-
-class TransactionForm(FlaskForm):
-    sender_account_id = IntegerField('Sender Account ID', validators=[DataRequired()])
-    receiver_account_id = IntegerField('Receiver Account ID', validators=[DataRequired()])
-    amount = DecimalField('Amount', validators=[DataRequired(), NumberRange(min=0.01)])
-    transaction_type = SelectField(
-        'Transaction Type',
-        choices=[(t.name, t.value) for t in TransactionType],
-        validators=[DataRequired()]
-    )
-    description = StringField('Description')
-    submit = SubmitField('Submit')
-
-
-# --- Tax Bracket Forms (Admin) ---
-from wtforms.validators import DataRequired, Length, Optional
-
-class TaxBracketForm(FlaskForm):
-    name = StringField('Bracket Name', validators=[DataRequired(), Length(min=3, max=100)])
-    description = TextAreaField('Description', validators=[Length(max=255)])
-    min_balance = DecimalField('Minimum Balance (Inclusive)', places=2, validators=[DataRequired()])
-    max_balance = DecimalField('Maximum Balance (Exclusive, leave blank for top tier)', places=2, validators=[Optional()])
-    tax_rate = DecimalField('Tax Rate (Percentage, e.g., 1.5 for 1.5%)', places=2, validators=[DataRequired()])
-    is_active = BooleanField('Active', default=True)
-    submit = SubmitField('Save Tax Bracket')
-
-
-    def validate_max_balance(self, field):
-        if field.data is not None and self.min_balance.data is not None:
-            if field.data <= self.min_balance.data:
-                raise ValidationError('Max Balance must be greater than Min Balance.')
-
-    def validate_name(self, name):
-        # Check if name is unique, excluding current bracket if editing
-        existing_bracket = TaxBracket.query.filter_by(name=name.data).first()
-        if existing_bracket:
-            # If 'obj' is in form and has an id, we are editing. Check if the found bracket is not the one being edited.
-            if hasattr(self, 'obj') and self.obj and hasattr(self.obj, 'id') and existing_bracket.id != self.obj.id:
-                 raise ValidationError('This tax bracket name is already in use.')
-            # If we are not editing (no obj or no obj.id), then any existing bracket is a conflict.
-            elif not (hasattr(self, 'obj') and self.obj and hasattr(self.obj, 'id')):
-                 raise ValidationError('This tax bracket name is already in use.')
-
-# Need to import TaxBracket if not already
-from app.models import TaxBracket, User, TicketStatus # Added User, TicketStatus
-from wtforms.fields import TextAreaField, StringField, DecimalField, SelectField, SubmitField # Ensure all are imported
-from wtforms.validators import DataRequired, Length, Optional # Ensure Optional is imported
-
-
-# --- DOT Ticket Forms ---
-class IssueTicketForm(FlaskForm):
-    # issued_to_user_id = SelectField('User to Ticket', coerce=int, validators=[DataRequired()])
-    # Better: use a StringField for username search, then find ID in the route, or use a Select2 type field.
-    # For now, simple SelectField; will need to populate choices in the route.
-    user_search = StringField('Username of Person to Ticket', validators=[DataRequired(), Length(min=3)])
-    vehicle_id = StringField('Vehicle ID / License Plate', validators=[Optional(), Length(max=100)])
-    violation_details = TextAreaField('Violation Details', validators=[DataRequired(), Length(min=10, max=1000)])
-    fine_amount = DecimalField('Fine Amount', places=2, validators=[DataRequired()])
-    submit = SubmitField('Issue Ticket')
-
-    # def __init__(self, *args, **kwargs):
-    #     super(IssueTicketForm, self).__init__(*args, **kwargs)
-        # Populate user choices - This is better done in the route to limit query size if many users
-        # self.issued_to_user_id.choices = [(u.id, u.username) for u in User.query.filter(User.role != UserRole.ADMIN).order_by(User.username).all()]
-
-
-class ContestTicketForm(FlaskForm):
-    user_contest_reason = TextAreaField('Reason for Contesting (Please be specific)', validators=[DataRequired(), Length(min=20, max=2000)])
-    submit = SubmitField('Submit Contestation')
-
-
-class ResolveTicketForm(FlaskForm):
-    # Admin chooses the final status after reviewing a contested ticket
-    new_status = SelectField('New Ticket Status',
-                             choices=[
-                                 (TicketStatus.RESOLVED_UNPAID.value, "Resolve: Fine Upheld (Unpaid)"),
-                                 (TicketStatus.RESOLVED_DISMISSED.value, "Resolve: Dismiss Ticket"),
-                                 (TicketStatus.CANCELLED.value, "Cancel Ticket (e.g., error in issuance)")
-                             ],
-                             validators=[DataRequired()])
-    resolution_notes = TextAreaField('Admin Resolution Notes', validators=[DataRequired(), Length(min=10, max=2000)])
-    submit = SubmitField('Update Ticket Status')
-
-# --- DOT Permit Forms ---
-from wtforms.fields import DateField # For Date-only fields
 
 class ApplyPermitForm(FlaskForm):
     vehicle_type = StringField('Vehicle Type/Description', validators=[DataRequired(), Length(min=5, max=150)])
@@ -166,139 +44,11 @@ class ApplyPermitForm(FlaskForm):
                 raise ValidationError('Travel End Date cannot be before Travel Start Date.')
             if field.data == self.travel_start_date.data: # Or some minimum duration
                 pass # Same day travel is allowed
-            # Could add validation for max duration if needed
 
     def validate_travel_start_date(self, field):
         if field.data and field.data < datetime.date(datetime.utcnow()): # Using datetime.date for comparison with DateField
              raise ValidationError('Travel Start Date cannot be in the past.')
 
-
-class ReviewPermitApplicationForm(FlaskForm):
-    # Officer/Admin uses this to update an application
-    new_status = SelectField('Application Status', choices=[], validators=[DataRequired()]) # Choices populated in route
-    permit_fee = DecimalField('Permit Fee (if approving)', places=2, validators=[Optional()])
-    officer_notes = TextAreaField('Officer/Admin Notes (feedback to user or internal)', validators=[Optional(), Length(max=2000)])
-    submit = SubmitField('Update Application Status')
-
-    def __init__(self, *args, **kwargs):
-        super(ReviewPermitApplicationForm, self).__init__(*args, **kwargs)
-        # Dynamically set choices for new_status based on current status or role
-        # This will be handled in the route for more context. Example:
-        from app.models import PermitApplicationStatus
-        self.new_status.choices = [
-            (PermitApplicationStatus.APPROVED_PENDING_PAYMENT.value, "Approve (Pending Payment)"),
-            (PermitApplicationStatus.REQUIRES_MODIFICATION.value, "Requires Modification (Send back to user)"),
-            (PermitApplicationStatus.REJECTED.value, "Reject Application"),
-            (PermitApplicationStatus.CANCELLED_BY_ADMIN.value, "Cancel Application (Admin Action)")
-            # More statuses can be added depending on workflow
-        ]
-
-    def validate_permit_fee(self, field):
-        # If status is being set to Approved, fee must be provided and be > 0
-        if self.new_status.data == PermitApplicationStatus.APPROVED_PENDING_PAYMENT.value:
-            if field.data is None or field.data <= 0:
-                raise ValidationError('A positive Permit Fee is required when approving an application.')
-        elif field.data is not None and field.data < 0:
-             raise ValidationError('Permit Fee cannot be negative.')
-
-
-# Need to import datetime for date validation
-from datetime import datetime
-from app.models import MarketplaceItemStatus # Import for marketplace forms
-from wtforms import RadioField # For Pass/Fail
-
-# --- Marketplace Forms ---
-class CreateListingForm(FlaskForm):
-    item_name = StringField('Item Name', validators=[DataRequired(), Length(min=3, max=150)])
-    description = TextAreaField('Item Description', validators=[Optional(), Length(max=1000)])
-    price = DecimalField('Price (per unit)', places=2, validators=[DataRequired()])
-    quantity = DecimalField('Quantity Available', places=2, validators=[DataRequired()]) # Numeric for e.g. 0.5 liters
-    unit = StringField('Unit (e.g., items, liters, kg)', default='item(s)', validators=[DataRequired(), Length(min=1, max=50)])
-    submit = SubmitField('Create Listing')
-
-    def validate_price(self, field):
-        if field.data is not None and field.data <= 0:
-            raise ValidationError('Price must be a positive value.')
-
-    def validate_quantity(self, field):
-        if field.data is not None and field.data <= 0:
-            raise ValidationError('Quantity must be a positive value.')
-
-# --- DOT Inspection Form ---
-class RecordInspectionForm(FlaskForm):
-    inspected_user_search = StringField('Inspected User\'s Username (Optional, if registered)', validators=[Optional(), Length(min=3)])
-    vehicle_id = StringField('Vehicle ID / License Plate', validators=[DataRequired(), Length(min=3, max=100)])
-    pass_status = RadioField('Inspection Result', choices=[('True', 'Pass'), ('False', 'Fail')],
-                             validators=[DataRequired(message="Must select Pass or Fail.")], default='True')
-    notes = TextAreaField('Inspection Notes (Required if Fail, details, reasons)', validators=[Optional(), Length(max=2000)])
-    submit = SubmitField('Record Inspection')
-
-    def validate_notes(self, field):
-        # Require notes if inspection failed
-        if self.pass_status.data == 'False' and (not field.data or len(field.data.strip()) < 10):
-            raise ValidationError('Detailed notes are required if the inspection result is Fail (min 10 characters).')
-
-
-# --- Auction House Forms ---
-from wtforms import StringField, TextAreaField, DecimalField, SubmitField, SelectField # Added SelectField
-from wtforms.validators import DataRequired, Length, Optional, URL # URL validator if using URLField
-from decimal import Decimal # For default values in PlaceBidForm
-
-# --- User Profile Forms (Update) ---
-class EditProfileForm(FlaskForm):
-    email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
-    region = SelectField('Region (for License Plate Format)',
-                         choices=[('US', 'US (e.g., 123-ABC)'),
-                                  ('EU', 'EU (e.g., ABC-123)'),
-                                  ('OTHER_DEFAULT', 'Other/Default')],
-                         validators=[Optional()])
-    submit = SubmitField('Update Profile')
-
-    def __init__(self, original_email, *args, **kwargs):
-        super(EditProfileForm, self).__init__(*args, **kwargs)
-        self.original_email = original_email
-
-    def validate_email(self, email):
-        if email.data != self.original_email:
-            user = User.query.filter_by(email=email.data).first()
-            if user:
-                raise ValidationError('That email address is already in use. Please choose a different one.')
-
-# --- Vehicle Registration Form ---
-from app.models import VehicleRegion # For choices
-
-class RegisterVehicleForm(FlaskForm):
-    vehicle_make = StringField('Vehicle Make (e.g., Ford, Volvo)', validators=[DataRequired(), Length(max=100)])
-    vehicle_model = StringField('Vehicle Model (e.g., F-150, FH16)', validators=[DataRequired(), Length(max=100)])
-    vehicle_type = StringField('Vehicle Type (e.g., Sedan, Truck, Tractor)', validators=[DataRequired(), Length(min=3, max=100)])
-    vehicle_description = TextAreaField('Vehicle Description/Details (Optional)', validators=[Optional(), Length(max=255)])
-    region_format = SelectField('License Plate Region',
-                                choices=[(region.name, region.value) for region in VehicleRegion],
-                                validators=[DataRequired()])
-    submit = SubmitField('Register Vehicle')
-
-# --- Messaging Forms ---
-class NewConversationForm(FlaskForm): # Admin to User
-    user_search = StringField('Recipient Username', validators=[DataRequired(), Length(min=3)])
-    subject = StringField('Subject', validators=[DataRequired(), Length(min=5, max=255)])
-    message_body = TextAreaField('Message', validators=[DataRequired(), Length(min=10)], render_kw={'rows': 5})
-    submit = SubmitField('Send Message')
-
-class ReplyMessageForm(FlaskForm): # For both User and Admin
-    message_body = TextAreaField('Your Reply', validators=[DataRequired(), Length(min=1)], render_kw={'rows': 5})
-    submit = SubmitField('Send Reply')
-
-
-class SubmitAuctionItemForm(FlaskForm):
-    item_name = StringField('Item Name', validators=[DataRequired(), Length(min=3, max=200)])
-    item_description = TextAreaField('Item Description', validators=[DataRequired(), Length(min=10, max=2000)])
-    suggested_starting_bid = DecimalField('Suggested Starting Bid (Optional, e.g., 10.00)', places=2, validators=[Optional()])
-    image_url = StringField('Image URL (Optional, e.g., https://.../image.png)', validators=[Optional(), URL(message="Please enter a valid URL for the image."), Length(max=512)])
-    submit = SubmitField('Submit Item for Auction Approval')
-
-    def validate_suggested_starting_bid(self, field):
-        if field.data is not None and field.data < 0:
-            raise ValidationError('Suggested starting bid cannot be negative.')
 
 class ApproveAuctionItemForm(FlaskForm):
     actual_starting_bid = DecimalField('Actual Starting Bid', places=2, validators=[DataRequired()])
@@ -322,6 +72,111 @@ class ApproveAuctionItemForm(FlaskForm):
         if field.data is not None and field.data <= 0:
             raise ValidationError('Minimum bid increment must be a positive value if set.')
 
+
+class CompanyForm(FlaskForm):
+    name = StringField('Company Name', validators=[DataRequired(), Length(min=3, max=128)])
+    details = TextAreaField('Company Details', validators=[Optional(), Length(max=1024)])
+    submit = SubmitField('Add Company')
+
+
+class ContestTicketForm(FlaskForm):
+    user_contest_reason = TextAreaField('Reason for Contesting (Please be specific)', validators=[DataRequired(), Length(min=20, max=2000)])
+    submit = SubmitField('Submit Contestation')
+
+
+class CreateListingForm(FlaskForm):
+    item_name = StringField('Item Name', validators=[DataRequired(), Length(max=200)])
+    description = TextAreaField('Description (Optional)', validators=[Optional(), Length(max=1000)])
+    price = DecimalField('Price', places=2, validators=[DataRequired()])
+    quantity = DecimalField('Quantity', places=2, validators=[DataRequired()])
+    unit = StringField('Unit (e.g., items, liters, kg)', validators=[DataRequired(), Length(max=50)])
+    submit = SubmitField('Create Listing')
+
+
+class EditBalanceForm(FlaskForm):
+    amount = DecimalField('Amount to Add/Subtract (+/-)', places=2, validators=[DataRequired()])
+    description = TextAreaField('Reason/Description', validators=[DataRequired(), Length(min=5, max=255)])
+    submit = SubmitField('Update Balance')
+
+
+class EditListingForm(FlaskForm):
+    item_name = StringField('Item Name', validators=[DataRequired(), Length(min=3, max=150)])
+    description = TextAreaField('Item Description', validators=[Optional(), Length(max=1000)])
+    price = DecimalField('Price (per unit)', places=2, validators=[DataRequired()])
+    quantity = DecimalField('Quantity Available', places=2, validators=[DataRequired()])
+    unit = StringField('Unit', validators=[DataRequired(), Length(min=1, max=50)])
+    submit = SubmitField('Update Listing')
+
+    def validate_price(self, field):
+        if field.data is not None and field.data <= 0:
+            raise ValidationError('Price must be a positive value.')
+
+    def validate_quantity(self, field):
+        if field.data is not None and field.data <= 0:
+            raise ValidationError('Quantity must be a positive value.')
+
+
+class EditProfileForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    about_me = TextAreaField('About me', validators=[Length(min=0, max=140)])
+    submit = SubmitField('Save')
+
+    def __init__(self, original_email, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.original_email = original_email
+
+    def validate_email(self, email):
+        if email.data != self.original_email:
+            user = User.query.filter_by(email=email.data).first()
+            if user:
+                raise ValidationError('This email is already in use.')
+
+
+class EditRulesForm(FlaskForm):
+    content_markdown = TextAreaField('Rules Content (Markdown Format)', 
+                                     validators=[DataRequired(), Length(min=20)], 
+                                     render_kw={'rows': 25, 'class': 'form-control'})
+    submit = SubmitField('Save Rules')
+
+
+class EditUserRoleForm(FlaskForm):
+    role = SelectField('Role', choices=[(role.name, role.value) for role in UserRole], validators=[DataRequired()])
+    submit = SubmitField('Update Role')
+
+
+class FarmerForm(FlaskForm):
+    submit = SubmitField('Register as Farmer')
+
+
+class IssueTicketForm(FlaskForm):
+    user_search = StringField('Username of Person to Ticket', validators=[DataRequired(), Length(min=3)])
+    vehicle_id = StringField('Vehicle ID / License Plate', validators=[Optional(), Length(max=100)])
+    violation_details = TextAreaField('Violation Details', validators=[DataRequired(), Length(min=10, max=1000)])
+    fine_amount = DecimalField('Fine Amount', places=2, validators=[DataRequired()])
+    submit = SubmitField('Issue Ticket')
+
+
+class LoginForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired(), Length(min=4, max=64)])
+    password = PasswordField('Password', validators=[DataRequired()])
+    remember_me = BooleanField('Remember Me')
+    submit = SubmitField('Sign In')
+
+
+class NewConversationForm(FlaskForm): # Admin to User
+    user_search = StringField('Recipient Username', validators=[DataRequired(), Length(min=3)])
+    subject = StringField('Subject', validators=[DataRequired(), Length(min=5, max=255)])
+    message_body = TextAreaField('Message', validators=[DataRequired(), Length(min=10)], render_kw={'rows': 5})
+    submit = SubmitField('Send Message')
+
+
+class ParcelForm(FlaskForm):
+    location = StringField('Parcel Location', validators=[DataRequired(), Length(min=3, max=256)])
+    size = DecimalField('Parcel Size (in acres)', validators=[DataRequired()])
+    submit = SubmitField('Add Parcel')
+
+
 class PlaceBidForm(FlaskForm):
     bid_amount = DecimalField('Your Bid Amount', places=2, validators=[DataRequired()])
     submit = SubmitField('Place Bid')
@@ -343,10 +198,99 @@ class PlaceBidForm(FlaskForm):
             raise ValidationError(f'Your bid must be at least {min_next_bid:.2f} (current highest/starting + increment).')
 
 
-# --- Messaging Forms ---
+class ProductForm(FlaskForm):
+    price = DecimalField('Price', validators=[must_be_positive])
+    quantity = IntegerField('Quantity', validators=[must_be_positive])
+
+
+class RecordInspectionForm(FlaskForm):
+    inspected_user_search = StringField('Inspected User\'s Username (Optional, if registered)', validators=[Optional(), Length(min=3)])
+    vehicle_id = StringField('Vehicle ID / License Plate', validators=[DataRequired(), Length(min=3, max=100)])
+    pass_status = RadioField('Inspection Result', choices=[('True', 'Pass'), ('False', 'Fail')],
+                             validators=[DataRequired(message="Must select Pass or Fail.")], default='True')
+    notes = TextAreaField('Inspection Notes (Required if Fail, details, reasons)', validators=[Optional(), Length(max=2000)])
+    submit = SubmitField('Record Inspection')
+
+    def validate_notes(self, field):
+        if self.pass_status.data == 'False' and (not field.data or len(field.data.strip()) < 10):
+            raise ValidationError('Detailed notes are required if the inspection result is Fail (min 10 characters).')
+
+
+class RegisterVehicleForm(FlaskForm):
+    vehicle_make = StringField('Vehicle Make (e.g., Ford, Volvo)', validators=[DataRequired(), Length(max=100)])
+    vehicle_model = StringField('Vehicle Model (e.g., F-150, FH16)', validators=[DataRequired(), Length(max=100)])
+    vehicle_type = StringField('Vehicle Type (e.g., Sedan, Truck, Tractor)', validators=[DataRequired(), Length(min=3, max=100)])
+    vehicle_description = TextAreaField('Vehicle Description/Details (Optional)', validators=[Optional(), Length(max=255)])
+    region_format = SelectField('License Plate Region',
+                                choices=[(region.name, region.value) for region in VehicleRegion],
+                                validators=[DataRequired()])
+    submit = SubmitField('Register Vehicle')
+
+
+class RegistrationForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired(), Length(min=4, max=64)])
+    email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=8)])
+    password2 = PasswordField(
+        'Repeat Password', validators=[DataRequired(), EqualTo('password')])
+    submit = SubmitField('Register')
+
+    def validate_username(self, username):
+        user = User.query.filter_by(username=username.data).first()
+        if user is not None:
+            raise ValidationError('Please use a different username.')
+
+    def validate_email(self, email):
+        user = User.query.filter_by(email=email.data).first()
+        if user is not None:
+            raise ValidationError('Please use a different email address.')
+
+
+class ReplyMessageForm(FlaskForm): # For both User and Admin
+    message_body = TextAreaField('Your Reply', validators=[DataRequired(), Length(min=1)], render_kw={'rows': 5})
+    submit = SubmitField('Send Reply')
+
+
+class ResolveTicketForm(FlaskForm):
+    new_status = SelectField('New Ticket Status',
+                             choices=[
+                                 (TicketStatus.RESOLVED_UNPAID.value, "Resolve: Fine Upheld (Unpaid)"),
+                                 (TicketStatus.RESOLVED_DISMISSED.value, "Resolve: Dismiss Ticket"),
+                                 (TicketStatus.CANCELLED.value, "Cancel Ticket (e.g., error in issuance)")
+                             ],
+                             validators=[DataRequired()])
+    resolution_notes = TextAreaField('Admin Resolution Notes', validators=[DataRequired(), Length(min=10, max=2000)])
+    submit = SubmitField('Update Ticket Status')
+
+
+class ReviewPermitApplicationForm(FlaskForm):
+    new_status = SelectField('Application Status', choices=[], validators=[DataRequired()]) # Choices populated in route
+    permit_fee = DecimalField('Permit Fee (if approving)', places=2, validators=[Optional()])
+    officer_notes = TextAreaField('Officer/Admin Notes (feedback to user or internal)', validators=[Optional(), Length(max=2000)])
+    submit = SubmitField('Update Application Status')
+
+    def __init__(self, *args, **kwargs):
+        super(ReviewPermitApplicationForm, self).__init__(*args, **kwargs)
+        from app.models import PermitApplicationStatus
+        self.new_status.choices = [
+            (PermitApplicationStatus.APPROVED_PENDING_PAYMENT.value, "Approve (Pending Payment)"),
+            (PermitApplicationStatus.REQUIRES_MODIFICATION.value, "Requires Modification (Send back to user)"),
+            (PermitApplicationStatus.REJECTED.value, "Reject Application"),
+            (PermitApplicationStatus.CANCELLED_BY_ADMIN.value, "Cancel Application (Admin Action)")
+        ]
+
+    def validate_permit_fee(self, field):
+        if self.new_status.data == PermitApplicationStatus.APPROVED_PENDING_PAYMENT.value:
+            if field.data is None or field.data <= 0:
+                raise ValidationError('A positive Permit Fee is required when approving an application.')
+        elif field.data is not None and field.data < 0:
+             raise ValidationError('Permit Fee cannot be negative.')
+
+
 class SendMessageForm(FlaskForm):
     body = TextAreaField('Message', validators=[DataRequired(), Length(min=1, max=5000)])
     submit = SubmitField('Send Message')
+
 
 class StartConversationForm(FlaskForm):
     user_search = StringField('Recipient Username', validators=[DataRequired(), Length(min=3)])
@@ -355,77 +299,50 @@ class StartConversationForm(FlaskForm):
     submit = SubmitField('Start Conversation')
 
 
-class EditListingForm(FlaskForm):
-    item_name = StringField('Item Name', validators=[DataRequired(), Length(min=3, max=150)])
-    description = TextAreaField('Item Description', validators=[Optional(), Length(max=1000)])
-    price = DecimalField('Price (per unit)', places=2, validators=[DataRequired()])
-    quantity = DecimalField('Quantity Available', places=2, validators=[DataRequired()])
-    unit = StringField('Unit', validators=[DataRequired(), Length(min=1, max=50)])
-    submit = SubmitField('Update Listing')
+class SubmitAuctionItemForm(FlaskForm):
+    item_name = StringField('Item Name', validators=[DataRequired(), Length(min=3, max=200)])
+    item_description = TextAreaField('Item Description', validators=[DataRequired(), Length(min=10, max=2000)])
+    suggested_starting_bid = DecimalField('Suggested Starting Bid (Optional, e.g., 10.00)', places=2, validators=[Optional()])
+    image_url = StringField('Image URL (Optional, e.g., https://.../image.png)', validators=[Optional(), URL(message="Please enter a valid URL for the image."), Length(max=512)])
+    submit = SubmitField('Submit Item for Auction Approval')
 
-    def validate_price(self, field):
-        if field.data is not None and field.data <= 0:
-            raise ValidationError('Price must be a positive value.')
-
-    def validate_quantity(self, field):
-        if field.data is not None and field.data <= 0:
-            raise ValidationError('Quantity must be a positive value.')
-
-from wtforms.validators import DataRequired, Length, Optional, ValidationError
-from app.models import MarketplaceItemStatus
+    def validate_suggested_starting_bid(self, field):
+        if field.data is not None and field.data < 0:
+            raise ValidationError('Suggested starting bid cannot be negative.')
 
 
-class CreateListingForm(FlaskForm):
-    item_name = StringField('Item Name', validators=[DataRequired(), Length(max=200)])
-    description = TextAreaField('Description (Optional)', validators=[Optional(), Length(max=1000)])
-    price = DecimalField('Price', places=2, validators=[DataRequired()])
-    quantity = DecimalField('Quantity', places=2, validators=[DataRequired()])
-    unit = StringField('Unit (e.g., items, liters, kg)', validators=[DataRequired(), Length(max=50)])
-    submit = SubmitField('Create Listing')
-
-from app.custom_validators import must_be_positive
-
-class ProductForm(FlaskForm):
-    price = DecimalField('Price', validators=[must_be_positive])
-    quantity = IntegerField('Quantity', validators=[must_be_positive])
+class TaxBracketForm(FlaskForm):
+    name = StringField('Bracket Name', validators=[DataRequired(), Length(min=3, max=100)])
+    description = TextAreaField('Description', validators=[Length(max=255)])
+    min_balance = DecimalField('Minimum Balance (Inclusive)', places=2, validators=[DataRequired()])
+    max_balance = DecimalField('Maximum Balance (Exclusive, leave blank for top tier)', places=2, validators=[Optional()])
+    tax_rate = DecimalField('Tax Rate (Percentage, e.g., 1.5 for 1.5%)', places=2, validators=[DataRequired()])
+    is_active = BooleanField('Active', default=True)
+    submit = SubmitField('Save Tax Bracket')
 
 
-class EditProfileForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired()])
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    about_me = TextAreaField('About me', validators=[Length(min=0, max=140)])
-    submit = SubmitField('Save')
+    def validate_max_balance(self, field):
+        if field.data is not None and self.min_balance.data is not None:
+            if field.data <= self.min_balance.data:
+                raise ValidationError('Max Balance must be greater than Min Balance.')
 
-    def __init__(self, original_email, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.original_email = original_email
+    def validate_name(self, name):
+        existing_bracket = TaxBracket.query.filter_by(name=name.data).first()
+        if existing_bracket:
+            if hasattr(self, 'obj') and self.obj and hasattr(self.obj, 'id') and existing_bracket.id != self.obj.id:
+                 raise ValidationError('This tax bracket name is already in use.')
+            elif not (hasattr(self, 'obj') and self.obj and hasattr(self.obj, 'id')):
+                 raise ValidationError('This tax bracket name is already in use.')
 
-    def validate_email(self, email):
-        if email.data != self.original_email:
-            user = User.query.filter_by(email=email.data).first()
-            if user:
-                raise ValidationError('This email is already in use.')
 
-# --- Rules Editing Form (Admin) ---
-class EditRulesForm(FlaskForm):
-    content_markdown = TextAreaField('Rules Content (Markdown Format)', 
-                                     validators=[DataRequired(), Length(min=20)], 
-                                     render_kw={'rows': 25, 'class': 'form-control'})
-    submit = SubmitField('Save Rules')
-
-class EditUserRoleForm(FlaskForm):
-    role = SelectField('Role', choices=[(role.name, role.value) for role in UserRole], validators=[DataRequired()])
-    submit = SubmitField('Update Role')
-
-class CompanyForm(FlaskForm):
-    name = StringField('Company Name', validators=[DataRequired(), Length(min=3, max=128)])
-    details = TextAreaField('Company Details', validators=[Optional(), Length(max=1024)])
-    submit = SubmitField('Add Company')
-
-class FarmerForm(FlaskForm):
-    submit = SubmitField('Register as Farmer')
-
-class ParcelForm(FlaskForm):
-    location = StringField('Parcel Location', validators=[DataRequired(), Length(min=3, max=256)])
-    size = DecimalField('Parcel Size (in acres)', validators=[DataRequired()])
-    submit = SubmitField('Add Parcel')
+class TransactionForm(FlaskForm):
+    sender_account_id = IntegerField('Sender Account ID', validators=[DataRequired()])
+    receiver_account_id = IntegerField('Receiver Account ID', validators=[DataRequired()])
+    amount = DecimalField('Amount', validators=[DataRequired(), NumberRange(min=0.01)])
+    transaction_type = SelectField(
+        'Transaction Type',
+        choices=[(t.name, t.value) for t in TransactionType],
+        validators=[DataRequired()]
+    )
+    description = StringField('Description')
+    submit = SubmitField('Submit')

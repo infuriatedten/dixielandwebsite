@@ -53,14 +53,7 @@ def create_app(config_class=Config):
     migrate.init_app(app, db)
 
     # Import models for SQLAlchemy
-    from app.models import (
-        User, Account, Transaction, TransactionType,
-        TaxBracket, AutomatedTaxDeductionLog,
-        Ticket, TicketStatus,
-        PermitApplication, PermitApplicationStatus,
-        MarketplaceListing, MarketplaceItemStatus,
-        Inspection, UserRole
-    )
+    from app.models import User, Account, Transaction, TransactionType, TaxBracket, AutomatedTaxDeductionLog, Ticket, TicketStatus, PermitApplication, PermitApplicationStatus, MarketplaceListing, MarketplaceListingStatus, Inspection, UserRole, UserVehicle, VehicleRegion, Conversation, ConversationStatus, Message, Notification, NotificationType, AuctionItem, AuctionStatus, AuctionBid, RulesContent, Company, Farmer, Parcel
 
     # Inject UserRole into templates
     @app.context_processor
