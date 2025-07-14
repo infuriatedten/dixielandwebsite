@@ -69,7 +69,7 @@ def list_issued_tickets():
         query = query.filter_by(issued_by_officer_id=current_user.id)
 
     tickets_pagination = query.order_by(Ticket.issue_date.desc()).paginate(page=page, per_page=10)
-    return render_template('dot/list_issued_tickets.html', title='My Issued Tickets', tickets_pagination=tickets_pagination)
+    return render_template('dot/list_issued_tickets.html', title='My Issued Tickets', tickets_pagination=tickets_pagination, TicketStatus=TicketStatus)
 
 
 # --- User Routes for Tickets ---

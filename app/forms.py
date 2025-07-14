@@ -411,3 +411,7 @@ class EditRulesForm(FlaskForm):
                                      validators=[DataRequired(), Length(min=20)], 
                                      render_kw={'rows': 25, 'class': 'form-control'})
     submit = SubmitField('Save Rules')
+
+class EditUserRoleForm(FlaskForm):
+    role = SelectField('Role', choices=[(role.name, role.value) for role in UserRole], validators=[DataRequired()])
+    submit = SubmitField('Update Role')

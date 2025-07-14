@@ -5,14 +5,14 @@ from datetime import datetime
 
 from app import db
 from app.models import (
-    User, Account, Transaction, TransactionType, TaxBracket,
+    User, UserRole, Account, Transaction, TransactionType, TaxBracket,
     AutomatedTaxDeductionLog, Ticket, TicketStatus,
     PermitApplication, PermitApplicationStatus,
     Inspection, NotificationType
 )
 from app.forms import (
     TransactionForm, AccountForm, EditBalanceForm,
-    TaxBracketForm, ResolveTicketForm
+    TaxBracketForm, ResolveTicketForm, EditUserRoleForm
 )
 from app.decorators import admin_required
 from app.services import notification_service  # Assuming this exists
@@ -102,12 +102,22 @@ def edit_account(account_id):
     return render_template('admin/edit_account_balance.html', account=account, form=form)
 
 # User Management
-@admin_bp.route('/users')
+@admin_bp.route('/users', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def users():
+    form = EditUserRoleForm()
+    if form.validate_on_submit():
+        user = User.query.get(request.form.get('user_id'))
+        if user:
+            user.role = UserRole[form.role.data]
+            db.session.commit()
+            flash(f'Successfully updated role for {user.username}.', 'success')
+        else:
+            flash('User not found.', 'danger')
+        return redirect(url_for('admin.users'))
     users = User.query.all()
-    return render_template('admin/users.html', users=users)
+    return render_template('admin/users.html', users=users, form=form)
 
 # Transactions
 @admin_bp.route('/transactions', methods=['GET', 'POST'])

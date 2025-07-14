@@ -37,7 +37,7 @@
   <ul>
     {% for txn in transactions %}
       <li>
-        {{ txn.timestamp }}: {{ txn.transaction_type.name }} - 
+        {{ txn.timestamp }}: {{ txn.type.name }} -
         From {{ txn.sender_account_id }} to {{ txn.receiver_account_id }}: ${{ txn.amount }}
       </li>
     {% endfor %}
