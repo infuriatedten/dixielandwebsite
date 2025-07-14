@@ -503,6 +503,7 @@ class AuctionStatus(enum.Enum):
     ACTIVE = "active"
     CLOSED = "closed"
     CANCELLED = "cancelled"
+    CANCELLED_BY_ADMIN = "cancelled_by_admin"
 
 
 from datetime import datetime

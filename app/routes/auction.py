@@ -21,7 +21,7 @@ def index():
                                      .order_by(AuctionItem.current_end_time.asc())\
                                      .paginate(page=page, per_page=10) # Configurable per_page
     return render_template('auction/auction_list.html', title='Active Auctions',
-                           auctions=active_auctions, AuctionStatus=AuctionStatus)
+                           auctions=active_auctions, AuctionStatus=AuctionStatus, AuctionBid=AuctionBid)
 
 
 @auction_bp.route('/submit', methods=['GET', 'POST'])
@@ -120,7 +120,7 @@ def view_auction(auction_id):
 
     return render_template('auction/view_auction_detail.html', title=auction_item.item_name,
                            auction=auction_item, form=form, highest_bid=highest_bid,
-                           time_remaining=time_remaining, AuctionStatus=AuctionStatus)
+                           time_remaining=time_remaining, AuctionStatus=AuctionStatus, AuctionBid=AuctionBid)
 
 
 @auction_bp.route('/<int:auction_id>/cancel_submission', methods=['POST'])
@@ -224,7 +224,7 @@ def manage_all_auctions():
 
     all_auctions = query.order_by(AuctionItem.submission_time.desc()).paginate(page=page, per_page=15)
     return render_template('admin/auction/manage_all_auctions.html', title='Manage All Auctions',
-                           auctions=all_auctions, AuctionStatus=AuctionStatus, current_status_filter_str=status_filter_str)
+                           auctions=all_auctions, AuctionStatus=AuctionStatus, current_status_filter_str=status_filter_str, AuctionBid=AuctionBid)
 
 
 @auction_bp.route('/admin/cancel/<int:auction_id>', methods=['POST'])

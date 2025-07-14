@@ -10,12 +10,11 @@
 
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <form method="POST" action="{{ url_for('vehicle.register_vehicle') }}" novalidate>
+                    <form method="POST" action="{{ url_for('vehicle.register_vehicle_route') }}" novalidate>
                         {{ form.hidden_tag() }}
 
                         {{ wtf.render_field(form.vehicle_make, placeholder="e.g., Ford, Scania, John Deere") }}
                         {{ wtf.render_field(form.vehicle_model, placeholder="e.g., F-150, R730, 9RX") }}
-                        {{ wtf.render_field(form.vehicle_type, placeholder="e.g., Truck, Tractor, Sedan") }}
                         {{ wtf.render_field(form.vehicle_description, placeholder="e.g., My primary logging truck, Red sports car with custom rims") }}
                         {{ wtf.render_field(form.region_format) }}
 

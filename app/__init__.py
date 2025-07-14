@@ -14,9 +14,24 @@ login_manager = LoginManager()
 scheduler = APScheduler()
 migrate = Migrate()
 
+import re
+from jinja2 import pass_context
+from markupsafe import Markup, escape
+
+_paragraph_re = re.compile(r'(?:\r\n|\r|\n){2,}')
+
+@pass_context
+def nl2br(context, value):
+    result = u'\n\n'.join(u'<p>%s</p>' % p.replace('\n', '<br>\n') \
+        for p in _paragraph_re.split(escape(value)))
+    if context.environment.autoescape:
+        result = Markup(result)
+    return result
+
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+    app.jinja_env.filters['nl2br'] = nl2br
 
     # Fallback for placeholder or missing DB URI
     if not app.config.get('SQLALCHEMY_DATABASE_URI') or 'user:password@host/dbname' in app.config['SQLALCHEMY_DATABASE_URI']:

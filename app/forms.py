@@ -223,26 +223,6 @@ class CreateListingForm(FlaskForm):
         if field.data is not None and field.data <= 0:
             raise ValidationError('Quantity must be a positive value.')
 
-# This EditListingForm seems to be a duplicate of the one above for Marketplace.
-# I will remove this duplicate block.
-# class EditListingForm(FlaskForm):
-#     item_name = StringField('Item Name', validators=[DataRequired(), Length(min=3, max=150)])
-#     description = TextAreaField('Item Description', validators=[Optional(), Length(max=1000)])
-#     price = DecimalField('Price (per unit)', places=2, validators=[DataRequired()])
-#     quantity = DecimalField('Quantity Available', places=2, validators=[DataRequired()])
-#     unit = StringField('Unit', validators=[DataRequired(), Length(min=1, max=50)])
-#     # Status might be handled by separate actions rather than a field here
-#     # status = SelectField('Status', choices=[(s.value, s.name.replace("_", " ").title()) for s in MarketplaceListingStatus], validators=[DataRequired()])
-#     submit = SubmitField('Update Listing')
-
-#     def validate_price(self, field):
-#         if field.data is not None and field.data <= 0:
-#             raise ValidationError('Price must be a positive value.')
-
-#     def validate_quantity(self, field):
-#         if field.data is not None and field.data <= 0:
-#             raise ValidationError('Quantity must be a positive value.')
-
 # --- DOT Inspection Form ---
 class RecordInspectionForm(FlaskForm):
     inspected_user_search = StringField('Inspected User\'s Username (Optional, if registered)', validators=[Optional(), Length(min=3)])
@@ -259,21 +239,18 @@ class RecordInspectionForm(FlaskForm):
 
 
 # --- Auction House Forms ---
-# from app.models import AuctionItem # Not strictly needed for basic form defs, but good for context
 from wtforms import StringField, TextAreaField, DecimalField, SubmitField, SelectField # Added SelectField
 from wtforms.validators import DataRequired, Length, Optional, URL # URL validator if using URLField
 from decimal import Decimal # For default values in PlaceBidForm
 
 # --- User Profile Forms (Update) ---
-class EditProfileForm(FlaskForm): # Assuming a base EditProfileForm might exist or be new
+class EditProfileForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
-    # Add other editable profile fields here if any, e.g., discord_username
-    # discord_username = StringField('Discord Username (e.g., user#1234)', validators=[Optional(), Length(max=100)])
     region = SelectField('Region (for License Plate Format)',
                          choices=[('US', 'US (e.g., 123-ABC)'),
                                   ('EU', 'EU (e.g., ABC-123)'),
                                   ('OTHER_DEFAULT', 'Other/Default')],
-                         validators=[Optional()]) # Optional for now, or DataRequired if must be set
+                         validators=[Optional()])
     submit = SubmitField('Update Profile')
 
     def __init__(self, original_email, *args, **kwargs):
@@ -287,16 +264,20 @@ class EditProfileForm(FlaskForm): # Assuming a base EditProfileForm might exist 
                 raise ValidationError('That email address is already in use. Please choose a different one.')
 
 # --- Vehicle Registration Form ---
+from app.models import VehicleRegion # For choices
+
 class RegisterVehicleForm(FlaskForm):
-    make = StringField('Vehicle Make (e.g., Ford, Claas)', validators=[DataRequired(), Length(max=100)])
-    model = StringField('Vehicle Model (e.g., F-150, Lexion 8900)', validators=[DataRequired(), Length(max=100)])
-    vehicle_type = StringField('Vehicle Type (e.g., Truck, Sedan, Tractor)', validators=[DataRequired(), Length(max=100)])
-    # License plate is auto-generated, so not a form field for user input here.
+    vehicle_make = StringField('Vehicle Make (e.g., Ford, Volvo)', validators=[DataRequired(), Length(max=100)])
+    vehicle_model = StringField('Vehicle Model (e.g., F-150, FH16)', validators=[DataRequired(), Length(max=100)])
+    vehicle_type = StringField('Vehicle Type (e.g., Sedan, Truck, Tractor)', validators=[DataRequired(), Length(min=3, max=100)])
+    vehicle_description = TextAreaField('Vehicle Description/Details (Optional)', validators=[Optional(), Length(max=255)])
+    region_format = SelectField('License Plate Region',
+                                choices=[(region.name, region.value) for region in VehicleRegion],
+                                validators=[DataRequired()])
     submit = SubmitField('Register Vehicle')
 
 # --- Messaging Forms ---
 class NewConversationForm(FlaskForm): # Admin to User
-    # User selection might be a SelectField populated in the route, or a search field
     user_search = StringField('Recipient Username', validators=[DataRequired(), Length(min=3)])
     subject = StringField('Subject', validators=[DataRequired(), Length(min=5, max=255)])
     message_body = TextAreaField('Message', validators=[DataRequired(), Length(min=10)], render_kw={'rows': 5})
@@ -311,7 +292,7 @@ class SubmitAuctionItemForm(FlaskForm):
     item_name = StringField('Item Name', validators=[DataRequired(), Length(min=3, max=200)])
     item_description = TextAreaField('Item Description', validators=[DataRequired(), Length(min=10, max=2000)])
     suggested_starting_bid = DecimalField('Suggested Starting Bid (Optional, e.g., 10.00)', places=2, validators=[Optional()])
-    image_url = StringField('Image URL (Optional, e.g., https://.../image.png)', validators=[Optional(), URL(message="Please enter a valid URL for the image."), Length(max=512)]) # Using StringField with URL validator
+    image_url = StringField('Image URL (Optional, e.g., https://.../image.png)', validators=[Optional(), URL(message="Please enter a valid URL for the image."), Length(max=512)])
     submit = SubmitField('Submit Item for Auction Approval')
 
     def validate_suggested_starting_bid(self, field):
@@ -320,33 +301,25 @@ class SubmitAuctionItemForm(FlaskForm):
 
 class ApproveAuctionItemForm(FlaskForm):
     actual_starting_bid = DecimalField('Actual Starting Bid', places=2, validators=[DataRequired()])
-    minimum_bid_increment = DecimalField('Minimum Bid Increment (Optional)', places=2, validators=[Optional(),]) # Removed DataRequired if using default
-    # Duration could be a field if admin can change it from default:
-    # auction_duration_hours = IntegerField('Auction Duration (Hours)', validators=[Optional(), NumberRange(min=1, max=168)])
+    minimum_bid_increment = DecimalField('Minimum Bid Increment (Optional)', places=2, validators=[Optional(),])
     admin_notes = TextAreaField('Admin Notes (e.g., for rejection, or internal)', validators=[Optional(), Length(max=2000)])
     submit_approve = SubmitField('Approve & Start Auction')
-    submit_reject = SubmitField('Reject Submission') # Separate submit for rejection
+    submit_reject = SubmitField('Reject Submission')
 
     def __init__(self, *args, **kwargs):
         super(ApproveAuctionItemForm, self).__init__(*args, **kwargs)
-        if self.minimum_bid_increment.data is None: # Set default if not provided by object or form data
+        if self.minimum_bid_increment.data is None:
             from flask import current_app
             self.minimum_bid_increment.data = current_app.config.get('AUCTION_DEFAULT_MIN_BID_INCREMENT', 1.00)
 
 
     def validate_actual_starting_bid(self, field):
-        if field.data is not None and field.data <= 0: # Starting bid must be positive
+        if field.data is not None and field.data <= 0:
             raise ValidationError('Actual starting bid must be a positive value.')
 
     def validate_minimum_bid_increment(self, field):
         if field.data is not None and field.data <= 0:
             raise ValidationError('Minimum bid increment must be a positive value if set.')
-
-    def validate_admin_notes(self, field):
-        # If rejecting, notes should be required (this logic might be better in the route)
-        # For now, just a length validator.
-        pass
-
 
 class PlaceBidForm(FlaskForm):
     bid_amount = DecimalField('Your Bid Amount', places=2, validators=[DataRequired()])
@@ -356,14 +329,14 @@ class PlaceBidForm(FlaskForm):
         super(PlaceBidForm, self).__init__(*args, **kwargs)
         self.current_highest_bid = current_highest_bid if current_highest_bid is not None else Decimal('0.00')
         self.starting_bid = starting_bid if starting_bid is not None else Decimal('0.00')
-        self.min_increment = min_increment if min_increment is not None else Decimal('0.01') # Default to 0.01 if not set
+        self.min_increment = min_increment if min_increment is not None else Decimal('0.01')
 
     def validate_bid_amount(self, field):
         min_next_bid = self.current_highest_bid + self.min_increment
-        if self.current_highest_bid == Decimal('0.00') and self.starting_bid > Decimal('0.00'): # First bid
+        if self.current_highest_bid == Decimal('0.00') and self.starting_bid > Decimal('0.00'):
             min_next_bid = self.starting_bid
 
-        if field.data is None: # Should be caught by DataRequired
+        if field.data is None:
             raise ValidationError('Bid amount is required.')
         if field.data < min_next_bid:
             raise ValidationError(f'Your bid must be at least {min_next_bid:.2f} (current highest/starting + increment).')
@@ -375,35 +348,18 @@ class SendMessageForm(FlaskForm):
     submit = SubmitField('Send Message')
 
 class StartConversationForm(FlaskForm):
-    user_search = StringField('Recipient Username', validators=[DataRequired(), Length(min=3)]) # Admin searches for user
+    user_search = StringField('Recipient Username', validators=[DataRequired(), Length(min=3)])
     subject = StringField('Subject', validators=[Optional(), Length(max=255)])
     initial_message_body = TextAreaField('Initial Message', validators=[DataRequired(), Length(min=5, max=5000)])
     submit = SubmitField('Start Conversation')
 
 
-# --- Vehicle Registration Form ---
-from app.models import VehicleRegion # For choices
-
-class RegisterVehicleForm(FlaskForm):
-    vehicle_make = StringField('Vehicle Make (e.g., Ford, Volvo)', validators=[Optional(), Length(max=100)])
-    vehicle_model = StringField('Vehicle Model (e.g., F-150, FH16)', validators=[Optional(), Length(max=100)])
-    # vehicle_description was in service, but form plan had vehicle_type. Let's use vehicle_type as primary identifier.
-    vehicle_type = StringField('Vehicle Type (e.g., Sedan, Truck, Tractor)', validators=[DataRequired(), Length(min=3, max=100)])
-    vehicle_description = TextAreaField('Vehicle Description/Details (Optional)', validators=[Optional(), Length(max=255)])
-    region_format = SelectField('License Plate Region',
-                                choices=[(region.name, region.value) for region in VehicleRegion],
-                                validators=[DataRequired()])
-    submit = SubmitField('Register Vehicle')
-
-
-class EditListingForm(FlaskForm): # Similar to Create, but might have fewer editable fields or different validation
+class EditListingForm(FlaskForm):
     item_name = StringField('Item Name', validators=[DataRequired(), Length(min=3, max=150)])
     description = TextAreaField('Item Description', validators=[Optional(), Length(max=1000)])
     price = DecimalField('Price (per unit)', places=2, validators=[DataRequired()])
     quantity = DecimalField('Quantity Available', places=2, validators=[DataRequired()])
     unit = StringField('Unit', validators=[DataRequired(), Length(min=1, max=50)])
-    # Status might be handled by separate actions rather than a field here
-    # status = SelectField('Status', choices=[(s.value, s.name.replace("_", " ").title()) for s in MarketplaceListingStatus], validators=[DataRequired()])
     submit = SubmitField('Update Listing')
 
     def validate_price(self, field):
@@ -414,48 +370,6 @@ class EditListingForm(FlaskForm): # Similar to Create, but might have fewer edit
         if field.data is not None and field.data <= 0:
             raise ValidationError('Quantity must be a positive value.')
 
-# The following CreateListingForm and EditListingForm for Marketplace are duplicates of earlier ones.
-# Removing these redundant definitions. The ones defined under "# --- Marketplace Forms ---" will be used.
-
-# # --- Marketplace Forms (Website - Optional) ---
-# class CreateListingForm(FlaskForm):
-#     item_name = StringField('Item Name', validators=[DataRequired(), Length(max=200)])
-#     description = TextAreaField('Description (Optional)', validators=[Optional(), Length(max=1000)])
-#     price = DecimalField('Price', places=2, validators=[DataRequired()])
-#     quantity = DecimalField('Quantity', places=2, validators=[DataRequired()]) # Allow partial quantities e.g. 0.5
-#     unit = StringField('Unit (e.g., items, liters, kg)', validators=[DataRequired(), Length(max=50)])
-#     submit = SubmitField('Create Listing')
-
-#     def validate_price(self, field):
-#         if field.data is not None and field.data <= 0:
-#             raise ValidationError('Price must be a positive value.')
-
-#     def validate_quantity(self, field):
-#         if field.data is not None and field.data <= 0:
-#             raise ValidationError('Quantity must be a positive value.')
-
-
-# class EditListingForm(FlaskForm):
-#     item_name = StringField('Item Name', validators=[DataRequired(), Length(max=200)])
-#     description = TextAreaField('Description (Optional)', validators=[Optional(), Length(max=1000)])
-#     price = DecimalField('Price', places=2, validators=[DataRequired()])
-#     quantity = DecimalField('Quantity', places=2, validators=[DataRequired()])
-#     unit = StringField('Unit', validators=[DataRequired(), Length(max=50)])
-#     # Status might be editable here too, or only via Discord bot commands
-#     status = SelectField('Status', choices=[(s.value, s.name.replace("_", " ").title()) for s in MarketplaceItemStatus],
-#                          validators=[DataRequired()])
-#     submit = SubmitField('Update Listing')
-
-#     def validate_price(self, field):
-#         if field.data is not None and field.data <= 0:
-#             raise ValidationError('Price must be a positive value.')
-
-#     def validate_quantity(self, field):
-#         if field.data is not None and field.data <= 0:
-#             raise ValidationError('Quantity must be a positive value.')
-
-from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, DecimalField, SubmitField, SelectField
 from wtforms.validators import DataRequired, Length, Optional, ValidationError
 from app.models import MarketplaceItemStatus
 
@@ -464,24 +378,16 @@ class CreateListingForm(FlaskForm):
     item_name = StringField('Item Name', validators=[DataRequired(), Length(max=200)])
     description = TextAreaField('Description (Optional)', validators=[Optional(), Length(max=1000)])
     price = DecimalField('Price', places=2, validators=[DataRequired()])
-    quantity = DecimalField('Quantity', places=2, validators=[DataRequired()])  # Allows partial quantities e.g. 0.5
+    quantity = DecimalField('Quantity', places=2, validators=[DataRequired()])
     unit = StringField('Unit (e.g., items, liters, kg)', validators=[DataRequired(), Length(max=50)])
     submit = SubmitField('Create Listing')
 
-from flask_wtf import FlaskForm
-from wtforms import DecimalField, IntegerField
 from app.custom_validators import must_be_positive
 
 class ProductForm(FlaskForm):
     price = DecimalField('Price', validators=[must_be_positive])
     quantity = IntegerField('Quantity', validators=[must_be_positive])
 
-
-
-from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, SubmitField
-from wtforms.validators import DataRequired, Email, Length, ValidationError
-from app.models import User  # import User model to query in validator
 
 class EditProfileForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
