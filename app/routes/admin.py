@@ -4,6 +4,7 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
 from app.enums import MarketplaceListingStatus
+from app.models import Account
 
 class UserRole(enum.Enum):
     USER = "user"
@@ -11,30 +12,26 @@ class UserRole(enum.Enum):
     ADMIN = "admin"
 
 class User(UserMixin, db.Model):
-    __tablename__ = 'users' # Explicitly naming the table
+    __tablename__ = 'users'
+    __table_args__ = {'extend_existing': True}  # Add this line to prevent duplicate table definition errors
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True, nullable=False)
-    email = db.Column(db.String(120), index=True, unique=True, nullable=False) # Added email
-    password_hash = db.Column(db.String(256), nullable=False) # Increased length for future hash algorithms
+    email = db.Column(db.String(120), index=True, unique=True, nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
     role = db.Column(db.Enum(UserRole), default=UserRole.USER, nullable=False)
 
-    # Relationships (examples, will be built out in respective modules)
-    # accounts = db.relationship('Account', backref='owner', lazy='dynamic')
-    # tickets_issued = db.relationship('Ticket', foreign_keys='Ticket.issued_by_officer_id', backref='issuer', lazy='dynamic')
-    # tickets_received = db.relationship('Ticket', foreign_keys='Ticket.issued_to_user_id', backref='recipient', lazy='dynamic')
-    # permit_applications = db.relationship('PermitApplication', backref='applicant', lazy='dynamic')
-    # marketplace_listings = db.relationship('MarketplaceListing', backref='seller', lazy='dynamic')
-    # inspections_conducted = db.relationship('Inspection', foreign_keys='Inspection.officer_user_id', backref='inspecting_officer', lazy='dynamic')
-    # inspections_on_user = db.relationship('Inspection', foreign_keys='Inspection.inspected_user_id', backref='inspected_party', lazy='dynamic')
-
     # Discord Integration fields
-    discord_user_id = db.Column(db.String(100), nullable=True, unique=True, index=True) # Discord's Snowflake ID for bot interactions
-    discord_username = db.Column(db.String(100), nullable=True) # Discord username#discriminator, for display or lookup
+    discord_user_id = db.Column(db.String(100), nullable=True, unique=True, index=True)
+    discord_username = db.Column(db.String(100), nullable=True)
 
     # User Profile Region
     region = db.Column(db.Enum('US', 'EU', 'OTHER_DEFAULT', name='region_enum'), nullable=True, default='OTHER_DEFAULT')
 
+    # Example relationships (you can uncomment and define in their respective modules later)
+    # accounts = db.relationship('Account', backref='owner', lazy='dynamic')
+    # tickets_issued = db.relationship('Ticket', foreign_keys='Ticket.issued_by_officer_id', backref='issuer', lazy='dynamic')
+    # tickets_received = db.relationship('Ticket', foreign_keys='Ticket.issued_to_user_id', backref='recipient', lazy='dynamic')
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -44,28 +41,6 @@ class User(UserMixin, db.Model):
 
     def __repr__(self):
         return f'<User {self.username} ({self.role.value})>'
-
-from datetime import datetime
-
-# Placeholder for other models to be added in future steps
-class Account(db.Model):
-    __tablename__ = 'accounts'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    balance = db.Column(db.Numeric(10, 2), default=0.00, nullable=False) # Using Numeric for currency
-    currency = db.Column(db.String(10), default="GDC", nullable=False) # Game Dollar Credits
-    name = db.Column(db.String(100), nullable=True) # Optional account name
-    is_company = db.Column(db.Boolean, default=False, nullable=False) # Is this a company account?
-    last_updated_on = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    # Potentially: admin_id who last updated, if needed for audit.
-    # last_updated_by_admin_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-
-    user = db.relationship('User', backref=db.backref('accounts', lazy='dynamic'))
-    transactions = db.relationship('Transaction', backref='account', lazy='dynamic', cascade="all, delete-orphan")
-
-    def __repr__(self):
-        return f'<Account {self.id} for User {self.user_id} - {self.balance} {self.currency}>'
 
 class TransactionType(enum.Enum):
     INITIAL_SETUP = "initial_setup"

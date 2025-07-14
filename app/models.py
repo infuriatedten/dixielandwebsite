@@ -48,17 +48,26 @@ class User(UserMixin, db.Model):
 from datetime import datetime
 
 # Placeholder for other models to be added in future steps
+from datetime import datetime
+from app import db  # or your correct import path
+
+# app/models/account.py
+
+from datetime import datetime
+from app import db
+
 class Account(db.Model):
     __tablename__ = 'accounts'
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    balance = db.Column(db.Numeric(10, 2), default=0.00, nullable=False) # Using Numeric for currency
-    currency = db.Column(db.String(10), default="GDC", nullable=False) # Game Dollar Credits
-    name = db.Column(db.String(100), nullable=True) # Optional account name
-    is_company = db.Column(db.Boolean, default=False, nullable=False) # Is this a company account?
+    balance = db.Column(db.Numeric(10, 2), default=0.00, nullable=False)  # Using Numeric for currency
+    currency = db.Column(db.String(10), default="GDC", nullable=False)    # Game Dollar Credits
+    name = db.Column(db.String(100), nullable=True)                       # Optional account name
+    is_company = db.Column(db.Boolean, default=False, nullable=False)     # Is this a company account?
     last_updated_on = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Potentially: admin_id who last updated, if needed for audit.
+    # Optional for future auditing:
     # last_updated_by_admin_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
     user = db.relationship('User', backref=db.backref('accounts', lazy='dynamic'))
@@ -66,6 +75,8 @@ class Account(db.Model):
 
     def __repr__(self):
         return f'<Account {self.id} for User {self.user_id} - {self.balance} {self.currency}>'
+
+
 
 class TransactionType(enum.Enum):
     INITIAL_SETUP = "initial_setup"

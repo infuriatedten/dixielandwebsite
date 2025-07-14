@@ -1,12 +1,14 @@
 import os
+import re
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_apscheduler import APScheduler
 from flask_migrate import Migrate
 from whitenoise import WhiteNoise
-
 from config import Config
+from jinja2 import pass_context
+from markupsafe import Markup, escape
 
 # Initialize extensions
 db = SQLAlchemy()
@@ -14,16 +16,14 @@ login_manager = LoginManager()
 scheduler = APScheduler()
 migrate = Migrate()
 
-import re
-from jinja2 import pass_context
-from markupsafe import Markup, escape
-
 _paragraph_re = re.compile(r'(?:\r\n|\r|\n){2,}')
 
 @pass_context
 def nl2br(context, value):
-    result = u'\n\n'.join(u'<p>%s</p>' % p.replace('\n', '<br>\n') \
-        for p in _paragraph_re.split(escape(value)))
+    result = u'\n\n'.join(
+        u'<p>%s</p>' % p.replace('\n', '<br>\n') 
+        for p in _paragraph_re.split(escape(value))
+    )
     if context.environment.autoescape:
         result = Markup(result)
     return result
