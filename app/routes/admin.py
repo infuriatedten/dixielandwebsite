@@ -8,7 +8,7 @@ from app.models import (
     User, UserRole, Account, Transaction, TransactionType, TaxBracket,
     AutomatedTaxDeductionLog, Ticket, TicketStatus,
     PermitApplication, PermitApplicationStatus,
-    Inspection, NotificationType
+    Inspection, NotificationType, Parcel
 )
 from app.forms import (
     TransactionForm, AccountForm, EditBalanceForm,
@@ -300,3 +300,16 @@ def edit_rules():
     
     return render_template('admin/edit_rules.html', title='Edit Site Rules', form=form, rules_entry=rules_entry)
 
+@admin_bp.route('/parcels/validate', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def validate_parcels():
+    parcels = Parcel.query.filter_by(validated=False).all()
+    if request.method == 'POST':
+        parcel_id = request.form.get('parcel_id')
+        parcel = Parcel.query.get_or_404(parcel_id)
+        parcel.validated = True
+        db.session.commit()
+        flash(f'Parcel {parcel.id} has been validated.', 'success')
+        return redirect(url_for('admin.validate_parcels'))
+    return render_template('admin/validate_parcels.html', parcels=parcels)

@@ -638,3 +638,37 @@ class RulesContent(db.Model):
 
     def __repr__(self):
         return f'<RulesContent last updated on {self.last_edited_on} by User ID {self.last_edited_by_id}>'
+
+class Company(db.Model):
+    __tablename__ = 'companies'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(128), nullable=False)
+    details = db.Column(db.Text, nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+
+    user = db.relationship('User', backref=db.backref('company', uselist=False))
+
+    def __repr__(self):
+        return f'<Company {self.name}>'
+
+class Farmer(db.Model):
+    __tablename__ = 'farmers'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+
+    user = db.relationship('User', backref=db.backref('farmer', uselist=False))
+    parcels = db.relationship('Parcel', backref='farmer', lazy='dynamic')
+
+    def __repr__(self):
+        return f'<Farmer {self.user.username}>'
+
+class Parcel(db.Model):
+    __tablename__ = 'parcels'
+    id = db.Column(db.Integer, primary_key=True)
+    location = db.Column(db.String(256), nullable=False)
+    size = db.Column(db.Float, nullable=False)
+    farmer_id = db.Column(db.Integer, db.ForeignKey('farmers.id'), nullable=False)
+    validated = db.Column(db.Boolean, default=False, nullable=False)
+
+    def __repr__(self):
+        return f'<Parcel {self.id}>'

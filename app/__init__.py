@@ -72,35 +72,35 @@ def create_app(config_class=Config):
     def load_user(user_id):
         return User.query.get(int(user_id))
 
-    # Register Blueprints
-    from app.routes.auth import bp as auth_bp
-    from app.routes.main import main_bp
-    from app.routes.admin import admin_bp
-    from app.routes.banking import bp as banking_bp
-    from app.routes.taxes import bp as taxes_bp
-    from app.routes.dot import bp as dot_bp
-    from app.routes.marketplace import bp as marketplace_bp
-    from app.routes.livemap import livemap_bp
-    from app.routes.auction import auction_bp
-    from app.routes.messaging import messaging_bp
-    from app.routes.notifications import notifications_bp
-    from app.routes.vehicle import bp as vehicle_bp
-
-    app.register_blueprint(auth_bp, url_prefix='/auth')
-    app.register_blueprint(main_bp)
-    app.register_blueprint(admin_bp)
-    app.register_blueprint(vehicle_bp, url_prefix='/vehicle')
-    app.register_blueprint(banking_bp, url_prefix='/banking')
-    app.register_blueprint(taxes_bp, url_prefix='/taxes')
-    app.register_blueprint(dot_bp, url_prefix='/dot')
-    app.register_blueprint(marketplace_bp, url_prefix='/marketplace')
-    app.register_blueprint(livemap_bp, url_prefix='/livemap')
-    app.register_blueprint(auction_bp, url_prefix='/auctions')
-    app.register_blueprint(messaging_bp, url_prefix='/messages')
-    app.register_blueprint(notifications_bp, url_prefix='/notifications')
-
-    # Auto-create tables (dev only — use migrations in prod)
     with app.app_context():
+        # Import and register blueprints
+        from app.routes.auth import bp as auth_bp
+        from app.routes.main import main_bp
+        from app.routes.admin import admin_bp
+        from app.routes.banking import bp as banking_bp
+        from app.routes.taxes import bp as taxes_bp
+        from app.routes.dot import bp as dot_bp
+        from app.routes.marketplace import bp as marketplace_bp
+        from app.routes.livemap import livemap_bp
+        from app.routes.auction import auction_bp
+        from app.routes.messaging import messaging_bp
+        from app.routes.notifications import notifications_bp
+        from app.routes.vehicle import bp as vehicle_bp
+
+        app.register_blueprint(auth_bp, url_prefix='/auth')
+        app.register_blueprint(main_bp)
+        app.register_blueprint(admin_bp)
+        app.register_blueprint(vehicle_bp, url_prefix='/vehicle')
+        app.register_blueprint(banking_bp, url_prefix='/banking')
+        app.register_blueprint(taxes_bp, url_prefix='/taxes')
+        app.register_blueprint(dot_bp, url_prefix='/dot')
+        app.register_blueprint(marketplace_bp, url_prefix='/marketplace')
+        app.register_blueprint(livemap_bp, url_prefix='/livemap')
+        app.register_blueprint(auction_bp, url_prefix='/auctions')
+        app.register_blueprint(messaging_bp, url_prefix='/messages')
+        app.register_blueprint(notifications_bp, url_prefix='/notifications')
+
+        # Auto-create tables (dev only — use migrations in prod)
         print(f"Current DB URI: {app.config['SQLALCHEMY_DATABASE_URI']}")
         try:
             db.create_all()

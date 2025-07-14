@@ -11,8 +11,9 @@ from app.models import (
     TaxBracket, AutomatedTaxDeductionLog,
     Ticket, TicketStatus,
     PermitApplication, PermitApplicationStatus,
-    MarketplaceListing, MarketplaceListingStatus,
-    Inspection
+    MarketplaceListing, MarketplaceItemStatus,
+    Inspection,
+    Company, Farmer, Parcel
 )
 
 @app.shell_context_processor
@@ -31,13 +32,16 @@ def make_shell_context():
         'PermitApplication': PermitApplication,
         'PermitApplicationStatus': PermitApplicationStatus,
         'MarketplaceListing': MarketplaceListing,
-        'MarketplaceListingStatus': MarketplaceListingStatus,
-        'Inspection': Inspection
+        'MarketplaceItemStatus': MarketplaceItemStatus,
+        'Inspection': Inspection,
+        'Company': Company,
+        'Farmer': Farmer,
+        'Parcel': Parcel
     }
 
 if __name__ == '__main__':
     import os
-    port = int(os.environ.get('PORT', 5000))  # Render sets PORT
+    port = int(os.environ.get('PORT', 5001))  # Render sets PORT
 
     with app.app_context():
         print(f"Checking database at URI: {app.config['SQLALCHEMY_DATABASE_URI']}")
@@ -63,4 +67,4 @@ if __name__ == '__main__':
         else:
             print("Admin user already exists.")
 
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=True, use_reloader=False)
