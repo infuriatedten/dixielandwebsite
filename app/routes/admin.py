@@ -159,9 +159,12 @@ def tax():
     form = TaxBracketForm()
     if form.validate_on_submit():
         bracket = TaxBracket(
+            name=form.name.data,
+            description=form.description.data,
             min_balance=form.min_balance.data,
             max_balance=form.max_balance.data,
             tax_rate=form.tax_rate.data,
+            is_active=form.is_active.data
         )
         db.session.add(bracket)
         db.session.commit()
