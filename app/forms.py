@@ -19,9 +19,9 @@ from app.custom_validators import must_be_positive
 
 class AccountForm(FlaskForm):
     user_id = SelectField('User', coerce=int, validators=[DataRequired()])
-    name = StringField('Account Name (Optional)', validators=[Optional(), Length(max=100)]) # Added
+    name = StringField('Account Name (Optional)', validators=[Optional(), Length(max=100)])
     balance = DecimalField('Initial Balance', places=2, validators=[DataRequired()])
-    is_company = BooleanField('Is Company Account?', default=False) # Added
+    is_company = BooleanField('Is Company Account?', default=False)
     currency = StringField('Currency', default='GDC', validators=[DataRequired(), Length(min=3, max=10)])
     submit = SubmitField('Create Account')
 

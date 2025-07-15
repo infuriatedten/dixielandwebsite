@@ -1,78 +1,8 @@
 {% extends "admin/base.html" %}
-{% import "bootstrap_wtf.html" as wtf %}
 
-{% block title %}Admin - Bank Accounts{% endblock %}
+{% block title %}Manage Accounts{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <h1 class="mb-4">Bank Account Management</h1>
-
-    <!-- Account Creation Form -->
-    <div class="card mb-4">
-        <div class="card-header">Create New Bank Account</div>
-        <div class="card-body">
-            <form method="POST" action="{{ url_for('admin.accounts') }}" novalidate>
-                {{ form.hidden_tag() }}
-                
-                <div class="form-group mb-3">
-                    {{ form.user_id.label(class="form-label") }}
-                    {{ form.user_id(class="form-select") }}
-                </div>
-
-                <div class="form-group mb-3">
-                    {{ form.name.label(class="form-label") }}
-                    {{ form.name(class="form-control") }}
-                </div>
-
-                <div class="form-group mb-3">
-                    {{ form.balance.label(class="form-label") }}
-                    {{ form.balance(class="form-control") }}
-                </div>
-                
-                <div class="form-check mb-3">
-                    {{ form.is_company(class="form-check-input") }}
-                    {{ form.is_company.label(class="form-check-label") }}
-                </div>
-                
-                <div class="form-group">
-                    {{ form.submit(class="btn btn-success") }}
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Existing Accounts List -->
-    <h2 class="mt-5 mb-3">Existing Accounts</h2>
-    <table class="table table-striped table-hover">
-        <thead class="thead-dark">
-            <tr>
-                <th>Account ID</th>
-                <th>Owner</th>
-                <th>Account Name</th>
-                <th>Balance</th>
-                <th>Is Company</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for account in accounts %}
-            <tr>
-                <td>{{ account.id }}</td>
-                <td>{{ account.owner_user.username if account.owner_user else 'N/A' }}</td>
-                <td>{{ account.name }}</td>
-                <td>{{ "%.2f"|format(account.balance) }} {{ account.currency }}</td>
-                <td>{{ 'Yes' if account.is_company else 'No' }}</td>
-                <td>
-                    <a href="{{ url_for('admin.edit_account', account_id=account.id) }}" class="btn btn-sm btn-warning">Edit Balance</a>
-                    {# <a href="{{ url_for('banking.view_account', account_id=account.id) }}" class="btn btn-sm btn-info">View Transactions</a> #}
-                </td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="6" class="text-center">No bank accounts found.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+<h1 class="mb-4">Manage Accounts</h1>
+<p>This is a placeholder for the account management page.</p>
 {% endblock %}
