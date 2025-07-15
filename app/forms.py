@@ -134,8 +134,8 @@ class EditProfileForm(FlaskForm):
 
 
 class EditRulesForm(FlaskForm):
-    content_markdown = TextAreaField('Rules Content (Markdown Format)', 
-                                     validators=[DataRequired(), Length(min=20)], 
+    content_markdown = TextAreaField('Rules Content (Markdown Format)',
+                                     validators=[DataRequired(), Length(min=20)],
                                      render_kw={'rows': 25, 'class': 'form-control'})
     submit = SubmitField('Save Rules')
 
