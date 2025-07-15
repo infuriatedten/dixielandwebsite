@@ -13,3 +13,9 @@ def index():
 def tickets():
     # This is a placeholder. You'll need to implement the logic to fetch and display tickets.
     return render_template('admin/tickets.html', title='Manage Tickets')
+
+@admin_bp.route('/rules/edit', methods=['GET', 'POST'])
+@admin_required
+def edit_rules():
+    # This is a placeholder. You'll need to implement the logic to edit the rules.
+    return render_template('admin/edit_rules.html', title='Edit Rules')
