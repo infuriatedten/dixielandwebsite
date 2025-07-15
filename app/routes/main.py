@@ -42,3 +42,4 @@ def view_rules():
     return render_template('main/rules.html', title='Rules', 
                            rules_content_html=rules_content_html, 
                            current_user=current_user, UserRole=UserRole)
+
