@@ -12,7 +12,7 @@ from datetime import datetime
 from decimal import Decimal
 from app.models import (
     User, UserRole, TransactionType, TaxBracket, TicketStatus,
-    PermitApplicationStatus, MarketplaceItemStatus, VehicleRegion
+    PermitApplicationStatus, MarketplaceListingStatus, VehicleRegion
 )
 from app.custom_validators import must_be_positive
 
