@@ -13,7 +13,13 @@ def main_index():
 @main_bp.route('/admin-dashboard')
 @admin_required
 def admin_dashboard():
-    return render_template('admin/dashboard.html', title='Admin Dashboard')
+    stats = {
+        'total_users': 0,
+        'pending_permits': 0,
+        'open_tickets': 0,
+        'revenue': 0
+    }
+    return render_template('admin/dashboard.html', title='Admin Dashboard', stats=stats)
 
 @main_bp.route('/officer-area')
 @officer_required
@@ -36,3 +42,4 @@ def view_rules():
     return render_template('main/rules.html', title='Rules', 
                            rules_content_html=rules_content_html, 
                            current_user=current_user, UserRole=UserRole)
+
