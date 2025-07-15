@@ -1,100 +1,17 @@
 {% extends "admin/base.html" %}
-{% import "bootstrap_wtf.html" as wtf %}
 
-{% block content %} {# Changed from admin_content to content #}
-{# Main debug banner removed #}
-<div class="container mt-4">
-    <h2>{{ title }}</h2>
+{% block title %}Edit Rules{% endblock %}
 
-    <div class="row mt-4">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    Edit Rules Content (Markdown Supported)
-                </div>
-                <div class="card-body">
-                    <form method="POST" action="" novalidate>
-                        {{ form.hidden_tag() }} {# For CSRF token #}
-                        
-                        <div class="form-group">
-                            {{ form.content_markdown.label(class="form-control-label") }}<br>
-                            {{ form.content_markdown(class="form-control", rows=25, style="font-family: monospace;") }}
-                            {% if form.content_markdown.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.content_markdown.errors %}
-                                        <span>{{ error }}</span><br>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                    
-                        <div class="form-group mt-3">
-                            {{ form.submit(class="btn btn-primary") }}
-                        </div>
-                    </form>
-                </div>
-                <div class="card-footer text-muted small">
-                    {% if rules_entry and rules_entry.last_edited_on %}
-                        Last updated on {{ rules_entry.last_edited_on.strftime('%Y-%m-%d %H:%M:%S') }} UTC
-                        {% if rules_entry.last_edited_by %}
-                            by {{ rules_entry.last_edited_by.username }}
-                        {% endif %}
-                    {% else %}
-                        Rules have not been saved yet.
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    Markdown Preview (How it will look on the Rules page)
-                </div>
-                <div class="card-body" id="markdown-preview">
-                    <p class="text-muted"><em>Preview will update as you type (JavaScript needed for live preview). For now, this is a static placeholder or would show saved content if `preview_html` was passed from route.</em></p>
-                    {# Example: If you pass preview_html from the route after processing markdown #}
-                    {# {{ preview_html|safe if preview_html else "Start typing in the editor to see a preview." }} #}
-                    {% if form.content_markdown.data %}
-                        <p><em>Content will be rendered as HTML on the public rules page. Basic preview:</em></p>
-                        <pre style="white-space: pre-wrap; word-wrap: break-word;">{{ form.content_markdown.data }}</pre>
-                        <p class="mt-2 text-info small">Note: This is a raw text preview. The actual page will render Markdown to HTML.</p>
-                    {% else %}
-                         <p>No content yet.</p>
-                    {% endif %}
-                </div>
-            </div>
-            <div class="alert alert-info mt-3 small">
-                <h5 class="alert-heading">Markdown Tips</h5>
-                <ul>
-                    <li><code># Heading 1</code>, <code>## Heading 2</code></li>
-                    <li><code>**Bold**</code> or <code>__Bold__</code></li>
-                    <li><code>*Italic*</code> or <code>_Italic_</code></li>
-                    <li><code>[Link Text](https://example.com)</code></li>
-                    <li><code>- Item 1</code><br><code>- Item 2</code> (for lists)</li>
-                    <li><code>1. Item 1</code><br><code>2. Item 2</code> (for numbered lists)</li>
-                    <li>Leave a blank line for a new paragraph.</li>
-                </ul>
-            </div>
-        </div>
+{% block content %}
+<h1 class="mb-4">Edit Rules</h1>
+<form method="POST" action="">
+    {{ form.hidden_tag() }}
+    <div class="form-group">
+        {{ form.content_markdown.label(class="form-control-label") }}
+        {{ form.content_markdown(class="form-control") }}
     </div>
-</div>
-
-{# Optional: Add JavaScript for live Markdown preview if desired #}
-{# 
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const markdownInput = document.getElementById('content_markdown'); // Ensure your TextAreaField has this ID
-    const previewOutput = document.getElementById('markdown-preview');
-
-    if (markdownInput && previewOutput) {
-        function updatePreview() {
-            previewOutput.innerHTML = marked.parse(markdownInput.value);
-        }
-        markdownInput.addEventListener('input', updatePreview);
-        updatePreview(); // Initial preview
-    }
-});
-</script>
-#}
+    <div class="form-group">
+        {{ form.submit(class="btn btn-primary") }}
+    </div>
+</form>
 {% endblock %}

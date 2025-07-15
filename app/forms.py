@@ -12,10 +12,9 @@ from datetime import datetime
 from decimal import Decimal
 from app.models import (
     User, UserRole, TransactionType, TaxBracket, TicketStatus,
-    PermitApplicationStatus, VehicleRegion
+    PermitApplicationStatus, MarketplaceListingStatus, VehicleRegion
 )
 from app.custom_validators import must_be_positive
-from app.models import MarketplaceListingStatus
 
 
 class AccountForm(FlaskForm):
@@ -135,8 +134,8 @@ class EditProfileForm(FlaskForm):
 
 
 class EditRulesForm(FlaskForm):
-    content_markdown = TextAreaField('Rules Content (Markdown Format)', 
-                                     validators=[DataRequired(), Length(min=20)], 
+    content_markdown = TextAreaField('Rules Content (Markdown Format)',
+                                     validators=[DataRequired(), Length(min=20)],
                                      render_kw={'rows': 25, 'class': 'form-control'})
     submit = SubmitField('Save Rules')
 

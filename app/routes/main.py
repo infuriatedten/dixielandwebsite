@@ -39,7 +39,6 @@ def view_rules():
         if current_user.is_authenticated and hasattr(current_user, 'role') and current_user.role.value == UserRole.ADMIN.value:
             rules_content_html += f'<p><a href="{url_for("admin.edit_rules")}">Set the rules now.</a></p>'
 
-    return render_template('main/rules.html', title='Rules', 
-                           rules_content_html=rules_content_html, 
+    return render_template('main/rules.html', title='Rules',
+                           rules_content_html=rules_content_html,
                            current_user=current_user, UserRole=UserRole)
-
