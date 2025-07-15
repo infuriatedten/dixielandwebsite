@@ -1,5 +1,8 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, flash, redirect, url_for
 from app.decorators import admin_required
+from app.forms import EditRulesForm
+from app.models import RulesContent
+from app import db
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -13,10 +16,6 @@ def index():
 def tickets():
     # This is a placeholder. You'll need to implement the logic to fetch and display tickets.
     return render_template('admin/tickets.html', title='Manage Tickets')
-
-from app.forms import EditRulesForm
-from app.models import RulesContent
-from app import db
 
 @admin_bp.route('/rules/edit', methods=['GET', 'POST'])
 @admin_required
