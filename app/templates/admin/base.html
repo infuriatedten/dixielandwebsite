@@ -45,9 +45,21 @@
                     {{ nav.dot_services_dropdown(current_user, UserRole) }}
 
                     {% if current_user.is_authenticated and current_user.role is defined and current_user.role.value is defined and current_user.role.value == UserRole.ADMIN.value %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('main.admin_dashboard') }}">Admin Panel</a>
-                        </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Admin Panel
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item" href="{{ url_for('admin.index') }}">Dashboard</a>
+                            <a class="dropdown-item" href="{{ url_for('admin.manage_users') }}">Manage Users</a>
+                            <a class="dropdown-item" href="{{ url_for('admin.manage_accounts') }}">Manage Accounts</a>
+                            <a class="dropdown-item" href="{{ url_for('admin.manage_tickets') }}">Manage Tickets</a>
+                            <a class="dropdown-item" href="{{ url_for('admin.manage_permits') }}">Manage Permits</a>
+                            <a class="dropdown-item" href="{{ url_for('admin.manage_inspections') }}">Manage Inspections</a>
+                            <a class="dropdown-item" href="{{ url_for('admin.manage_tax_brackets') }}">Manage Tax Brackets</a>
+                            <a class="dropdown-item" href="{{ url_for('admin.edit_rules') }}">Edit Rules</a>
+                        </div>
+                    </li>
                     {% endif %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('marketplace.index') }}">Marketplace</a>
