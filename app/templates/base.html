@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{{ title or "Game Website" }} - My Application</title>
+    <title>{{ title or "Dixieland RolePlay" }}</title>
     <!-- Add any CSS frameworks or custom stylesheets here -->
     <link
       rel="stylesheet"
@@ -14,7 +14,7 @@
 <body>
     {% import "macros/nav_macros.html" as nav %}
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="{{ url_for('main.index') }}">Game Portal</a>
+        <a class="navbar-brand" href="{{ url_for('main.index') }}">Dixieland RolePlay</a>
         <button
           class="navbar-toggler"
           type="button"
@@ -126,7 +126,7 @@
 
     <footer class="footer mt-auto py-3 bg-light">
         <div class="container">
-            <span class="text-muted">© {{ SCRIPT_YEAR }} Game Website Project</span>
+            <span class="text-muted">© {{ SCRIPT_YEAR }} Dixieland RolePlay</span>
         </div>
     </footer>
 

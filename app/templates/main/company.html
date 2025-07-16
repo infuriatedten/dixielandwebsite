@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% import "bootstrap_wtf.html" as wtf %}
+
+{% block content %}
+<div class="container">
+    <h1>Company</h1>
+    <p>This is the company page.</p>
+
+    <h2>Set Company Name</h2>
+    <form method="POST" action="{{ url_for('main.company') }}">
+        {{ form.hidden_tag() }}
+     <form>
+
+    <h2>Registered Vehicles</h2>
+    {% if vehicles %}
+        <ul>
+        {% for vehicle in vehicles %}
+            <li>{{ vehicle.license_plate }} - {{ vehicle.vehicle_make }} {{ vehicle.vehicle_model }}</li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No vehicles registered.</p>
+    {% endif %}
+</div>
+{% endblock %}

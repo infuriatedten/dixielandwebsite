@@ -79,6 +79,11 @@ class CompanyForm(FlaskForm):
     submit = SubmitField('Add Company')
 
 
+class CompanyNameForm(FlaskForm):
+    name = StringField('Company Name', validators=[DataRequired(), Length(min=3, max=128)])
+    submit = SubmitField('Set Company Name')
+
+
 class ContestTicketForm(FlaskForm):
     user_contest_reason = TextAreaField('Reason for Contesting (Please be specific)', validators=[DataRequired(), Length(min=20, max=2000)])
     submit = SubmitField('Submit Contestation')

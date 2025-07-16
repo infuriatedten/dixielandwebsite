@@ -42,3 +42,46 @@ def view_rules():
     return render_template('main/rules.html', title='Rules',
                            rules_content_html=rules_content_html,
                            current_user=current_user, UserRole=UserRole)
+
+from app.models import Farmer, Parcel, UserVehicle, Account
+
+@main_bp.route('/farmers')
+def farmers():
+    # Assuming the logged-in user is a farmer
+    farmer = Farmer.query.filter_by(user_id=current_user.id).first()
+    if farmer:
+        parcels = Parcel.query.filter_by(farmer_id=farmer.id).all()
+        total_acres = sum(parcel.size for parcel in parcels)
+        vehicles = UserVehicle.query.filter_by(user_id=current_user.id).all()
+        bank_accounts = Account.query.filter_by(user_id=current_user.id).all()
+    else:
+        parcels = []
+        total_acres = 0
+        vehicles = []
+        bank_accounts = []
+
+    return render_template('main/farmers.html', title='Farmers', parcels=parcels, total_acres=total_acres, vehicles=vehicles, bank_accounts=bank_accounts)
+
+from app.models import Company, UserVehicle, Account
+from app.forms import CompanyNameForm
+from app import db
+
+@main_bp.route('/company', methods=['GET', 'POST'])
+def company():
+    form = CompanyNameForm()
+    if form.validate_on_submit():
+        company = Company.query.filter_by(user_id=current_user.id).first()
+        if not company:
+            company = Company(user_id=current_user.id)
+        company.name = form.name.data
+        db.session.add(company)
+        db.session.commit()
+        return redirect(url_for('main.company'))
+
+    company = Company.query.filter_by(user_id=current_user.id).first()
+    vehicles = []
+    if company:
+        vehicles = UserVehicle.query.filter_by(user_id=current_user.id).all()
+        form.name.data = company.name
+
+    return render_template('main/company.html', title='Company', form=form, vehicles=vehicles)

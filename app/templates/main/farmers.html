@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Farmers</h1>
+    <p>This is the farmers page.</p>
+
+    <h2>Banking Information</h2>
+    {% if bank_accounts %}
+        <ul>
+        {% for account in bank_accounts %}
+            <li>{{ account.name }}: {{ account.balance }} {{ account.currency }}</li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No banking information available.</p>
+    {% endif %}
+
+    <h2>Owned Parcels</h2>
+    {% if parcels %}
+        <p>Total Acres: {{ total_acres }}</p>
+        <ul>
+        {% for parcel in parcels %}
+            <li>{{ parcel.location }} - {{ parcel.size }} acres</li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No parcels owned.</p>
+    {% endif %}
+
+    <h2>Registered Vehicles</h2>
+    {% if vehicles %}
+        <ul>
+        {% for vehicle in vehicles %}
+            <li>{{ vehicle.license_plate }} - {{ vehicle.vehicle_make }} {{ vehicle.vehicle_model }}</li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No vehicles registered.</p>
+    {% endif %}
+</div>
+{% endblock %}
