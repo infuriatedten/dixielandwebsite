@@ -4,5 +4,48 @@
 
 {% block content %}
 <h1 class="mb-4">Manage Tax Brackets</h1>
-<p>This is a placeholder for the tax bracket management page.</p>
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Min Balance</th>
+                <th>Max Balance</th>
+                <th>Tax Rate</th>
+                <th>Active</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for bracket in tax_brackets.items %}
+            <tr>
+                <td>{{ bracket.id }}</td>
+                <td>{{ bracket.name }}</td>
+                <td>{{ bracket.min_balance }}</td>
+                <td>{{ bracket.max_balance if bracket.max_balance is not none else 'Infinity' }}</td>
+                <td>{{ bracket.tax_rate }}%</td>
+                <td>{{ "Yes" if bracket.is_active else "No" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<nav aria-label="Page navigation">
+    <ul class="pagination">
+        {% if tax_brackets.has_prev %}
+        <li class="page-item"><a class="page-link" href="{{ url_for('admin.manage_tax_brackets', page=tax_brackets.prev_num) }}">Previous</a></li>
+        {% endif %}
+        {% for page_num in tax_brackets.iter_pages() %}
+        {% if page_num %}
+        <li class="page-item {% if page_num == tax_brackets.page %}active{% endif %}"><a class="page-link" href="{{ url_for('admin.manage_tax_brackets', page=page_num) }}">{{ page_num }}</a></li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">...</span></li>
+        {% endif %}
+        {% endfor %}
+        {% if tax_brackets.has_next %}
+        <li class="page-item"><a class="page-link" href="{{ url_for('admin.manage_tax_brackets', page=tax_brackets.next_num) }}">Next</a></li>
+        {% endif %}
+    </ul>
+</nav>
 {% endblock %}
