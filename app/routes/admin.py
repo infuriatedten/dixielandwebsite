@@ -1,16 +1,35 @@
 from flask import Blueprint, render_template, flash, redirect, url_for, request
 from app.decorators import admin_required
+ feature/admin-dashboard-routes
+from app.models import User, Account, Ticket, PermitApplication, Inspection, TaxBracket, PermitApplicationStatus, TicketStatus, Transaction, TransactionType, VehicleRegion
+from app.forms import EditRulesForm, EditUserForm, EditAccountForm, EditTicketForm, EditPermitForm, EditInspectionForm, EditTaxBracketForm
+from app.models import RulesContent, UserRole
+from app import db
+=======
 from app.models import User, Account, Ticket, PermitApplication, Inspection, TaxBracket
+>>>>>>> main
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 @admin_bp.route('/')
 @admin_required
 def index():
-    return render_template('admin/dashboard.html', title='Admin Dashboard')
+    stats = {
+        'total_users': User.query.count(),
+        'pending_permits': PermitApplication.query.filter_by(status=PermitApplicationStatus.PENDING_REVIEW).count(),
+        'open_tickets': Ticket.query.filter_by(status=TicketStatus.OUTSTANDING).count(),
+        'revenue': db.session.query(db.func.sum(Transaction.amount)).filter(Transaction.type.in_([TransactionType.TICKET_PAYMENT, TransactionType.PERMIT_FEE_PAYMENT])).scalar() or 0
+    }
+    return render_template('admin/dashboard.html', title='Admin Dashboard', stats=stats)
 
 @admin_bp.route('/manage_tickets')
 @admin_required
+ feature/admin-dashboard-routes
+def tickets():
+    page = request.args.get('page', 1, type=int)
+    tickets = Ticket.query.order_by(Ticket.issue_date.desc()).paginate(page=page, per_page=10)
+    return render_template('admin/tickets.html', title='Manage Tickets', tickets=tickets)
+=======
 def manage_tickets():
     page = request.args.get('page', 1, type=int)
     tickets = Ticket.query.order_by(Ticket.issue_date.desc()).paginate(page=page, per_page=10)
@@ -19,6 +38,7 @@ def manage_tickets():
 from app.forms import EditRulesForm, EditUserForm, EditAccountForm, EditTicketForm, EditPermitForm, EditInspectionForm, EditTaxBracketForm
 from app.models import RulesContent, UserRole
 from app import db
+>>>>>>> main
 
 @admin_bp.route('/rules/edit', methods=['GET', 'POST'])
 @admin_required
@@ -83,7 +103,11 @@ def edit_user(user_id):
         user.email = form.email.data
         user.role = UserRole[form.role.data]
         user.discord_user_id = form.discord_user_id.data
+ feature/admin-dashboard-routes
+        user.region = VehicleRegion[form.region.data]
+=======
         user.region = form.region.data
+>>>>>>> main
         db.session.commit()
         flash('User updated successfully.', 'success')
         return redirect(url_for('admin.manage_users'))
@@ -92,7 +116,11 @@ def edit_user(user_id):
         form.email.data = user.email
         form.role.data = user.role.name
         form.discord_user_id.data = user.discord_user_id
+ feature/admin-dashboard-routes
+        form.region.data = user.region.name
+=======
         form.region.data = user.region
+>>>>>>> main
     return render_template('admin/edit_user.html', title='Edit User', form=form, user=user)
 
 @admin_bp.route('/account/<int:account_id>/edit', methods=['GET', 'POST'])
@@ -118,7 +146,11 @@ def edit_ticket(ticket_id):
         ticket.status = TicketStatus[form.status.data]
         db.session.commit()
         flash('Ticket updated successfully.', 'success')
+ feature/admin-dashboard-routes
+        return redirect(url_for('admin.tickets'))
+=======
         return redirect(url_for('admin.manage_tickets'))
+>>>>>>> main
     return render_template('admin/edit_ticket.html', title='Edit Ticket', form=form, ticket=ticket)
 
 @admin_bp.route('/permit/<int:permit_id>/edit', methods=['GET', 'POST'])
@@ -147,10 +179,17 @@ def edit_inspection(inspection_id):
         return redirect(url_for('admin.manage_inspections'))
     return render_template('admin/edit_inspection.html', title='Edit Inspection', form=form, inspection=inspection)
 
+feature/admin-dashboard-routes
+@admin_bp.route('/tax_bracket/<int:bracket_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def edit_tax_bracket(bracket_id):
+    tax_bracket = TaxBracket.query.get_or_404(bracket_id)
+=======
 @admin_bp.route('/tax_bracket/<int:tax_bracket_id>/edit', methods=['GET', 'POST'])
 @admin_required
 def edit_tax_bracket(tax_bracket_id):
     tax_bracket = TaxBracket.query.get_or_404(tax_bracket_id)
+>>>>>>> main
     form = EditTaxBracketForm(obj=tax_bracket)
     if form.validate_on_submit():
         tax_bracket.name = form.name.data
@@ -161,4 +200,17 @@ def edit_tax_bracket(tax_bracket_id):
         db.session.commit()
         flash('Tax bracket updated successfully.', 'success')
         return redirect(url_for('admin.manage_tax_brackets'))
+ feature/admin-dashboard-routes
+    return render_template('admin/edit_tax_bracket.html', title='Edit Tax Bracket', form=form, bracket=tax_bracket)
+
+@admin_bp.route('/user/<int:user_id>/delete', methods=['POST'])
+@admin_required
+def delete_user(user_id):
+    user = User.query.get_or_404(user_id)
+    db.session.delete(user)
+    db.session.commit()
+    flash('User deleted successfully.', 'success')
+    return redirect(url_for('admin.manage_users'))
+=======
     return render_template('admin/edit_tax_bracket.html', title='Edit Tax Bracket', form=form, tax_bracket=tax_bracket)
+   main
