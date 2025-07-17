@@ -7,7 +7,7 @@ from app.models import RulesContent, UserRole
 from app import db
 =======
 from app.models import User, Account, Ticket, PermitApplication, Inspection, TaxBracket
->>>>>>> main
+main
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -38,7 +38,7 @@ def manage_tickets():
 from app.forms import EditRulesForm, EditUserForm, EditAccountForm, EditTicketForm, EditPermitForm, EditInspectionForm, EditTaxBracketForm
 from app.models import RulesContent, UserRole
 from app import db
->>>>>>> main
+
 
 @admin_bp.route('/rules/edit', methods=['GET', 'POST'])
 @admin_required
@@ -107,7 +107,7 @@ def edit_user(user_id):
         user.region = VehicleRegion[form.region.data]
 =======
         user.region = form.region.data
->>>>>>> main
+
         db.session.commit()
         flash('User updated successfully.', 'success')
         return redirect(url_for('admin.manage_users'))
@@ -120,7 +120,7 @@ def edit_user(user_id):
         form.region.data = user.region.name
 =======
         form.region.data = user.region
->>>>>>> main
+
     return render_template('admin/edit_user.html', title='Edit User', form=form, user=user)
 
 @admin_bp.route('/account/<int:account_id>/edit', methods=['GET', 'POST'])
@@ -150,7 +150,7 @@ def edit_ticket(ticket_id):
         return redirect(url_for('admin.tickets'))
 =======
         return redirect(url_for('admin.manage_tickets'))
->>>>>>> main
+
     return render_template('admin/edit_ticket.html', title='Edit Ticket', form=form, ticket=ticket)
 
 @admin_bp.route('/permit/<int:permit_id>/edit', methods=['GET', 'POST'])
