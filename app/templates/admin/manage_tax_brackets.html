@@ -25,6 +25,7 @@
                 <td>{{ bracket.max_balance if bracket.max_balance is not none else 'Infinity' }}</td>
                 <td>{{ bracket.tax_rate }}%</td>
                 <td>{{ "Yes" if bracket.is_active else "No" }}</td>
+                <td><a href="{{ url_for('admin.edit_tax_bracket', tax_bracket_id=bracket.id) }}" class="btn btn-primary btn-sm">Edit</a></td>
             </tr>
             {% endfor %}
         </tbody>

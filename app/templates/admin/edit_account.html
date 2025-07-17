@@ -1,0 +1,14 @@
+{% extends "admin/base.html" %}
+{% import "bootstrap_wtf.html" as wtf %}
+
+{% block title %}Edit Account{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Edit Account</h1>
+<form method="POST" action="{{ url_for('admin.edit_account', account_id=account.id) }}">
+    {{ form.hidden_tag() }}
+    {{ wtf.render_field(form.balance) }}
+    {{ wtf.render_field(form.is_company) }}
+    {{ wtf.render_field(form.submit) }}
+</form>
+{% endblock %}

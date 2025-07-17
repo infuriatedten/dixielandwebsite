@@ -1,0 +1,14 @@
+{% extends "admin/base.html" %}
+{% import "bootstrap_wtf.html" as wtf %}
+
+{% block title %}Edit Ticket{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Edit Ticket</h1>
+<form method="POST" action="{{ url_for('admin.edit_ticket', ticket_id=ticket.id) }}">
+    {{ form.hidden_tag() }}
+    {{ wtf.render_field(form.fine_amount) }}
+    {{ wtf.render_field(form.status) }}
+    {{ wtf.render_field(form.submit) }}
+</form>
+{% endblock %}

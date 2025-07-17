@@ -25,6 +25,7 @@
                 <td>{{ inspection.vehicle_id }}</td>
                 <td>{{ inspection.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                 <td>{{ "Pass" if inspection.pass_status else "Fail" }}</td>
+                <td><a href="{{ url_for('admin.edit_inspection', inspection_id=inspection.id) }}" class="btn btn-primary btn-sm">Edit</a></td>
             </tr>
             {% endfor %}
         </tbody>

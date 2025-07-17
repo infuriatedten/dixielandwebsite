@@ -23,6 +23,7 @@
                 <td>{{ permit.vehicle_type }}</td>
                 <td>{{ permit.status.value }}</td>
                 <td>{{ permit.application_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                <td><a href="{{ url_for('admin.edit_permit', permit_id=permit.id) }}" class="btn btn-primary btn-sm">Edit</a></td>
             </tr>
             {% endfor %}
         </tbody>

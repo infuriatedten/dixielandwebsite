@@ -16,8 +16,8 @@ def manage_tickets():
     tickets = Ticket.query.order_by(Ticket.issue_date.desc()).paginate(page=page, per_page=10)
     return render_template('admin/manage_tickets.html', title='Manage Tickets', tickets_pagination=tickets, TicketStatus=TicketStatus)
 
-from app.forms import EditRulesForm
-from app.models import RulesContent
+from app.forms import EditRulesForm, EditUserForm, EditAccountForm, EditTicketForm, EditPermitForm, EditInspectionForm, EditTaxBracketForm
+from app.models import RulesContent, UserRole
 from app import db
 
 @admin_bp.route('/rules/edit', methods=['GET', 'POST'])
@@ -72,3 +72,93 @@ def manage_tax_brackets():
     page = request.args.get('page', 1, type=int)
     tax_brackets = TaxBracket.query.order_by(TaxBracket.min_balance).paginate(page=page, per_page=10)
     return render_template('admin/manage_tax_brackets.html', title='Manage Tax Brackets', tax_brackets=tax_brackets)
+
+@admin_bp.route('/user/<int:user_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def edit_user(user_id):
+    user = User.query.get_or_404(user_id)
+    form = EditUserForm(original_username=user.username, original_email=user.email)
+    if form.validate_on_submit():
+        user.username = form.username.data
+        user.email = form.email.data
+        user.role = UserRole[form.role.data]
+        user.discord_user_id = form.discord_user_id.data
+        user.region = form.region.data
+        db.session.commit()
+        flash('User updated successfully.', 'success')
+        return redirect(url_for('admin.manage_users'))
+    elif request.method == 'GET':
+        form.username.data = user.username
+        form.email.data = user.email
+        form.role.data = user.role.name
+        form.discord_user_id.data = user.discord_user_id
+        form.region.data = user.region
+    return render_template('admin/edit_user.html', title='Edit User', form=form, user=user)
+
+@admin_bp.route('/account/<int:account_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def edit_account(account_id):
+    account = Account.query.get_or_404(account_id)
+    form = EditAccountForm(obj=account)
+    if form.validate_on_submit():
+        account.balance = form.balance.data
+        account.is_company = form.is_company.data
+        db.session.commit()
+        flash('Account updated successfully.', 'success')
+        return redirect(url_for('admin.manage_accounts'))
+    return render_template('admin/edit_account.html', title='Edit Account', form=form, account=account)
+
+@admin_bp.route('/ticket/<int:ticket_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def edit_ticket(ticket_id):
+    ticket = Ticket.query.get_or_404(ticket_id)
+    form = EditTicketForm(obj=ticket)
+    if form.validate_on_submit():
+        ticket.fine_amount = form.fine_amount.data
+        ticket.status = TicketStatus[form.status.data]
+        db.session.commit()
+        flash('Ticket updated successfully.', 'success')
+        return redirect(url_for('admin.manage_tickets'))
+    return render_template('admin/edit_ticket.html', title='Edit Ticket', form=form, ticket=ticket)
+
+@admin_bp.route('/permit/<int:permit_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def edit_permit(permit_id):
+    permit = PermitApplication.query.get_or_404(permit_id)
+    form = EditPermitForm(obj=permit)
+    if form.validate_on_submit():
+        permit.status = PermitApplicationStatus[form.status.data]
+        permit.permit_fee = form.permit_fee.data
+        db.session.commit()
+        flash('Permit application updated successfully.', 'success')
+        return redirect(url_for('admin.manage_permits'))
+    return render_template('admin/edit_permit.html', title='Edit Permit Application', form=form, permit=permit)
+
+@admin_bp.route('/inspection/<int:inspection_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def edit_inspection(inspection_id):
+    inspection = Inspection.query.get_or_404(inspection_id)
+    form = EditInspectionForm(obj=inspection)
+    if form.validate_on_submit():
+        inspection.pass_status = form.pass_status.data
+        inspection.notes = form.notes.data
+        db.session.commit()
+        flash('Inspection updated successfully.', 'success')
+        return redirect(url_for('admin.manage_inspections'))
+    return render_template('admin/edit_inspection.html', title='Edit Inspection', form=form, inspection=inspection)
+
+@admin_bp.route('/tax_bracket/<int:tax_bracket_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def edit_tax_bracket(tax_bracket_id):
+    tax_bracket = TaxBracket.query.get_or_404(tax_bracket_id)
+    form = EditTaxBracketForm(obj=tax_bracket)
+    if form.validate_on_submit():
+        tax_bracket.name = form.name.data
+        tax_bracket.min_balance = form.min_balance.data
+        tax_bracket.max_balance = form.max_balance.data
+        tax_bracket.tax_rate = form.tax_rate.data
+        tax_bracket.is_active = form.is_active.data
+        db.session.commit()
+        flash('Tax bracket updated successfully.', 'success')
+        return redirect(url_for('admin.manage_tax_brackets'))
+    return render_template('admin/edit_tax_bracket.html', title='Edit Tax Bracket', form=form, tax_bracket=tax_bracket)
