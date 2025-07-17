@@ -1,6 +1,9 @@
 from flask import Blueprint, render_template, flash, redirect, url_for, request
 from app.decorators import admin_required
 from app.models import User, Account, Ticket, PermitApplication, Inspection, TaxBracket, PermitApplicationStatus, TicketStatus, Transaction, TransactionType
+from app.forms import EditRulesForm, EditUserForm, EditAccountForm, EditTicketForm, EditPermitForm, EditInspectionForm, EditTaxBracketForm
+from app.models import RulesContent, UserRole
+from app import db
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -21,10 +24,6 @@ def manage_tickets():
     page = request.args.get('page', 1, type=int)
     tickets = Ticket.query.order_by(Ticket.issue_date.desc()).paginate(page=page, per_page=10)
     return render_template('admin/manage_tickets.html', title='Manage Tickets', tickets_pagination=tickets, TicketStatus=TicketStatus)
-
-from app.forms import EditRulesForm, EditUserForm, EditAccountForm, EditTicketForm, EditPermitForm, EditInspectionForm, EditTaxBracketForm
-from app.models import RulesContent, UserRole
-from app import db
 
 @admin_bp.route('/rules/edit', methods=['GET', 'POST'])
 @admin_required
@@ -99,7 +98,7 @@ def edit_user(user_id):
         form.role.data = user.role.name
         form.discord_user_id.data = user.discord_user_id
         form.region.data = user.region
-    return render_template('admin/edit_user.html', title='Edit User', form=form, user=user)
+    return render_template('admin/edit__user.html', title='Edit User', form=form, user=user)
 
 @admin_bp.route('/account/<int:account_id>/edit', methods=['GET', 'POST'])
 @admin_required
