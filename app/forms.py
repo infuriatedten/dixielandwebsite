@@ -145,6 +145,65 @@ class EditRulesForm(FlaskForm):
     submit = SubmitField('Save Rules')
 
 
+class EditUserForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    role = SelectField('Role', choices=[(role.name, role.value) for role in UserRole], validators=[DataRequired()])
+    discord_user_id = StringField('Discord User ID', validators=[Optional(), Length(max=100)])
+    region = SelectField('Region', choices=[('US', 'US'), ('EU', 'EU'), ('OTHER_DEFAULT', 'Other')], validators=[DataRequired()])
+    submit = SubmitField('Update User')
+
+    def __init__(self, original_username, original_email, *args, **kwargs):
+        super(EditUserForm, self).__init__(*args, **kwargs)
+        self.original_username = original_username
+        self.original_email = original_email
+
+    def validate_username(self, username):
+        if username.data != self.original_username:
+            user = User.query.filter_by(username=username.data).first()
+            if user:
+                raise ValidationError('Please use a different username.')
+
+    def validate_email(self, email):
+        if email.data != self.original_email:
+            user = User.query.filter_by(email=email.data).first()
+            if user:
+                raise ValidationError('This email is already in use.')
+
+
+class EditTaxBracketForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired(), Length(max=100)])
+    min_balance = DecimalField('Minimum Balance', places=2, validators=[DataRequired()])
+    max_balance = DecimalField('Maximum Balance', places=2, validators=[Optional()])
+    tax_rate = DecimalField('Tax Rate', places=2, validators=[DataRequired()])
+    is_active = BooleanField('Is Active')
+    submit = SubmitField('Update Tax Bracket')
+
+
+class EditInspectionForm(FlaskForm):
+    pass_status = BooleanField('Pass Status')
+    notes = TextAreaField('Notes', validators=[Optional(), Length(max=2000)])
+    submit = SubmitField('Update Inspection')
+
+
+class EditPermitForm(FlaskForm):
+    status = SelectField('Status', choices=[(status.name, status.value) for status in PermitApplicationStatus], validators=[DataRequired()])
+    permit_fee = DecimalField('Permit Fee', places=2, validators=[Optional()])
+    submit = SubmitField('Update Permit Application')
+
+
+class EditTicketForm(FlaskForm):
+    fine_amount = DecimalField('Fine Amount', places=2, validators=[DataRequired()])
+    status = SelectField('Status', choices=[(status.name, status.value) for status in TicketStatus], validators=[DataRequired()])
+    submit = SubmitField('Update Ticket')
+
+
+class EditAccountForm(FlaskForm):
+    balance = DecimalField('Balance', places=2, validators=[DataRequired()])
+    is_company = BooleanField('Is Company Account?', default=False)
+    submit = SubmitField('Update Account')
+
+
 class EditUserRoleForm(FlaskForm):
     role = SelectField('Role', choices=[(role.name, role.value) for role in UserRole], validators=[DataRequired()])
     submit = SubmitField('Update Role')

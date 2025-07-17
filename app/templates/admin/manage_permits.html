@@ -3,6 +3,48 @@
 {% block title %}Manage Permits{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Manage Permits</h1>
-<p>This is a placeholder for the permit management page.</p>
+<h1 class="mb-4">Manage Permit Applications</h1>
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Applicant</th>
+                <th>Vehicle Type</th>
+                <th>Status</th>
+                <th>Application Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for permit in permits.items %}
+            <tr>
+                <td>{{ permit.id }}</td>
+                <td>{{ permit.applicant.username }}</td>
+                <td>{{ permit.vehicle_type }}</td>
+                <td>{{ permit.status.value }}</td>
+                <td>{{ permit.application_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                <td><a href="{{ url_for('admin.edit_permit', permit_id=permit.id) }}" class="btn btn-primary btn-sm">Edit</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<nav aria-label="Page navigation">
+    <ul class="pagination">
+        {% if permits.has_prev %}
+        <li class="page-item"><a class="page-link" href="{{ url_for('admin.manage_permits', page=permits.prev_num) }}">Previous</a></li>
+        {% endif %}
+        {% for page_num in permits.iter_pages() %}
+        {% if page_num %}
+        <li class="page-item {% if page_num == permits.page %}active{% endif %}"><a class="page-link" href="{{ url_for('admin.manage_permits', page=page_num) }}">{{ page_num }}</a></li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">...</span></li>
+        {% endif %}
+        {% endfor %}
+        {% if permits.has_next %}
+        <li class="page-item"><a class="page-link" href="{{ url_for('admin.manage_permits', page=permits.next_num) }}">Next</a></li>
+        {% endif %}
+    </ul>
+</nav>
 {% endblock %}
