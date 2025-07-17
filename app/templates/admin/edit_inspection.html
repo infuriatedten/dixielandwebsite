@@ -1,0 +1,14 @@
+{% extends "admin/base.html" %}
+{% import "bootstrap_wtf.html" as wtf %}
+
+{% block title %}Edit Inspection{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Edit Inspection</h1>
+<form method="POST" action="{{ url_for('admin.edit_inspection', inspection_id=inspection.id) }}">
+    {{ form.hidden_tag() }}
+    {{ wtf.render_field(form.pass_status) }}
+    {{ wtf.render_field(form.notes) }}
+    {{ wtf.render_field(form.submit) }}
+</form>
+{% endblock %}

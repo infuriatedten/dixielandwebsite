@@ -4,5 +4,49 @@
 
 {% block content %}
 <h1 class="mb-4">Manage Inspections</h1>
-<p>This is a placeholder for the inspection management page.</p>
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Officer</th>
+                <th>Inspected User</th>
+                <th>Vehicle ID</th>
+                <th>Timestamp</th>
+                <th>Pass Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for inspection in inspections.items %}
+            <tr>
+                <td>{{ inspection.id }}</td>
+                <td>{{ inspection.officer.username }}</td>
+                <td>{{ inspection.inspected_user.username }}</td>
+                <td>{{ inspection.vehicle_id }}</td>
+                <td>{{ inspection.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                <td>{{ "Pass" if inspection.pass_status else "Fail" }}</td>
+                <td><a href="{{ url_for('admin.edit_inspection', inspection_id=inspection.id) }}" class="btn btn-primary btn-sm">Edit</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<nav aria-label="Page navigation">
+    <ul class="pagination">
+        {% if inspections.has_prev %}
+        <li class="page-item"><a class="page-link" href="{{ url_for('admin.manage_inspections', page=inspections.prev_num) }}">Previous</a></li>
+        {% endif %}
+        {% for page_num in inspections.iter_pages() %}
+        {% if page_num %}
+        <li class="page-item {% if page_num == inspections.page %}active{% endif %}"><a class="page-link" href="{{ url_for('admin.manage_inspections', page=page_num) }}">{{ page_num }}</a></li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">...</span></li>
+        {% endif %}
+        {% endfor %}
+        {% if inspections.has_next %}
+        <li class="page-item"><a class="page-link" href="{{ url_for('admin.manage_inspections', page=inspections.next_num) }}">Next</a></li>
+        {% endif %}
+    </ul>
+</nav>
 {% endblock %}

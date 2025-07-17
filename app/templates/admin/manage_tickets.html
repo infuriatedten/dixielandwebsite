@@ -53,6 +53,7 @@
                 </td>
                 <td>
                     <a href="{{ url_for('dot.view_ticket_detail', ticket_id=ticket.id) }}" class="btn btn-xs btn-info">View</a>
+                     <a href="{{ url_for('admin.edit_ticket', ticket_id=ticket.id) }}" class="btn btn-xs btn-primary">Edit</a>
                     {% if ticket.status == TicketStatus.CONTESTED or ticket.status == TicketStatus.OUTSTANDING %}
                         <a href="{{ url_for('admin.resolve_ticket', ticket_id=ticket.id) }}" class="btn btn-xs btn-primary">Resolve</a>
                     {% endif %}
