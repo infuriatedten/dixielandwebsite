@@ -1,13 +1,19 @@
 from flask import Blueprint, render_template, flash, redirect, url_for, request
 from app.decorators import admin_required
-from app.models import User, Account, Ticket, PermitApplication, Inspection, TaxBracket
+from app.models import User, Account, Ticket, PermitApplication, Inspection, TaxBracket, PermitApplicationStatus, TicketStatus, Transaction, TransactionType
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 @admin_bp.route('/')
 @admin_required
 def index():
-    return render_template('admin/dashboard.html', title='Admin Dashboard')
+    stats = {
+        'total_users': User.query.count(),
+        'pending_permits': PermitApplication.query.filter_by(status=PermitApplicationStatus.PENDING_REVIEW).count(),
+        'open_tickets': Ticket.query.filter_by(status=TicketStatus.OUTSTANDING).count(),
+        'revenue': db.session.query(db.func.sum(Transaction.amount)).filter(Transaction.type.in_([TransactionType.TICKET_PAYMENT, TransactionType.PERMIT_FEE_PAYMENT])).scalar() or 0
+    }
+    return render_template('admin/dashboard.html', title='Admin Dashboard', stats=stats)
 
 @admin_bp.route('/manage_tickets')
 @admin_required
