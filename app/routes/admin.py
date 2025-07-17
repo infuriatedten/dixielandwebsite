@@ -168,3 +168,12 @@ def edit_tax_bracket(tax_bracket_id):
         flash('Tax bracket updated successfully.', 'success')
         return redirect(url_for('admin.manage_tax_brackets'))
     return render_template('admin/edit_tax_bracket.html', title='Edit Tax Bracket', form=form, tax_bracket=tax_bracket)
+
+@admin_bp.route('/user/<int:user_id>/delete', methods=['POST'])
+@admin_required
+def delete_user(user_id):
+    user = User.query.get_or_404(user_id)
+    db.session.delete(user)
+    db.session.commit()
+    flash('User deleted successfully.', 'success')
+    return redirect(url_for('admin.manage_users'))
