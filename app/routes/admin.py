@@ -125,6 +125,33 @@ def edit_account(account_id):
         return redirect(url_for('admin.manage_accounts'))
     return render_template('admin/edit_account.html', title='Edit Account', form=form, account=account)
 
+@admin_bp.route('/account/<int:account_id>/edit_balance', methods=['GET', 'POST'])
+@admin_required
+def edit_account_balance(account_id):
+    account = Account.query.get_or_404(account_id)
+    form = EditBalanceForm()
+    if form.validate_on_submit():
+        amount = form.amount.data
+        description = form.description.data
+        
+        # Create a transaction record
+        transaction = Transaction(
+            account_id=account.id,
+            amount=amount,
+            description=description,
+            type=TransactionType.ADMIN_DEPOSIT if amount > 0 else TransactionType.ADMIN_WITHDRAWAL
+        )
+        db.session.add(transaction)
+        
+        # Update account balance
+        account.balance += amount
+        db.session.commit()
+        
+        flash('Account balance updated successfully.', 'success')
+        return redirect(url_for('admin.manage_accounts'))
+        
+    return render_template('admin/edit_account_balance.html', title='Edit Account Balance', form=form, account=account)
+
 @admin_bp.route('/ticket/<int:ticket_id>/edit', methods=['GET', 'POST'])
 @admin_required
 def edit_ticket(ticket_id):

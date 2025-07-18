@@ -25,7 +25,10 @@
                 <td>{{ account.currency }}</td>
                 <td>{{ "Yes" if account.is_company else "No" }}</td>
                 <td>{{ account.last_updated_on.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                <td><a href="{{ url_for('admin.edit_account', account_id=account.id) }}" class="btn btn-primary btn-sm">Edit</a></td>
+                <td>
+                    <a href="{{ url_for('admin.edit_account', account_id=account.id) }}" class="btn btn-primary btn-sm">Edit</a>
+                    <a href="{{ url_for('admin.edit_account_balance', account_id=account.id) }}" class="btn btn-secondary btn-sm">Edit Balance</a>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
