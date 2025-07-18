@@ -22,7 +22,7 @@ def index():
 def tickets():
     page = request.args.get('page', 1, type=int)
     tickets = Ticket.query.order_by(Ticket.issue_date.desc()).paginate(page=page, per_page=10)
-    return render_template('admin/tickets.html', title='Manage Tickets', tickets=tickets, TicketStatus=TicketStatus)
+    return render_template('admin/tickets.html', title='Manage Tickets', tickets_pagination=tickets, TicketStatus=TicketStatus)
 
 @admin_bp.route('/rules/edit', methods=['GET', 'POST'])
 @admin_required
@@ -91,6 +91,13 @@ def edit_user(user_id):
         db.session.commit()
         flash('User updated successfully.', 'success')
         return redirect(url_for('admin.manage_users'))
+    elif request.method == 'GET':
+        form.username.data = user.username
+        form.email.data = user.email
+        form.role.data = user.role.name
+        form.discord_user_id.data = user.discord_user_id
+        if user.region:
+            form.region.data = user.region.name
     return render_template('admin/edit_user.html', title='Edit User', form=form, user=user)
 
 @admin_bp.route('/account/<int:account_id>/edit', methods=['GET', 'POST'])
