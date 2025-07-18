@@ -16,11 +16,11 @@
                 {{ field(class="btn " + button_map.get(field.id, "btn-primary") ) }}
             {% elif field.type == 'BooleanField' %}
                  <div class="form-check">
-                    {{ field(class="form-check-input " + ( field.flags.error_class if field.flags.error_class else "")) }}
+                    {{ field(class="form-check-input " + ( "is-invalid" if field.errors else "" )) }}
                     {{ field.label(class="form-check-label") }}
                 </div>
             {% else %}
-                {{ field(class="form-control " + ( field.flags.error_class if field.flags.error_class else ""), **kwargs) }}
+                {{ field(class="form-control" + ( " is-invalid" if field.errors else "" ), **kwargs) }}
             {% endif %}
 
             {% if field.errors %}
