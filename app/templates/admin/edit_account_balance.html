@@ -3,12 +3,12 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h1 class="mb-4">{{ title }} for {{ account.owner_user.username }} (Acc ID: {{ account.id }})</h1>
+    <h1 class="mb-4">{{ title }} for {{ account.user.username }} (Acc ID: {{ account.id }})</h1>
     <p>Current Balance: <strong>{{ "%.2f"|format(account.balance) }} {{ account.currency }}</strong></p>
 
     <div class="card">
         <div class="card-body">
-            <form method="POST" action="{{ url_for('admin.edit_account', account_id=account.id) }}" novalidate>
+            <form method="POST" action="{{ url_for('admin.edit_account_balance', account_id=account.id) }}" novalidate>
                 {{ form.hidden_tag() }}
                 <p class="text-muted">Enter a positive amount to deposit, or a negative amount to withdraw.</p>
                 {{ wtf.render_field(form.amount) }}
@@ -18,6 +18,6 @@
         </div>
     </div>
 
-    <a href="{{ url_for('admin.accounts') }}" class="btn btn-secondary mt-3">Back to Account List</a>
+    <a href="{{ url_for('admin.manage_accounts') }}" class="btn btn-secondary mt-3">Back to Account List</a>
 </div>
 {% endblock %}

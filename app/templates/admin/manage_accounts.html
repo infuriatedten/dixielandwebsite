@@ -3,6 +3,13 @@
 {% block title %}Manage Accounts{% endblock %}
 
 {% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
 <h1 class="mb-4">Manage Accounts</h1>
 <div class="table-responsive">
     <table class="table table-striped">
@@ -25,7 +32,10 @@
                 <td>{{ account.currency }}</td>
                 <td>{{ "Yes" if account.is_company else "No" }}</td>
                 <td>{{ account.last_updated_on.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                <td><a href="{{ url_for('admin.edit_account', account_id=account.id) }}" class="btn btn-primary btn-sm">Edit</a></td>
+                <td>
+                    <a href="{{ url_for('admin.edit_account', account_id=account.id) }}" class="btn btn-primary btn-sm">Edit</a>
+                    <a href="{{ url_for('admin.edit_account_balance', account_id=account.id) }}" class="btn btn-secondary btn-sm">Edit Balance</a>
+                </td>
             </tr>
             {% endfor %}
         </tbody>

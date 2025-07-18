@@ -10,11 +10,13 @@
             <form method="POST" action="{{ url_for('admin.edit_tax_bracket', bracket_id=bracket.id) }}" novalidate>
                 {{ form.hidden_tag() }}
                 {{ wtf.render_field(form.name) }}
-                {{ wtf.render_field(form.description) }}
-                <div class="form-row">
-                    <div class="col-md-6">{{ wtf.render_field(form.min_balance) }}</div>
-                    <div class="col-md-6">{{ wtf.render_field(form.max_balance) }}</div>
-                </div>
+                {{ wtf.render_field(form.min_balance) }}
+                {{ wtf.render_field(form.max_balance) }}
+                {% if form.max_balance.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.max_balance.errors[0] }}
+                    </div>
+                {% endif %}
                 {{ wtf.render_field(form.tax_rate) }}
                 {{ wtf.render_field(form.is_active) }}
                 {{ wtf.render_field(form.submit, button_map={'submit': 'btn-success'}) }}

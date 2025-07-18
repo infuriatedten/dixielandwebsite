@@ -8,7 +8,17 @@
 <form method="POST" action="{{ url_for('admin.edit_user', user_id=user.id) }}">
     {{ form.hidden_tag() }}
     {{ wtf.render_field(form.username) }}
+    {% if form.username.errors %}
+        <div class="alert alert-danger">
+            {{ form.username.errors[0] }}
+        </div>
+    {% endif %}
     {{ wtf.render_field(form.email) }}
+    {% if form.email.errors %}
+        <div class="alert alert-danger">
+            {{ form.email.errors[0] }}
+        </div>
+    {% endif %}
     {{ wtf.render_field(form.role) }}
     {{ wtf.render_field(form.discord_user_id) }}
     {{ wtf.render_field(form.region) }}

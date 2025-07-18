@@ -21,7 +21,7 @@
             <p><strong>Issued To:</strong> {{ ticket.issued_to.username if ticket.issued_to else 'N/A' }}</p>
             <p><strong>Issued By:</strong> Officer {{ ticket.issued_by.username if ticket.issued_by else 'System/Unknown' }}</p>
             <p><strong>Vehicle ID:</strong> {{ ticket.vehicle_id|default('N/A', True) }}</p>
-            <p><strong>Fine Amount:</strong> {{ "%.2f"|format(ticket.fine_amount) }} {{ current_user.accounts.first().currency if current_user.accounts.first() else '' }}</p>
+            <p><strong>Fine Amount:</strong> {{ "%.2f"|format(ticket.fine_amount) }} {{ current_user.accounts.first().currency if current_user.accounts and current_user.accounts.first() else '' }}</p>
             <p><strong>Issue Date:</strong> {{ ticket.issue_date.strftime('%Y-%m-%d %H:%M:%S UTC') if ticket.issue_date else 'N/A' }}</p>
             <p><strong>Due Date:</strong> {{ ticket.due_date.strftime('%Y-%m-%d %H:%M:%S UTC') if ticket.due_date else 'N/A' }}</p>
 

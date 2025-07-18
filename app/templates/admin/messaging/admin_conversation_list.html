@@ -7,12 +7,12 @@
 
     <div class="mb-3">
         <a href="{{ url_for('messaging.admin_start_conversation') }}" class="btn btn-success">Start New Conversation</a>
-        <a href="{{ url_for('messaging.admin_list_all_conversations', unread='true') }}"
+        <a href="{{ url_for('admin.admin_list_all_conversations', unread='true') }}"
            class="btn btn-outline-warning {% if filter_unread %}active{% endif %}">
            Show My Unread Only
         </a>
         {% if filter_unread %}
-        <a href="{{ url_for('messaging.admin_list_all_conversations') }}" class="btn btn-outline-info">Show All</a>
+        <a href="{{ url_for('admin.admin_list_all_conversations') }}" class="btn btn-outline-info">Show All</a>
         {% endif %}
     </div>
 

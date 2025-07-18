@@ -48,6 +48,8 @@ from app.models import Farmer, Parcel, UserVehicle, Account
 @main_bp.route('/farmers')
 def farmers():
     # Assuming the logged-in user is a farmer
+    if not current_user.is_authenticated:
+        return redirect(url_for('auth.login'))
     farmer = Farmer.query.filter_by(user_id=current_user.id).first()
     if farmer:
         parcels = Parcel.query.filter_by(farmer_id=farmer.id).all()
@@ -68,6 +70,8 @@ from app import db
 
 @main_bp.route('/company', methods=['GET', 'POST'])
 def company():
+    if not current_user.is_authenticated:
+        return redirect(url_for('auth.login'))
     form = CompanyNameForm()
     if form.validate_on_submit():
         company = Company.query.filter_by(user_id=current_user.id).first()

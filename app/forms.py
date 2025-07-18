@@ -179,6 +179,11 @@ class EditTaxBracketForm(FlaskForm):
     is_active = BooleanField('Is Active')
     submit = SubmitField('Update Tax Bracket')
 
+    def validate_max_balance(self, field):
+        if field.data is not None and self.min_balance.data is not None:
+            if field.data <= self.min_balance.data:
+                raise ValidationError('Max Balance must be greater than Min Balance.')
+
 
 class EditInspectionForm(FlaskForm):
     pass_status = BooleanField('Pass Status')

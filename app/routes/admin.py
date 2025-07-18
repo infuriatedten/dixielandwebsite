@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, flash, redirect, url_for, request
 from app.decorators import admin_required
 from app.models import User, Account, Ticket, PermitApplication, Inspection, TaxBracket, PermitApplicationStatus, TicketStatus, Transaction, TransactionType, VehicleRegion, RulesContent, UserRole
-from app.forms import EditRulesForm, EditUserForm, EditAccountForm, EditTicketForm, EditPermitForm, EditInspectionForm, EditTaxBracketForm
+from app.forms import EditRulesForm, EditUserForm, EditAccountForm, EditTicketForm, EditPermitForm, EditInspectionForm, EditTaxBracketForm, EditBalanceForm
 from app import db
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -9,11 +9,23 @@ admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 @admin_bp.route('/')
 @admin_required
 def index():
+    revenue_query = db.session.query(db.func.sum(Transaction.amount)).filter(
+        Transaction.type.in_([
+            TransactionType.TICKET_PAYMENT,
+            TransactionType.PERMIT_FEE_PAYMENT,
+            TransactionType.PERMIT_FEE
+        ])
+    ).scalar()
+
     stats = {
         'total_users': User.query.count(),
-        'pending_permits': PermitApplication.query.filter(PermitApplication.status == PermitApplicationStatus.PENDING_REVIEW).count(),
-        'open_tickets': Ticket.query.filter(Ticket.status == TicketStatus.OUTSTANDING).count(),
-        'revenue': db.session.query(db.func.sum(Transaction.amount)).filter(Transaction.type.in_([TransactionType.TICKET_PAYMENT, TransactionType.PERMIT_FEE_PAYMENT])).scalar() or 0
+        'pending_permits': PermitApplication.query.filter(
+            PermitApplication.status == PermitApplicationStatus.PENDING_REVIEW
+        ).count(),
+        'open_tickets': Ticket.query.filter(
+            Ticket.status == TicketStatus.OUTSTANDING
+        ).count(),
+        'revenue': revenue_query or 0.0
     }
     return render_template('admin/dashboard.html', title='Admin Dashboard', stats=stats)
 
@@ -113,6 +125,38 @@ def edit_account(account_id):
         return redirect(url_for('admin.manage_accounts'))
     return render_template('admin/edit_account.html', title='Edit Account', form=form, account=account)
 
+@admin_bp.route('/account/<int:account_id>/edit_balance', methods=['GET', 'POST'])
+@admin_required
+def edit_account_balance(account_id):
+    account = Account.query.get_or_404(account_id)
+    form = EditBalanceForm()
+    if form.validate_on_submit():
+        amount = form.amount.data
+        description = form.description.data
+
+        try:
+            # Create a transaction record
+            transaction = Transaction(
+                account_id=account.id,
+                amount=amount,
+                description=description,
+                type=TransactionType.ADMIN_DEPOSIT if amount > 0 else TransactionType.ADMIN_WITHDRAWAL
+            )
+            db.session.add(transaction)
+
+            # Update account balance
+            account.balance += amount
+            db.session.commit()
+
+            flash('Account balance updated successfully.', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating account balance: {e}', 'danger')
+
+        return redirect(url_for('admin.manage_accounts'))
+
+    return render_template('admin/edit_account_balance.html', title='Edit Account Balance', form=form, account=account)
+
 @admin_bp.route('/ticket/<int:ticket_id>/edit', methods=['GET', 'POST'])
 @admin_required
 def edit_ticket(ticket_id):
@@ -172,7 +216,51 @@ def edit_tax_bracket(bracket_id):
 @admin_required
 def delete_user(user_id):
     user = User.query.get_or_404(user_id)
+
+    # Check for related objects
+    if user.accounts.first() or \
+       user.tickets_received.first() or \
+       user.tickets_issued.first() or \
+       user.permit_applications.first() or \
+       user.marketplace_listings.first() or \
+       user.inspections_conducted.first() or \
+       user.inspections_received.first() or \
+       user.vehicles.first() or \
+       user.conversations_as_user_participant.first() or \
+       user.conversations_as_admin_participant.first() or \
+       user.sent_messages.first() or \
+       user.notifications.first() or \
+       user.submitted_auction_items.first() or \
+       user.approved_auction_items.first() or \
+       user.auctions_won.first() or \
+       user.auction_bids_placed.first() or \
+       hasattr(user, 'company') or \
+       hasattr(user, 'farmer'):
+        flash('Cannot delete user with related objects. Please reassign or delete them first.', 'danger')
+        return redirect(url_for('admin.manage_users'))
+
     db.session.delete(user)
     db.session.commit()
     flash('User deleted successfully.', 'success')
     return redirect(url_for('admin.manage_users'))
+
+# --- Admin Specific Messaging Routes ---
+@admin_bp.route('/conversations', methods=['GET']) # Changed route for clarity
+@admin_required
+def admin_list_all_conversations(): # Renamed for clarity
+    page = request.args.get('page', 1, type=int)
+    filter_unread = request.args.get('unread', 'false').lower() == 'true'
+    from app.services import messaging_service
+    from app.models import ConversationStatus
+
+    conversations_pagination = messaging_service.get_admin_conversations_list(
+        admin_user_id=None, # Pass None to indicate all for any admin if service supports it
+        page=page,
+        filter_unread=filter_unread
+    )
+
+    return render_template('admin/messaging/admin_conversation_list.html',
+                           title='All System Conversations',
+                           conversations_pagination=conversations_pagination,
+                           filter_unread=filter_unread,
+                           ConversationStatus=ConversationStatus)

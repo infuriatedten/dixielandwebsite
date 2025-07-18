@@ -82,33 +82,6 @@ def close_conversation_route(conversation_id):
 
 
 # --- Admin Specific Messaging Routes ---
-@messaging_bp.route('/admin/conversations', methods=['GET']) # Changed route for clarity
-@login_required
-@admin_required
-def admin_list_all_conversations(): # Renamed for clarity
-    page = request.args.get('page', 1, type=int)
-    filter_unread = request.args.get('unread', 'false').lower() == 'true'
-
-    # Service function get_admin_conversations_list with admin_id=None and show_all_admin=True
-    # would show ALL conversations if that's the intent.
-    # For now, let's assume this lists all conversations in the system for any admin to browse.
-    # The service logic for get_admin_conversations_list might need adjustment if it's currently scoped per admin.
-    # Let's refine: get_admin_conversations_list(admin_id=None, page=page, show_all_admin=True, filter_unread=filter_unread)
-    # For now, sticking to the service as is, meaning it will show convos for THIS admin, or all if admin_id is None.
-    # This route implies "all", so admin_id should be None.
-    conversations_pagination = messaging_service.get_admin_conversations_list(
-        admin_user_id=None, # Pass None to indicate all for any admin if service supports it
-        page=page,
-        filter_unread=filter_unread
-    )
-    # If get_admin_conversations_list doesn't have show_all_admin, it will only show where current_user is admin_id
-    # Let's assume the service get_admin_conversations_list(admin_id=None) means show all for an admin.
-
-    return render_template('admin/messaging/admin_conversation_list.html',
-                           title='All System Conversations',
-                           conversations_pagination=conversations_pagination,
-                           filter_unread=filter_unread,
-                           ConversationStatus=ConversationStatus)
 
 
 @messaging_bp.route('/admin/start_conversation', methods=['GET', 'POST'])
