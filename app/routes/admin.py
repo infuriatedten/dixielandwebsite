@@ -9,11 +9,23 @@ admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 @admin_bp.route('/')
 @admin_required
 def index():
+    revenue_query = db.session.query(db.func.sum(Transaction.amount)).filter(
+        Transaction.type.in_([
+            TransactionType.TICKET_PAYMENT,
+            TransactionType.PERMIT_FEE_PAYMENT,
+            TransactionType.PERMIT_FEE
+        ])
+    ).scalar()
+
     stats = {
         'total_users': User.query.count(),
-        'pending_permits': PermitApplication.query.filter(PermitApplication.status == PermitApplicationStatus.PENDING_REVIEW).count(),
-        'open_tickets': Ticket.query.filter(Ticket.status == TicketStatus.OUTSTANDING).count(),
-        'revenue': db.session.query(db.func.sum(Transaction.amount)).filter(Transaction.type.in_([TransactionType.TICKET_PAYMENT, TransactionType.PERMIT_FEE_PAYMENT])).scalar() or 0
+        'pending_permits': PermitApplication.query.filter(
+            PermitApplication.status == PermitApplicationStatus.PENDING_REVIEW
+        ).count(),
+        'open_tickets': Ticket.query.filter(
+            Ticket.status == TicketStatus.OUTSTANDING
+        ).count(),
+        'revenue': revenue_query or 0.0
     }
     return render_template('admin/dashboard.html', title='Admin Dashboard', stats=stats)
 
