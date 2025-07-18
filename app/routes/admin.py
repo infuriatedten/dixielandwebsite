@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, flash, redirect, url_for, request
 from app.decorators import admin_required
 from app.models import User, Account, Ticket, PermitApplication, Inspection, TaxBracket, PermitApplicationStatus, TicketStatus, Transaction, TransactionType, VehicleRegion, RulesContent, UserRole
-from app.forms import EditRulesForm, EditUserForm, EditAccountForm, EditTicketForm, EditPermitForm, EditInspectionForm, EditTaxBracketForm
+from app.forms import EditRulesForm, EditUserForm, EditAccountForm, EditTicketForm, EditPermitForm, EditInspectionForm, EditTaxBracketForm, EditBalanceForm
 from app import db
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -134,20 +134,25 @@ def edit_account_balance(account_id):
         amount = form.amount.data
         description = form.description.data
         
-        # Create a transaction record
-        transaction = Transaction(
-            account_id=account.id,
-            amount=amount,
-            description=description,
-            type=TransactionType.ADMIN_DEPOSIT if amount > 0 else TransactionType.ADMIN_WITHDRAWAL
-        )
-        db.session.add(transaction)
-        
-        # Update account balance
-        account.balance += amount
-        db.session.commit()
-        
-        flash('Account balance updated successfully.', 'success')
+        try:
+            # Create a transaction record
+            transaction = Transaction(
+                account_id=account.id,
+                amount=amount,
+                description=description,
+                type=TransactionType.ADMIN_DEPOSIT if amount > 0 else TransactionType.ADMIN_WITHDRAWAL
+            )
+            db.session.add(transaction)
+            
+            # Update account balance
+            account.balance += amount
+            db.session.commit()
+            
+            flash('Account balance updated successfully.', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating account balance: {e}', 'danger')
+            
         return redirect(url_for('admin.manage_accounts'))
         
     return render_template('admin/edit_account_balance.html', title='Edit Account Balance', form=form, account=account)
