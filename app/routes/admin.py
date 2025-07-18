@@ -1,8 +1,7 @@
 from flask import Blueprint, render_template, flash, redirect, url_for, request
 from app.decorators import admin_required
-from app.models import User, Account, Ticket, PermitApplication, Inspection, TaxBracket, PermitApplicationStatus, TicketStatus, Transaction, TransactionType, VehicleRegion
+from app.models import User, Account, Ticket, PermitApplication, Inspection, TaxBracket, PermitApplicationStatus, TicketStatus, Transaction, TransactionType, VehicleRegion, RulesContent, UserRole
 from app.forms import EditRulesForm, EditUserForm, EditAccountForm, EditTicketForm, EditPermitForm, EditInspectionForm, EditTaxBracketForm
-from app.models import RulesContent, UserRole
 from app import db
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -12,8 +11,8 @@ admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 def index():
     stats = {
         'total_users': User.query.count(),
-        'pending_permits': PermitApplication.query.filter_by(status=PermitApplicationStatus.PENDING_REVIEW).count(),
-        'open_tickets': Ticket.query.filter_by(status=TicketStatus.OUTSTANDING).count(),
+        'pending_permits': PermitApplication.query.filter(PermitApplication.status == PermitApplicationStatus.PENDING_REVIEW).count(),
+        'open_tickets': Ticket.query.filter(Ticket.status == TicketStatus.OUTSTANDING).count(),
         'revenue': db.session.query(db.func.sum(Transaction.amount)).filter(Transaction.type.in_([TransactionType.TICKET_PAYMENT, TransactionType.PERMIT_FEE_PAYMENT])).scalar() or 0
     }
     return render_template('admin/dashboard.html', title='Admin Dashboard', stats=stats)
@@ -23,7 +22,7 @@ def index():
 def tickets():
     page = request.args.get('page', 1, type=int)
     tickets = Ticket.query.order_by(Ticket.issue_date.desc()).paginate(page=page, per_page=10)
-    return render_template('admin/tickets.html', title='Manage Tickets', tickets=tickets)
+    return render_template('admin/tickets.html', title='Manage Tickets', tickets=tickets, TicketStatus=TicketStatus)
 
 @admin_bp.route('/rules/edit', methods=['GET', 'POST'])
 @admin_required
@@ -82,7 +81,7 @@ def manage_tax_brackets():
 @admin_required
 def edit_user(user_id):
     user = User.query.get_or_404(user_id)
-    form = EditUserForm(original_username=user.username, original_email=user.email)
+    form = EditUserForm(original_username=user.username, original_email=user.email, obj=user)
     if form.validate_on_submit():
         user.username = form.username.data
         user.email = form.email.data
@@ -92,12 +91,6 @@ def edit_user(user_id):
         db.session.commit()
         flash('User updated successfully.', 'success')
         return redirect(url_for('admin.manage_users'))
-    elif request.method == 'GET':
-        form.username.data = user.username
-        form.email.data = user.email
-        form.role.data = user.role.name
-        form.discord_user_id.data = user.discord_user_id
-        form.region.data = user.region.name
     return render_template('admin/edit_user.html', title='Edit User', form=form, user=user)
 
 @admin_bp.route('/account/<int:account_id>/edit', methods=['GET', 'POST'])
