@@ -184,7 +184,51 @@ def edit_tax_bracket(bracket_id):
 @admin_required
 def delete_user(user_id):
     user = User.query.get_or_404(user_id)
+
+    # Check for related objects
+    if user.accounts.first() or \
+       user.tickets_received.first() or \
+       user.tickets_issued.first() or \
+       user.permit_applications.first() or \
+       user.marketplace_listings.first() or \
+       user.inspections_conducted.first() or \
+       user.inspections_received.first() or \
+       user.vehicles.first() or \
+       user.conversations_as_user_participant.first() or \
+       user.conversations_as_admin_participant.first() or \
+       user.sent_messages.first() or \
+       user.notifications.first() or \
+       user.submitted_auction_items.first() or \
+       user.approved_auction_items.first() or \
+       user.auctions_won.first() or \
+       user.auction_bids_placed.first() or \
+       hasattr(user, 'company') or \
+       hasattr(user, 'farmer'):
+        flash('Cannot delete user with related objects. Please reassign or delete them first.', 'danger')
+        return redirect(url_for('admin.manage_users'))
+
     db.session.delete(user)
     db.session.commit()
     flash('User deleted successfully.', 'success')
     return redirect(url_for('admin.manage_users'))
+
+# --- Admin Specific Messaging Routes ---
+@admin_bp.route('/conversations', methods=['GET']) # Changed route for clarity
+@admin_required
+def admin_list_all_conversations(): # Renamed for clarity
+    page = request.args.get('page', 1, type=int)
+    filter_unread = request.args.get('unread', 'false').lower() == 'true'
+    from app.services import messaging_service
+    from app.models import ConversationStatus
+
+    conversations_pagination = messaging_service.get_admin_conversations_list(
+        admin_user_id=None, # Pass None to indicate all for any admin if service supports it
+        page=page,
+        filter_unread=filter_unread
+    )
+
+    return render_template('admin/messaging/admin_conversation_list.html',
+                           title='All System Conversations',
+                           conversations_pagination=conversations_pagination,
+                           filter_unread=filter_unread,
+                           ConversationStatus=ConversationStatus)
