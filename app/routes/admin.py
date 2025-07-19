@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, flash, redirect, url_for, request
 from app.decorators import admin_required
-from app.models import User, Account, Ticket, PermitApplication, Inspection, TaxBracket, PermitApplicationStatus, TicketStatus, Transaction, TransactionType, VehicleRegion, RulesContent, UserRole
-from app.forms import EditRulesForm, EditUserForm, EditAccountForm, EditTicketForm, EditPermitForm, EditInspectionForm, EditTaxBracketForm, EditBalanceForm
+from app.models import User, Account, Ticket, PermitApplication, Inspection, TaxBracket, PermitApplicationStatus, TicketStatus, Transaction, TransactionType, VehicleRegion, RulesContent, UserRole, InsuranceClaim, InsuranceClaimStatus
+from app.forms import EditRulesForm, EditUserForm, EditAccountForm, EditTicketForm, EditPermitForm, EditInspectionForm, EditTaxBracketForm, EditBalanceForm, EditInsuranceClaimForm
 from app import db
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -264,3 +264,24 @@ def admin_list_all_conversations(): # Renamed for clarity
                            conversations_pagination=conversations_pagination,
                            filter_unread=filter_unread,
                            ConversationStatus=ConversationStatus)
+
+
+@admin_bp.route('/insurance_claims')
+@admin_required
+def manage_insurance_claims():
+    page = request.args.get('page', 1, type=int)
+    claims = InsuranceClaim.query.order_by(InsuranceClaim.claim_date.desc()).paginate(page=page, per_page=10)
+    return render_template('admin/manage_insurance_claims.html', title='Manage Insurance Claims', claims=claims)
+
+
+@admin_bp.route('/insurance_claim/<int:claim_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def edit_insurance_claim(claim_id):
+    claim = InsuranceClaim.query.get_or_404(claim_id)
+    form = EditInsuranceClaimForm(obj=claim)
+    if form.validate_on_submit():
+        claim.status = InsuranceClaimStatus[form.status.data]
+        db.session.commit()
+        flash('Insurance claim updated successfully.', 'success')
+        return redirect(url_for('admin.manage_insurance_claims'))
+    return render_template('admin/edit_insurance_claim.html', title='Edit Insurance Claim', form=form, claim=claim)
