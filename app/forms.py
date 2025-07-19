@@ -12,7 +12,7 @@ from datetime import datetime
 from decimal import Decimal
 from app.models import (
     User, UserRole, TransactionType, TaxBracket, TicketStatus,
-    PermitApplicationStatus, MarketplaceListingStatus, VehicleRegion
+    PermitApplicationStatus, MarketplaceListingStatus, VehicleRegion, InsuranceClaimStatus
 )
 from app.custom_validators import must_be_positive
 
@@ -249,6 +249,11 @@ class ParcelForm(FlaskForm):
 class InsuranceClaimForm(FlaskForm):
     reason = TextAreaField('Reason for Claim', validators=[DataRequired(), Length(min=10, max=1000)])
     submit = SubmitField('Submit Claim')
+
+
+class EditInsuranceClaimForm(FlaskForm):
+    status = SelectField('Status', choices=[(status.name, status.value) for status in InsuranceClaimStatus], validators=[DataRequired()])
+    submit = SubmitField('Update Claim')
 
 
 class PlaceBidForm(FlaskForm):
