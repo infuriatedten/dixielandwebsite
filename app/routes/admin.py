@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, flash, redirect, url_for, request
 from app.decorators import admin_required
-from app.models import User, Account, Ticket, PermitApplication, Inspection, TaxBracket, PermitApplicationStatus, TicketStatus, Transaction, TransactionType, VehicleRegion, RulesContent, UserRole
+from app.models import User, Account, Ticket, PermitApplication, Inspection, TaxBracket, PermitApplicationStatus, TicketStatus, Transaction, TransactionType, VehicleRegion, RulesContent, UserRole, InsuranceClaim, InsuranceClaimStatus
 from app.forms import EditRulesForm, EditUserForm, EditAccountForm, EditTicketForm, EditPermitForm, EditInspectionForm, EditTaxBracketForm, EditBalanceForm
 from app import db
 
@@ -264,3 +264,11 @@ def admin_list_all_conversations(): # Renamed for clarity
                            conversations_pagination=conversations_pagination,
                            filter_unread=filter_unread,
                            ConversationStatus=ConversationStatus)
+
+
+@admin_bp.route('/insurance_claims')
+@admin_required
+def manage_insurance_claims():
+    page = request.args.get('page', 1, type=int)
+    claims = InsuranceClaim.query.order_by(InsuranceClaim.claim_date.desc()).paginate(page=page, per_page=10)
+    return render_template('admin/manage_insurance_claims.html', title='Manage Insurance Claims', claims=claims)

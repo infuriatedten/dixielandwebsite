@@ -388,3 +388,22 @@ class Parcel(db.Model):
 
     def __repr__(self):
         return f'<Parcel {self.id}>'
+
+
+class InsuranceClaimStatus(enum.Enum):
+    PENDING = "Pending"
+    APPROVED = "Approved"
+    REJECTED = "Rejected"
+
+
+class InsuranceClaim(db.Model):
+    __tablename__ = 'insurance_claims'
+    id = db.Column(db.Integer, primary_key=True)
+    farmer_id = db.Column(db.Integer, db.ForeignKey('farmers.id'), nullable=False)
+    claim_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    reason = db.Column(db.Text, nullable=False)
+    status = db.Column(db.Enum(InsuranceClaimStatus), default=InsuranceClaimStatus.PENDING, nullable=False)
+    farmer = db.relationship('Farmer', backref=db.backref('insurance_claims', lazy='dynamic'))
+
+    def __repr__(self):
+        return f'<InsuranceClaim {self.id}>'

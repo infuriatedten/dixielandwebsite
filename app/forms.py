@@ -246,6 +246,11 @@ class ParcelForm(FlaskForm):
     submit = SubmitField('Add Parcel')
 
 
+class InsuranceClaimForm(FlaskForm):
+    reason = TextAreaField('Reason for Claim', validators=[DataRequired(), Length(min=10, max=1000)])
+    submit = SubmitField('Submit Claim')
+
+
 class PlaceBidForm(FlaskForm):
     bid_amount = DecimalField('Your Bid Amount', places=2, validators=[DataRequired()])
     submit = SubmitField('Place Bid')
