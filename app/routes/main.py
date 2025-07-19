@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, url_for # Added url_for
-from flask_login import current_user
+from flask_login import current_user, login_required
 from app.decorators import admin_required, officer_required
 from app.models import UserRole, RulesContent # Consolidated imports
 import mistune # For Markdown to HTML conversion
@@ -43,10 +43,11 @@ def view_rules():
                            rules_content_html=rules_content_html,
                            current_user=current_user, UserRole=UserRole)
 
-from app.models import Farmer, Parcel, UserVehicle, Account, InsuranceClaim
+from app.models import Farmer, Parcel, UserVehicle, Account, InsuranceClaim, Contract, ContractStatus
 from app.forms import ParcelForm, InsuranceClaimForm
 from flask import redirect, flash
 from app import db
+from datetime import datetime
 
 @main_bp.route('/farmers', methods=['GET', 'POST'])
 def farmers():
@@ -130,3 +131,23 @@ def company():
         form.name.data = company.name
 
     return render_template('main/company.html', title='Company', form=form, vehicles=vehicles)
+
+@main_bp.route('/contracts')
+@login_required
+def contracts():
+    contracts = Contract.query.filter_by(status=ContractStatus.AVAILABLE).all()
+    return render_template('main/contracts.html', title='Contracts', contracts=contracts)
+
+@main_bp.route('/contract/<int:contract_id>/claim', methods=['POST'])
+@login_required
+def claim_contract(contract_id):
+    contract = Contract.query.get_or_404(contract_id)
+    if contract.status == ContractStatus.AVAILABLE:
+        contract.status = ContractStatus.CLAIMED
+        contract.claimant_id = current_user.id
+        contract.claimed_date = datetime.utcnow()
+        db.session.commit()
+        flash('Contract claimed successfully!', 'success')
+    else:
+        flash('This contract is not available to be claimed.', 'danger')
+    return redirect(url_for('main.contracts'))
