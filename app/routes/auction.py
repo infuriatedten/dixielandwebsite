@@ -8,6 +8,7 @@ from flask_login import login_required
 from app.decorators import admin_required
 from datetime import datetime, timedelta
 from decimal import Decimal
+from app.services.discord_webhook_service import post_auction_to_discord
 
 auction_bp = Blueprint('auction', __name__)
 
@@ -184,6 +185,7 @@ def approve_auction_item(item_id):
         item.status = AuctionStatus.ACTIVE
 
         db.session.commit()
+        post_auction_to_discord(item)
         flash(f'Auction item "{item.item_name}" has been approved and is now active.', 'success')
         # TODO: Notify submitter
         return redirect(url_for('auction.list_pending_auctions'))
