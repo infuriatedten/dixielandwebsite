@@ -1,39 +1,138 @@
 from flask import Blueprint, render_template, url_for, redirect, flash, request
 from flask_login import current_user, login_required
+from datetime import datetime
+import mistune
+
+from app import db
 from app.decorators import admin_required, officer_required
 from app.models import (
-    User, UserRole, RulesContent, Farmer, Parcel, UserVehicle, 
-    Account, InsuranceClaim, Contract, ContractStatus, Company
+    User, UserRole, RulesContent, Farmer, Parcel, UserVehicle,
+    Account, InsuranceClaim, Contract, ContractStatus, Company,
+    MarketplaceListing, MarketplaceListingStatus, Ticket, PermitApplication,
+    Transaction, TransactionType
 )
 from app.forms import (
     ParcelForm, InsuranceClaimForm, ContractForm, CompanyNameForm
 )
-from app import db
-import mistune
-from datetime import datetime
 
 main_bp = Blueprint('main', __name__)
 
-# Home route
+
+# ------------------------ HOME ------------------------
+
 @main_bp.route('/', endpoint='index')
 def main_index():
-    return render_template('main/index.html', title='Home')
+    recent_listings = MarketplaceListing.query \
+        .filter_by(status=MarketplaceListingStatus.AVAILABLE) \
+        .order_by(MarketplaceListing.creation_date.desc()) \
+        .limit(4).all()
+
+    announcements = [
+        {
+            'title': 'Welcome to the new and improved Game Portal!',
+            'content': 'We have redesigned the home page to be more informative and user-friendly.'
+        },
+        {
+            'title': 'New Marketplace Items Available',
+            'content': 'Check out the new items available in the marketplace. There are some great deals to be had!'
+        },
+    ]
+
+    stats = {
+        'active_players': User.query.count(),
+        'open_tickets': Ticket.query.filter_by(status='OUTSTANDING').count(),
+        'pending_permits': PermitApplication.query.filter_by(status='PENDING_REVIEW').count(),
+    }
+
+    return render_template('main/index.html', title='Home',
+                           recent_listings=recent_listings,
+                           announcements=announcements,
+                           stats=stats)
 
 
-# Admin dashboard
+# ------------------------ RULES ------------------------
+
+@main_bp.route('/rules', endpoint='view_rules')
+def view_rules():
+    rules_entry = RulesContent.query.first()
+    markdown_parser = mistune.create_markdown(escape=False)
+
+    if rules_entry and rules_entry.content_markdown:
+        rules_content_html = markdown_parser(rules_entry.content_markdown)
+    else:
+        rules_content_html = "<p>The rules have not been set yet. Please check back later.</p>"
+        if current_user.is_authenticated and current_user.role == UserRole.ADMIN:
+            rules_content_html += f'<p><a href="{url_for("admin.edit_rules")}">Set the rules now.</a></p>'
+
+    return render_template('main/rules.html', title='Rules',
+                           rules_content_html=rules_content_html,
+                           current_user=current_user, UserRole=UserRole)
+
+
+# ------------------------ ADMIN ------------------------
+
 @main_bp.route('/admin-dashboard')
 @admin_required
 def admin_dashboard():
     stats = {
         'total_users': User.query.count(),
-        'pending_permits': 0,  # Add logic later
-        'open_tickets': 0,     # Add logic later
-        'revenue': 0           # Add logic later
+        'pending_permits': PermitApplication.query.filter_by(status='PENDING_REVIEW').count(),
+        'open_tickets': Ticket.query.filter_by(status='OUTSTANDING').count(),
+        'revenue': 0  # TODO: Implement revenue logic
     }
     return render_template('admin/dashboard.html', title='Admin Dashboard', stats=stats)
 
 
-# Officer area
+# ------------------------ OFFICER ------------------------
+
+@main_bp.route('/officer-area')
+@officer_required
+def officer_area():
+    return render_template('officer/area.html', title='Officer Area')
+
+
+# ------------------------ FARMERS ------------------------
+
+@main_bp.route('/farmers', methods=['GET', 'POST'])
+@login_required
+def farmers():
+    parcel_form = ParcelForm()
+    insurance_form = InsuranceClaimForm()
+    farmer = Farmer.query.filter_by(user_id=current_user.id).first()
+
+    if parcel_form.validate_on_submit() and parcel_form.submit.data:
+        if farmer:
+            new_parcel = Parcel(
+                location=parcel_form.location.data,
+                size=parcel_form.size.data,
+                farmer_id=farmer.id
+            )
+            db.session.add(new_parcel)
+            db.session.commit()
+            flash('Parcel added successfully!', 'success')
+        else:
+            flash('You must be a registered farmer to add a parcel.', 'danger')
+        return redirect(url_for('main.farmers'))
+
+    if insurance_form.validate_on_submit() and insurance_form.submit.data:
+        if farmer:
+            claim = InsuranceClaim(
+                reason=insurance_form.reason.data,
+                farmer_id=farmer.id
+            )
+            db.session.add(claim)
+            db.session.commit()
+            flash('Insurance claim submitted successfully!', 'success')
+        else:
+            flash('You must be a registered farmer to submit a claim.', 'danger')
+        return redirect(url_for('main.farmers'))
+
+    parcels = Parcel.query.filter_by(farmer_id=farmer.id).all() if farmer else []
+    total_acres = sum(parcel.size for parcel in parcels)
+    vehicles = UserVehicle.query.filter_by(user_id=current_user.id).all()
+    bank_accounts = Account.query.filter_by(user_id=current_user.id).all()
+    insurance_claims = InsuranceClaim.query.filter_by(farmer_id=farmer.id).all() if farmer_
+
 @main_bp.route('/officer-area')
 @officer_required
 def officer_area():
