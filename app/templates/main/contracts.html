@@ -3,6 +3,9 @@
 {% block content %}
 <div class="container">
     <h1>Contracts</h1>
+
+    <a href="{{ url_for('main.create_contract') }}" class="btn btn-primary mb-3">Create Contract</a>
+
     <div class="row">
         {% for contract in contracts %}
         <div class="col-md-4">
