@@ -58,7 +58,16 @@ def view_rules():
                            current_user=current_user, UserRole=UserRole)
 
 
+
 # Farmer area: parcels, claims, etc.
+
+from app.models import Farmer, Parcel, UserVehicle, Account, InsuranceClaim, Contract, ContractStatus, Transaction, TransactionType
+from app.forms import ParcelForm, InsuranceClaimForm, ContractForm
+from flask import redirect, flash
+from app import db
+from datetime import datetime
+
+
 @main_bp.route('/farmers', methods=['GET', 'POST'])
 @login_required
 def farmers():
@@ -115,6 +124,11 @@ def farmers():
     )
 
 
+from app.models import Company, UserVehicle, Account
+from app.forms import CompanyNameForm
+from app import db
+
+
 # Company registration and dashboard
 @main_bp.route('/company', methods=['GET', 'POST'])
 @login_required
@@ -168,6 +182,17 @@ def users():
     all_users = User.query.all()
     return render_template('main/users.html', title='Users', users=all_users)
 
+@main_bp.route('/contract/<int:contract_id>/delete', methods=['POST'])
+@login_required
+def delete_contract(contract_id):
+    contract = Contract.query.get_or_404(contract_id)
+    if contract.creator_id != current_user.id:
+        flash('You are not authorized to delete this contract.', 'danger')
+        return redirect(url_for('main.contracts'))
+    db.session.delete(contract)
+    db.session.commit()
+    flash('Contract deleted successfully!', 'success')
+    return redirect(url_for('main.contracts'))
 
 # Create a contract
 @main_bp.route('/contracts/create', methods=['GET', 'POST'])
@@ -186,4 +211,38 @@ def create_contract():
         flash('Contract created successfully!', 'success')
         return redirect(url_for('main.contracts'))
     return render_template('main/create_contract.html', title='Create Contract', form=form)
+
+
+@main_bp.route('/contract/<int:contract_id>/complete', methods=['POST'])
+@login_required
+def complete_contract(contract_id):
+    contract = Contract.query.get_or_404(contract_id)
+    if contract.claimant_id != current_user.id:
+        flash('You are not authorized to complete this contract.', 'danger')
+        return redirect(url_for('main.contracts'))
+
+    if contract.status != ContractStatus.CLAIMED:
+        flash('This contract cannot be completed.', 'danger')
+        return redirect(url_for('main.contracts'))
+
+    # Transfer the reward to the claimant's account
+    claimant_account = Account.query.filter_by(user_id=contract.claimant_id).first()
+    if not claimant_account:
+        flash('You do not have a bank account to receive the reward.', 'danger')
+        return redirect(url_for('main.contracts'))
+
+    claimant_account.balance += contract.reward
+    transaction = Transaction(
+        account_id=claimant_account.id,
+        type=TransactionType.OTHER,
+        amount=contract.reward,
+        description=f"Reward for completing contract #{contract.id}: {contract.title}"
+    )
+    db.session.add(transaction)
+
+    contract.status = ContractStatus.COMPLETED
+    db.session.commit()
+
+    flash('Contract completed successfully! The reward has been transferred to your account.', 'success')
+    return redirect(url_for('main.contracts'))
 

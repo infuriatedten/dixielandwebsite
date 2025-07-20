@@ -8,7 +8,6 @@ from flask_login import login_required
 from app.decorators import admin_required
 from datetime import datetime, timedelta
 from decimal import Decimal
-from app.services.discord_webhook_service import post_auction_to_discord
 
 auction_bp = Blueprint('auction', __name__)
 
@@ -171,45 +170,40 @@ def approve_auction_item(item_id):
          form.minimum_bid_increment.data = app_flask.config.get('AUCTION_DEFAULT_MIN_BID_INCREMENT', 1.00)
 
 
-    if form.validate_on_submit():
-        item.actual_starting_bid = form.actual_starting_bid.data
-        item.minimum_bid_increment = form.minimum_bid_increment.data or app_flask.config.get('AUCTION_DEFAULT_MIN_BID_INCREMENT', 1.00)
-        item.admin_notes = form.admin_notes.data
-        item.admin_approver_id = current_user.id
-        item.approval_time = datetime.utcnow()
-        item.start_time = item.approval_time # Auction starts immediately on approval
+    if request.method == 'POST': # Check which button was pressed
+        if form.submit_approve.data and form.validate():
+            item.actual_starting_bid = form.actual_starting_bid.data
+            item.minimum_bid_increment = form.minimum_bid_increment.data or app_flask.config.get('AUCTION_DEFAULT_MIN_BID_INCREMENT', 1.00)
+            item.admin_notes = form.admin_notes.data
+            item.admin_approver_id = current_user.id
+            item.approval_time = datetime.utcnow()
+            item.start_time = item.approval_time # Auction starts immediately on approval
 
-        duration_hours = app_flask.config.get('AUCTION_DEFAULT_DURATION_HOURS', 24)
-        item.original_end_time = item.start_time + timedelta(hours=duration_hours)
-        item.current_end_time = item.original_end_time
-        item.status = AuctionStatus.ACTIVE
+            duration_hours = app_flask.config.get('AUCTION_DEFAULT_DURATION_HOURS', 24)
+            item.original_end_time = item.start_time + timedelta(hours=duration_hours)
+            item.current_end_time = item.original_end_time
+            item.status = AuctionStatus.ACTIVE
 
-        db.session.commit()
-        post_auction_to_discord(item)
-        flash(f'Auction item "{item.item_name}" has been approved and is now active.', 'success')
-        # TODO: Notify submitter
-        return redirect(url_for('auction.list_pending_auctions'))
+            db.session.commit()
+            flash(f'Auction item "{item.item_name}" has been approved and is now active.', 'success')
+            # TODO: Notify submitter
+            return redirect(url_for('auction.list_pending_auctions'))
 
-    return render_template('admin/auction/approve_auction_item.html', title='Approve Auction Item',
+        elif form.submit_reject.data: # Minimal validation for notes if rejecting
+            if not form.admin_notes.data or len(form.admin_notes.data.strip()) < 10 :
+                 flash("Admin notes are required for rejection (min 10 characters).", "danger")
+            else:
+                item.admin_notes = form.admin_notes.data
+                item.admin_approver_id = current_user.id # Admin who rejected
+                item.approval_time = datetime.utcnow() # Time of rejection
+                item.status = AuctionStatus.REJECTED_BY_ADMIN
+                db.session.commit()
+                flash(f'Auction item "{item.item_name}" has been rejected.', 'info')
+                # TODO: Notify submitter
+                return redirect(url_for('auction.list_pending_auctions'))
+
+    return render_template('admin/auction/approve_auction_item.html', title='Approve/Reject Auction Item',
                            form=form, item=item)
-
-
-@auction_bp.route('/admin/reject/<int:item_id>', methods=['POST'])
-@login_required
-@admin_required
-def reject_auction(item_id):
-    item = AuctionItem.query.get_or_404(item_id)
-    if item.status != AuctionStatus.PENDING_APPROVAL:
-        flash('This item is not currently pending approval.', 'warning')
-        return redirect(url_for('auction.list_pending_auctions'))
-
-    item.status = AuctionStatus.REJECTED_BY_ADMIN
-    item.admin_approver_id = current_user.id
-    item.approval_time = datetime.utcnow()
-    db.session.commit()
-    flash(f'Auction item "{item.item_name}" has been rejected.', 'info')
-    # TODO: Notify submitter
-    return redirect(url_for('auction.list_pending_auctions'))
 
 
 @auction_bp.route('/admin/manage_all', methods=['GET'])
