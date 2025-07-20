@@ -1,23 +1,51 @@
-from flask import Blueprint, render_template, url_for # Added url_for
+from flask import Blueprint, render_template, url_for, redirect, flash
 from flask_login import current_user, login_required
 from app.decorators import admin_required, officer_required
-from app.models import UserRole, RulesContent # Consolidated imports
-import mistune # For Markdown to HTML conversion
+from app.models import (
+    UserRole, RulesContent, Farmer, Parcel, UserVehicle, Account,
+    InsuranceClaim, Company, Contract, ContractStatus, User
+)
+from app.forms import (
+    ParcelForm, InsuranceClaimForm, CompanyNameForm, ContractForm
+)
+from app import db
+from datetime import datetime
+import mistune
 
 main_bp = Blueprint('main', __name__)
+
+# ------------------- General Routes -------------------
 
 @main_bp.route('/', endpoint='index')
 def main_index():
     return render_template('main/index.html', title='Home')
 
+@main_bp.route('/rules', endpoint='view_rules')
+def view_rules():
+    rules_entry = RulesContent.query.first()
+    rules_content_html = ""
+    if rules_entry and rules_entry.content_markdown:
+        markdown_parser = mistune.create_markdown(escape=False)
+        rules_content_html = markdown_parser(rules_entry.content_markdown)
+    else:
+        rules_content_html = "<p>The rules have not been set yet. Please check back later.</p>"
+        if current_user.is_authenticated and hasattr(current_user, 'role') and current_user.role.value == UserRole.ADMIN.value:
+            rules_content_html += f'<p><a href="{url_for("admin.edit_rules")}">Set the rules now.</a></p>'
+
+    return render_template('main/rules.html', title='Rules',
+                           rules_content_html=rules_content_html,
+                           current_user=current_user, UserRole=UserRole)
+
+# ------------------- Admin & Officer Dashboards -------------------
+
 @main_bp.route('/admin-dashboard')
 @admin_required
 def admin_dashboard():
     stats = {
-        'total_users': 0,
-        'pending_permits': 0,
-        'open_tickets': 0,
-        'revenue': 0
+        'total_users': User.query.count(),
+        'pending_permits': 0,  # Add real logic if needed
+        'open_tickets': 0,     # Add real logic if needed
+        'revenue': 0           # Add real logic if needed
     }
     return render_template('admin/dashboard.html', title='Admin Dashboard', stats=stats)
 
@@ -26,42 +54,13 @@ def admin_dashboard():
 def officer_area():
     return render_template('officer/area.html', title='Officer Area')
 
-@main_bp.route('/rules', endpoint='view_rules')
-def view_rules():
-    rules_entry = RulesContent.query.first()
-    rules_content_html = ""
-    if rules_entry and rules_entry.content_markdown:
-        markdown_parser = mistune.create_markdown(escape=False) 
-        rules_content_html = markdown_parser(rules_entry.content_markdown)
-    else:
-        rules_content_html = "<p>The rules have not been set yet. Please check back later.</p>"
-        # Check if current_user is authenticated and is an admin before suggesting to set rules
-        if current_user.is_authenticated and hasattr(current_user, 'role') and current_user.role.value == UserRole.ADMIN.value:
-            rules_content_html += f'<p><a href="{url_for("admin.edit_rules")}">Set the rules now.</a></p>'
-
-    return render_template('main/rules.html', title='Rules',
-                           rules_content_html=rules_content_html,
-                           current_user=current_user, UserRole=UserRole)
-
-feature/admin-auction-panel
-
-feature/admin-auction-panel
-
-from app.models import Farmer, Parcel, UserVehicle, Account, InsuranceClaim, Contract, ContractStatus
- feature/discord-webhooks
-from app.forms import ParcelForm, InsuranceClaimForm, ContractForm
-=======
-from app.forms import ParcelForm, InsuranceClaimForm
-main
-from flask import redirect, flash
-from app import db
-from datetime import datetime
+# ------------------- Farmers Section -------------------
 
 @main_bp.route('/farmers', methods=['GET', 'POST'])
+@login_required
 def farmers():
     parcel_form = ParcelForm()
     insurance_form = InsuranceClaimForm()
-
     farmer = Farmer.query.filter_by(user_id=current_user.id).first()
 
     if parcel_form.validate_on_submit() and parcel_form.submit.data:
@@ -91,18 +90,11 @@ def farmers():
             flash('You must be a registered farmer to submit a claim.', 'danger')
         return redirect(url_for('main.farmers'))
 
-    if farmer:
-        parcels = Parcel.query.filter_by(farmer_id=farmer.id).all()
-        total_acres = sum(parcel.size for parcel in parcels)
-        vehicles = UserVehicle.query.filter_by(user_id=current_user.id).all()
-        bank_accounts = Account.query.filter_by(user_id=current_user.id).all()
-        insurance_claims = InsuranceClaim.query.filter_by(farmer_id=farmer.id).all()
-    else:
-        parcels = []
-        total_acres = 0
-        vehicles = []
-        bank_accounts = []
-        insurance_claims = []
+    parcels = Parcel.query.filter_by(farmer_id=farmer.id).all() if farmer else []
+    total_acres = sum(parcel.size for parcel in parcels)
+    vehicles = UserVehicle.query.filter_by(user_id=current_user.id).all()
+    bank_accounts = Account.query.filter_by(user_id=current_user.id).all()
+    insurance_claims = InsuranceClaim.query.filter_by(farmer_id=farmer.id).all() if farmer else []
 
     return render_template(
         'main/farmers.html',
@@ -116,13 +108,10 @@ def farmers():
         insurance_form=insurance_form
     )
 
-main
-  main
-from app.models import Company, UserVehicle, Account
-from app.forms import CompanyNameForm
-from app import db
+# ------------------- Company Management -------------------
 
 @main_bp.route('/company', methods=['GET', 'POST'])
+@login_required
 def company():
     form = CompanyNameForm()
     if form.validate_on_submit():
@@ -135,12 +124,13 @@ def company():
         return redirect(url_for('main.company'))
 
     company = Company.query.filter_by(user_id=current_user.id).first()
-    vehicles = []
+    vehicles = UserVehicle.query.filter_by(user_id=current_user.id).all() if company else []
     if company:
-        vehicles = UserVehicle.query.filter_by(user_id=current_user.id).all()
         form.name.data = company.name
 
     return render_template('main/company.html', title='Company', form=form, vehicles=vehicles)
+
+# ------------------- Contracts System -------------------
 
 @main_bp.route('/contracts')
 @login_required
@@ -162,13 +152,6 @@ def claim_contract(contract_id):
         flash('This contract is not available to be claimed.', 'danger')
     return redirect(url_for('main.contracts'))
 
-@main_bp.route('/users')
-@login_required
-def users():
-    users = User.query.all()
-    return render_template('main/users.html', title='Users', users=users)
-feature/discord-webhooks
-
 @main_bp.route('/contracts/create', methods=['GET', 'POST'])
 @login_required
 def create_contract():
@@ -185,5 +168,11 @@ def create_contract():
         flash('Contract created successfully!', 'success')
         return redirect(url_for('main.contracts'))
     return render_template('main/create_contract.html', title='Create Contract', form=form)
-=======
- main
+
+# ------------------- User List -------------------
+
+@main_bp.route('/users')
+@login_required
+def users():
+    users = User.query.all()
+    return render_template('main/users.html', title='Users', users=users)
