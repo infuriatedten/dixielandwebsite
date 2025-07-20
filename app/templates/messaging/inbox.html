@@ -8,9 +8,9 @@
         <p><a href="{{ url_for('messaging.admin_start_conversation') }}" class="btn btn-primary mb-3">Start New Conversation with User</a></p>
     {% endif %}
 
-    {% if conversations %}
+    {% if conversations_pagination.items %}
     <div class="list-group">
-        {% for convo in conversations %}
+        {% for convo in conversations_pagination.items %}
         <a href="{{ url_for('messaging.view_conversation', conversation_id=convo.id) }}"
            class="list-group-item list-group-item-action flex-column align-items-start {% if (current_user.id == convo.user_id and convo.user_has_unread) or (current_user.id == convo.admin_id and convo.admin_has_unread) %}list-group-item-warning font-weight-bold{% endif %}">
             <div class="d-flex w-100 justify-content-between">
@@ -26,12 +26,12 @@
             </div>
             <p class="mb-1">
                 {% if current_user.id == convo.user_id %}
-                    Conversation with Admin: {{ convo.admin_participant.username if convo.admin_participant else 'N/A' }}
+                    Conversation with Admin: {{ convo.admin.username if convo.admin else 'N/A' }}
                 {% elif current_user.id == convo.admin_id %}
-                     Conversation with User: {{ convo.user_participant.username if convo.user_participant else 'N/A' }}
+                     Conversation with User: {{ convo.user.username if convo.user else 'N/A' }}
                 {% else %}
                     {# Fallback for general user if somehow seeing a convo they are not part of #}
-                    Participants: {{ convo.user_participant.username if convo.user_participant else 'User N/A' }} & {{ convo.admin_participant.username if convo.admin_participant else 'Admin N/A' }}
+                    Participants: {{ convo.user.username if convo.user else 'User N/A' }} & {{ convo.admin.username if convo.admin else 'Admin N/A' }}
                 {% endif %}
             </p>
             <small>Status: {{ convo.status.value }}</small>
@@ -42,6 +42,38 @@
         </a>
         {% endfor %}
     </div>
+     <nav aria-label="Conversation pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% set endpoint = request.endpoint %}
+            {% if conversations_pagination.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for(endpoint, page=conversations_pagination.prev_num) }}">Previous</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+            {% endif %}
+
+            {% for page_num in conversations_pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                {% if page_num %}
+                    {% if conversations_pagination.page == page_num %}
+                    <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
+                    {% else %}
+                    <li class="page-item"><a class="page-link" href="{{ url_for(endpoint, page=page_num) }}">{{ page_num }}</a></li>
+                    {% endif %}
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if conversations_pagination.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for(endpoint, page=conversations_pagination.next_num) }}">Next</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+            {% endif %}
+        </ul>
+    </nav>
     {% else %}
     <div class="alert alert-info" role="alert">
         You have no messages in your inbox.

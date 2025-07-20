@@ -6,9 +6,30 @@ import mistune # For Markdown to HTML conversion
 
 main_bp = Blueprint('main', __name__)
 
+from app.models import MarketplaceListing, MarketplaceListingStatus, Ticket, PermitApplication, User
 @main_bp.route('/', endpoint='index')
 def main_index():
-    return render_template('main/index.html', title='Home')
+    # Fetch data for the new sections
+    recent_listings = MarketplaceListing.query.filter_by(status=MarketplaceListingStatus.AVAILABLE).order_by(MarketplaceListing.creation_date.desc()).limit(4).all()
+
+    # For now, we'll use placeholder data for announcements
+    announcements = [
+        {'title': 'Welcome to the new and improved Game Portal!', 'content': 'We have redesigned the home page to be more informative and user-friendly. We hope you enjoy the new look!'},
+        {'title': 'New Marketplace Items Available', 'content': 'Check out the new items available in the marketplace. There are some great deals to be had!'},
+    ]
+
+    # Game statistics
+    stats = {
+        'active_players': User.query.count(),
+        'open_tickets': Ticket.query.filter(Ticket.status == 'OUTSTANDING').count(),
+        'pending_permits': PermitApplication.query.filter(PermitApplication.status == 'PENDING_REVIEW').count(),
+    }
+
+    return render_template('main/index.html',
+                           title='Home',
+                           recent_listings=recent_listings,
+                           announcements=announcements,
+                           stats=stats)
 
 @main_bp.route('/admin-dashboard')
 @admin_required

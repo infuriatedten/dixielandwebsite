@@ -26,7 +26,7 @@ def list_my_conversations():
         conversations_pagination = messaging_service.get_user_conversations(current_user.id, page=page)
         title = "My Messages"
 
-    return render_template('messaging/conversation_list.html',
+    return render_template('messaging/inbox.html',
                            title=title,
                            conversations_pagination=conversations_pagination,
                            ConversationStatus=ConversationStatus)

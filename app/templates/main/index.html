@@ -1,30 +1,108 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <div class="jumbotron">
-        <h1 class="display-4">Welcome to the Game Portal!</h1>
-        <p class="lead">This is the central hub for all your in-game activities, including banking, taxes, tickets, permits, and the marketplace.</p>
-        <hr class="my-4">
-        {% if current_user.is_authenticated %}
-            <p>You are logged in as {{ current_user.username }}. Explore the available services through the navigation bar.</p>
-            <a class="btn btn-primary btn-lg" href="{{ url_for('auth.profile') }}" role="button">View Profile</a>
-        {% else %}
-            <p>Please log in or register to access all features.</p>
-            <a class="btn btn-primary btn-lg" href="{{ url_for('auth.login') }}" role="button">Login</a>
-            <a class="btn btn-secondary btn-lg" href="{{ url_for('auth.register') }}" role="button">Register</a>
-        {% endif %}
+<style>
+    .hero-section {
+        background: url('https://via.placeholder.com/1920x400') no-repeat center center;
+        background-size: cover;
+        color: white;
+        padding: 100px 0;
+        text-align: center;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    .card-deck .card {
+        min-width: 220px;
+    }
+</style>
+
+<div class="hero-section">
+    <h1 class="display-4">Welcome to the Game Portal!</h1>
+    <p class="lead">Your central hub for all in-game activities.</p>
+    {% if current_user.is_authenticated %}
+        <a class="btn btn-primary btn-lg" href="{{ url_for('auth.profile') }}" role="button">View Profile</a>
+    {% else %}
+        <a class="btn btn-primary btn-lg" href="{{ url_for('auth.login') }}" role="button">Login</a>
+        <a class="btn btn-secondary btn-lg" href="{{ url_for('auth.register') }}" role="button">Register</a>
+    {% endif %}
+</div>
+
+<div class="container mt-5">
+    <!-- Announcements Section -->
+    <div class="row mb-5">
+        <div class="col-md-12">
+            <h2>Recent Announcements</h2>
+            <div id="announcementsCarousel" class="carousel slide" data-ride="carousel">
+                <div class="carousel-inner">
+                    {% for announcement in announcements %}
+                    <div class="carousel-item {% if loop.first %}active{% endif %}">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ announcement.title }}</h5>
+                                <p class="card-text">{{ announcement.content }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <a class="carousel-control-prev" href="#announcementsCarousel" role="button" data-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Previous</span>
+                </a>
+                <a class="carousel-control-next" href="#announcementsCarousel" role="button" data-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Next</span>
+                </a>
+            </div>
+        </div>
     </div>
 
-    <h2>Features Overview</h2>
-    <ul>
-        <li>View Bank Information (Balance, History, Statements)</li>
-        <li>Pay Taxes</li>
-        <li>Manage and Pay Tickets</li>
-        <li>Apply for Vehicle Permits</li>
-        <li>DOT System (Inspections, Ticket Issuance, Permit Management)</li>
-        <li>Marketplace with Discord Integration</li>
-        <li>Farmer specific features (acres, insurance claims)</li>
-    </ul>
-    <p><em>Modules will become accessible as they are developed.</em></p>
+    <!-- Featured Marketplace Items -->
+    <div class="row mb-5">
+        <div class="col-md-12">
+            <h2>Featured Marketplace Items</h2>
+            <div class="card-deck">
+                {% for listing in recent_listings %}
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ listing.item_name }}</h5>
+                        <p class="card-text">{{ listing.description | truncate(100) }}</p>
+                        <p class="card-text"><small class="text-muted">Price: ${{ listing.price }}</small></p>
+                        <a href="{{ url_for('marketplace.view_listing_detail', listing_id=listing.id) }}" class="btn btn-sm btn-primary">View Item</a>
+                    </div>
+                </div>
+                {% else %}
+                <p>No featured items at the moment. Check back later!</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
 
+    <!-- Game Statistics -->
+    <div class="row text-center">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h3>{{ stats.active_players }}</h3>
+                    <p>Active Players</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h3>{{ stats.open_tickets }}</h3>
+                    <p>Open Tickets</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h3>{{ stats.pending_permits }}</h3>
+                    <p>Pending Permits</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
