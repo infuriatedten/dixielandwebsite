@@ -4,7 +4,7 @@ import os
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'fallback-secret-key-for-dev-only'
-    SQLALCHEMY_DATABASE_URI = os.environ.get('postgresql://dixielandwebsite_user:gKeSGCTQcARpwDXW4k7CGpOlkDegi2KW@dpg-d1mouvje5dus73dq5p00-a.virginia-postgres.render.com/dixielandwebsite') or 'postgresql://dixielandwebsite_user:gKeSGCTQcARpwDXW4k7CGpOlkDegi2KW@dpg-d1mouvje5dus73dq5p00-a.virginia-postgres.render.com/dixielandwebsite'
+    SQLALCHEMY_DATABASE_URI = 'postgresql://neondb_owner:npg_LkFc37SufAYZ@ep-spring-field-a80t4xw9-pooler.eastus2.azure.neon.tech/neondb?sslmode=require'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     WTF_CSRF_ENABLED = True
     # For CSRF protection with Flask-WTF if we add forms
@@ -48,8 +48,6 @@ class Config:
 
     if not DISCORD_PRODUCT_UPDATES_WEBHOOK_URL:
         print("WARNING: DISCORD_PRODUCT_UPDATES_WEBHOOK_URL is not set. Product updates will not be posted to Discord.")
-
-    DISCORD_AUCTIONS_WEBHOOK_URL = os.environ.get('DISCORD_AUCTIONS_WEBHOOK_URL', 'https://discord.com/api/webhooks/1396515355039498281/ylPhxOAJJad5qScxkqTMiBDXU9v5N2UdAMXA6zBzAsUwIgSaKdT_8YON5umXlGKqEf5O')
 
     # Livemap XML Access Configuration
     LIVEMAP_XML_ACCESS_METHOD = os.environ.get('LIVEMAP_XML_ACCESS_METHOD', 'SCP') # 'SCP', 'FTP', or 'LOCAL_PATH'

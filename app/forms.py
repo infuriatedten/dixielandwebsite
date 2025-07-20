@@ -256,6 +256,13 @@ class EditInsuranceClaimForm(FlaskForm):
     submit = SubmitField('Update Claim')
 
 
+class ContractForm(FlaskForm):
+    title = StringField('Title', validators=[DataRequired(), Length(min=5, max=128)])
+    description = TextAreaField('Description', validators=[DataRequired(), Length(min=10)])
+    reward = DecimalField('Reward', places=2, validators=[DataRequired()])
+    submit = SubmitField('Create Contract')
+
+
 class PlaceBidForm(FlaskForm):
     bid_amount = DecimalField('Your Bid Amount', places=2, validators=[DataRequired()])
     submit = SubmitField('Place Bid')
@@ -312,6 +319,7 @@ class RegistrationForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired(), Length(min=8)])
     password2 = PasswordField(
         'Repeat Password', validators=[DataRequired(), EqualTo('password')])
+    account_type = RadioField('Account Type', choices=[('farmer', 'Farmer'), ('company', 'Company')], validators=[DataRequired()])
     submit = SubmitField('Register')
 
     def validate_username(self, username):

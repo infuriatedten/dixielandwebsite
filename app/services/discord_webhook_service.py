@@ -122,6 +122,8 @@ def update_listing_on_discord(listing, action_text="Listing Updated"):
     """
     return post_product_update_to_discord(listing)
 
+
+
 def post_auction_to_discord(auction):
     """Posts a new auction to the auctions Discord channel."""
     webhook_url = current_app.config.get('DISCORD_AUCTIONS_WEBHOOK_URL')
@@ -148,3 +150,4 @@ def post_auction_to_discord(auction):
 
     payload = {"embeds": [embed]}
     return _post_to_discord(webhook_url, payload)
+

@@ -217,27 +217,27 @@ def edit_tax_bracket(bracket_id):
 def delete_user(user_id):
     user = User.query.get_or_404(user_id)
 
-    # # Check for related objects
-    # if user.accounts.first() or \
-    #    user.tickets_received.first() or \
-    #    user.tickets_issued.first() or \
-    #    user.permit_applications.first() or \
-    #    user.marketplace_listings.first() or \
-    #    user.inspections_conducted.first() or \
-    #    user.inspections_received.first() or \
-    #    user.vehicles.first() or \
-    #    user.conversations_as_user_participant.first() or \
-    #    user.conversations_as_admin_participant.first() or \
-    #    user.sent_messages.first() or \
-    #    user.notifications.first() or \
-    #    user.submitted_auction_items.first() or \
-    #    user.approved_auction_items.first() or \
-    #    user.auctions_won.first() or \
-    #    user.auction_bids_placed.first() or \
-    #    hasattr(user, 'company') or \
-    #    hasattr(user, 'farmer'):
-    #     flash('Cannot delete user with related objects. Please reassign or delete them first.', 'danger')
-    #     return redirect(url_for('admin.manage_users'))
+    # Check for related objects
+    if user.accounts.first() or \
+       user.tickets_received.first() or \
+       user.tickets_issued.first() or \
+       user.permit_applications.first() or \
+       user.marketplace_listings.first() or \
+       user.inspections_conducted.first() or \
+       user.inspections_received.first() or \
+       user.vehicles.first() or \
+       user.conversations_as_user_participant.first() or \
+       user.conversations_as_admin_participant.first() or \
+       user.sent_messages.first() or \
+       user.notifications.first() or \
+       user.submitted_auction_items.first() or \
+       user.approved_auction_items.first() or \
+       user.auctions_won.first() or \
+       user.auction_bids_placed.first() or \
+       hasattr(user, 'company') or \
+       hasattr(user, 'farmer'):
+        flash('Cannot delete user with related objects. Please reassign or delete them first.', 'danger')
+        return redirect(url_for('admin.manage_users'))
 
     db.session.delete(user)
     db.session.commit()
