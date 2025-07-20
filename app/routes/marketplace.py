@@ -7,7 +7,7 @@ from app.models import (
 )
 from app.forms import CreateListingForm, EditListingForm
 from app.services.discord_webhook_service import (
-    post_listing_to_discord, update_listing_on_discord
+    post_store_sale_to_discord, post_product_update_to_discord
 )
 
 bp = Blueprint('marketplace', __name__)
@@ -51,7 +51,7 @@ def create_listing():
 
         db.session.refresh(new_listing)
 
-        discord_post_success = post_listing_to_discord(new_listing)
+        discord_post_success = post_store_sale_to_discord(new_listing)
 
         if discord_post_success:
             flash('Listing created successfully and an attempt was made to post it to Discord!', 'success')
@@ -108,7 +108,7 @@ def edit_listing(listing_id):
         flash('You are not authorized to edit this listing.', 'danger')
         return redirect(url_for('marketplace.index'))
 
-    if listing.status not in [MarketplaceListingStatus.AVAILABLE, MarketplaceListingStatus.SOLD_MORE_AVAILABLE]:
+    if listing.status not in [MarketplaceListingStatus.AVAILABLE, MarketplaceListingStatus.SOLD_PENDING_RELIST]:
         flash('Only listings that are "Available" or "Sold - More Available" can be edited. You may need to cancel and relist for major changes to sold items.', 'warning')
         return redirect(url_for('marketplace.view_listing_detail', listing_id=listing.id))
 
@@ -121,7 +121,7 @@ def edit_listing(listing_id):
         listing.unit = form.unit.data
         db.session.commit()
 
-        update_listing_on_discord(listing, action_text="Listing Details Updated")
+        post_product_update_to_discord(listing)
         flash('Listing updated successfully. Discord update attempted.', 'success')
         return redirect(url_for('marketplace.view_listing_detail', listing_id=listing.id))
 
@@ -154,7 +154,7 @@ def update_listing_status(listing_id):
     listing.status = new_status
     db.session.commit()
 
-    update_listing_on_discord(listing, action_text=f"Listing Status Updated to {new_status.value}")
+    post_product_update_to_discord(listing)
     flash(f'Listing status updated to "{new_status.value}". Discord update attempted.', 'info')
     return redirect(url_for('marketplace.view_listing_detail', listing_id=listing.id))
 
