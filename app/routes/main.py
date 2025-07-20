@@ -177,4 +177,4 @@ def create_contract():
         flash('Contract created successfully!', 'success')
         return redirect(url_for('main.contracts'))
     return render_template('main/create_contract.html', title='Create Contract', form=form)
-main
+
