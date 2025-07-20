@@ -31,7 +31,7 @@ def view_rules():
     rules_entry = RulesContent.query.first()
     rules_content_html = ""
     if rules_entry and rules_entry.content_markdown:
-        markdown_parser = mistune.create_markdown(escape=False) 
+        markdown_parser = mistune.create_markdown(escape=False)
         rules_content_html = markdown_parser(rules_entry.content_markdown)
     else:
         rules_content_html = "<p>The rules have not been set yet. Please check back later.</p>"
@@ -42,6 +42,7 @@ def view_rules():
     return render_template('main/rules.html', title='Rules',
                            rules_content_html=rules_content_html,
                            current_user=current_user, UserRole=UserRole)
+
 
 from app.models import Farmer, Parcel, UserVehicle, Account, InsuranceClaim, Contract, ContractStatus
 from app.forms import ParcelForm, InsuranceClaimForm, ContractForm
@@ -108,6 +109,7 @@ def farmers():
         insurance_form=insurance_form
     )
 
+ main
 from app.models import Company, UserVehicle, Account
 from app.forms import CompanyNameForm
 from app import db
@@ -158,6 +160,7 @@ def users():
     users = User.query.all()
     return render_template('main/users.html', title='Users', users=users)
 
+
 @main_bp.route('/contracts/create', methods=['GET', 'POST'])
 @login_required
 def create_contract():
@@ -174,3 +177,4 @@ def create_contract():
         flash('Contract created successfully!', 'success')
         return redirect(url_for('main.contracts'))
     return render_template('main/create_contract.html', title='Create Contract', form=form)
+main

@@ -121,3 +121,32 @@ def update_listing_on_discord(listing, action_text="Listing Updated"):
     For now, using webhook to post a NEW message indicating an update.
     """
     return post_product_update_to_discord(listing)
+
+
+def post_auction_to_discord(auction):
+    """Posts a new auction to the auctions Discord channel."""
+    webhook_url = current_app.config.get('DISCORD_AUCTIONS_WEBHOOK_URL')
+    if not webhook_url:
+        current_app.logger.warning("DISCORD_AUCTIONS_WEBHOOK_URL not configured.")
+        return
+
+    embed = {
+        "title": f"New Auction: {auction.item_name}",
+        "description": auction.item_description or "No description provided.",
+        "color": 0x7289DA, # Discord Blue
+        "fields": [
+            {"name": "Starting Bid", "value": f"{auction.actual_starting_bid:.2f}", "inline": True},
+            {"name": "End Time", "value": f"<t:{int(auction.current_end_time.timestamp())}:R>", "inline": True},
+        ],
+        "url": url_for('auction.view_auction', auction_id=auction.id, _external=True),
+        "footer": {
+            "text": f"Auction ID: {auction.id}"
+        },
+        "timestamp": auction.start_time.isoformat()
+    }
+    if auction.image_url:
+        embed["image"] = {"url": auction.image_url}
+
+    payload = {"embeds": [embed]}
+    return _post_to_discord(webhook_url, payload)
+main
