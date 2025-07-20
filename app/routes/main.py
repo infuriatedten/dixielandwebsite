@@ -131,83 +131,6 @@ def farmers():
     total_acres = sum(parcel.size for parcel in parcels)
     vehicles = UserVehicle.query.filter_by(user_id=current_user.id).all()
     bank_accounts = Account.query.filter_by(user_id=current_user.id).all()
-    insurance_claims = InsuranceClaim.query.filter_by(farmer_id=farmer.id).all() if farmer_
-
-@main_bp.route('/officer-area')
-@officer_required
-def officer_area():
-    return render_template('officer/area.html', title='Officer Area')
-
-
-# Rules page (Markdown-based)
-@main_bp.route('/rules', endpoint='view_rules')
-def view_rules():
-    rules_entry = RulesContent.query.first()
-    markdown_parser = mistune.create_markdown(escape=False)
-    
-    if rules_entry and rules_entry.content_markdown:
-        rules_content_html = markdown_parser(rules_entry.content_markdown)
-    else:
-        rules_content_html = "<p>The rules have not been set yet. Please check back later.</p>"
-        if current_user.is_authenticated and current_user.role == UserRole.ADMIN:
-            rules_content_html += f'<p><a href="{url_for("admin.edit_rules")}">Set the rules now.</a></p>'
-
-    return render_template('main/rules.html', title='Rules',
-                           rules_content_html=rules_content_html,
-                           current_user=current_user, UserRole=UserRole)
-
-
-
-# Farmer area: parcels, claims, etc.
-
-from app.models import Farmer, Parcel, UserVehicle, Account, InsuranceClaim, Contract, ContractStatus, Transaction, TransactionType
-from app.forms import ParcelForm, InsuranceClaimForm, ContractForm
-from flask import redirect, flash
-from app import db
-from datetime import datetime
-
-
-@main_bp.route('/farmers', methods=['GET', 'POST'])
-@login_required
-def farmers():
-    parcel_form = ParcelForm()
-    insurance_form = InsuranceClaimForm()
-    farmer = Farmer.query.filter_by(user_id=current_user.id).first()
-
-    # Handle parcel submission
-    if parcel_form.validate_on_submit() and parcel_form.submit.data:
-        if farmer:
-            new_parcel = Parcel(
-                location=parcel_form.location.data,
-                size=parcel_form.size.data,
-                farmer_id=farmer.id
-            )
-            db.session.add(new_parcel)
-            db.session.commit()
-            flash('Parcel added successfully!', 'success')
-        else:
-            flash('You must be a registered farmer to add a parcel.', 'danger')
-        return redirect(url_for('main.farmers'))
-
-    # Handle insurance claim
-    if insurance_form.validate_on_submit() and insurance_form.submit.data:
-        if farmer:
-            claim = InsuranceClaim(
-                reason=insurance_form.reason.data,
-                farmer_id=farmer.id
-            )
-            db.session.add(claim)
-            db.session.commit()
-            flash('Insurance claim submitted successfully!', 'success')
-        else:
-            flash('You must be a registered farmer to submit a claim.', 'danger')
-        return redirect(url_for('main.farmers'))
-
-    # Gather related data
-    parcels = Parcel.query.filter_by(farmer_id=farmer.id).all() if farmer else []
-    total_acres = sum(parcel.size for parcel in parcels)
-    vehicles = UserVehicle.query.filter_by(user_id=current_user.id).all()
-    bank_accounts = Account.query.filter_by(user_id=current_user.id).all()
     insurance_claims = InsuranceClaim.query.filter_by(farmer_id=farmer.id).all() if farmer else []
 
     return render_template(
@@ -223,12 +146,8 @@ def farmers():
     )
 
 
-from app.models import Company, UserVehicle, Account
-from app.forms import CompanyNameForm
-from app import db
+# ------------------------ COMPANY ------------------------
 
-
-# Company registration and dashboard
 @main_bp.route('/company', methods=['GET', 'POST'])
 @login_required
 def company():
@@ -250,7 +169,8 @@ def company():
     return render_template('main/company.html', title='Company', form=form, vehicles=vehicles)
 
 
-# View available contracts
+# ------------------------ CONTRACTS ------------------------
+
 @main_bp.route('/contracts')
 @login_required
 def contracts():
@@ -258,7 +178,6 @@ def contracts():
     return render_template('main/contracts.html', title='Contracts', contracts=available_contracts)
 
 
-# Claim a contract
 @main_bp.route('/contract/<int:contract_id>/claim', methods=['POST'])
 @login_required
 def claim_contract(contract_id):
@@ -274,13 +193,6 @@ def claim_contract(contract_id):
     return redirect(request.referrer or url_for('main.contracts'))
 
 
-# List users
-@main_bp.route('/users')
-@admin_required
-def users():
-    all_users = User.query.all()
-    return render_template('main/users.html', title='Users', users=all_users)
-
 @main_bp.route('/contract/<int:contract_id>/delete', methods=['POST'])
 @login_required
 def delete_contract(contract_id):
@@ -293,7 +205,7 @@ def delete_contract(contract_id):
     flash('Contract deleted successfully!', 'success')
     return redirect(url_for('main.contracts'))
 
-# Create a contract
+
 @main_bp.route('/contracts/create', methods=['GET', 'POST'])
 @login_required
 def create_contract():
@@ -324,7 +236,6 @@ def complete_contract(contract_id):
         flash('This contract cannot be completed.', 'danger')
         return redirect(url_for('main.contracts'))
 
-    # Transfer the reward to the claimant's account
     claimant_account = Account.query.filter_by(user_id=contract.claimant_id).first()
     if not claimant_account:
         flash('You do not have a bank account to receive the reward.', 'danger')
@@ -345,3 +256,11 @@ def complete_contract(contract_id):
     flash('Contract completed successfully! The reward has been transferred to your account.', 'success')
     return redirect(url_for('main.contracts'))
 
+
+# ------------------------ USER MANAGEMENT ------------------------
+
+@main_bp.route('/users')
+@admin_required
+def users():
+    all_users = User.query.all()
+    return render_template('main/users.html', title='Users', users=all_users)
