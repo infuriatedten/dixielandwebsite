@@ -43,6 +43,8 @@ def view_rules():
                            rules_content_html=rules_content_html,
                            current_user=current_user, UserRole=UserRole)
 
+feature/admin-auction-panel
+=======
 from app.models import Farmer, Parcel, UserVehicle, Account, InsuranceClaim, Contract, ContractStatus
  feature/discord-webhooks
 from app.forms import ParcelForm, InsuranceClaimForm, ContractForm
@@ -112,6 +114,7 @@ def farmers():
         insurance_form=insurance_form
     )
 
+main
 from app.models import Company, UserVehicle, Account
 from app.forms import CompanyNameForm
 from app import db
