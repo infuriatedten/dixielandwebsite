@@ -57,6 +57,11 @@
                             <a class="dropdown-item" href="{{ url_for('admin.manage_permits') }}">Manage Permits</a>
                             <a class="dropdown-item" href="{{ url_for('admin.manage_inspections') }}">Manage Inspections</a>
                             <a class="dropdown-item" href="{{ url_for('admin.manage_tax_brackets') }}">Manage Tax Brackets</a>
+                            <div class="dropdown-divider"></div>
+                            <h6 class="dropdown-header">Auction Management</h6>
+                            <a class="dropdown-item" href="{{ url_for('auction.list_pending_auctions') }}">Pending Approvals</a>
+                            <a class="dropdown-item" href="{{ url_for('auction.manage_all_auctions') }}">All Auctions</a>
+                             <div class="dropdown-divider"></div>
                             <a class="dropdown-item" href="{{ url_for('admin.edit_rules') }}">Edit Rules</a>
                         </div>
                     </li>
