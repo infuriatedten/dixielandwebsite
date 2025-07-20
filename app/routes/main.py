@@ -43,6 +43,78 @@ def view_rules():
                            rules_content_html=rules_content_html,
                            current_user=current_user, UserRole=UserRole)
 
+feature/admin-auction-panel
+=======
+from app.models import Farmer, Parcel, UserVehicle, Account, InsuranceClaim, Contract, ContractStatus
+ feature/discord-webhooks
+from app.forms import ParcelForm, InsuranceClaimForm, ContractForm
+=======
+from app.forms import ParcelForm, InsuranceClaimForm
+main
+from flask import redirect, flash
+from app import db
+from datetime import datetime
+
+@main_bp.route('/farmers', methods=['GET', 'POST'])
+def farmers():
+    parcel_form = ParcelForm()
+    insurance_form = InsuranceClaimForm()
+
+    farmer = Farmer.query.filter_by(user_id=current_user.id).first()
+
+    if parcel_form.validate_on_submit() and parcel_form.submit.data:
+        if farmer:
+            parcel = Parcel(
+                location=parcel_form.location.data,
+                size=parcel_form.size.data,
+                farmer_id=farmer.id
+            )
+            db.session.add(parcel)
+            db.session.commit()
+            flash('Parcel added successfully!', 'success')
+        else:
+            flash('You must be a registered farmer to add a parcel.', 'danger')
+        return redirect(url_for('main.farmers'))
+
+    if insurance_form.validate_on_submit() and insurance_form.submit.data:
+        if farmer:
+            claim = InsuranceClaim(
+                reason=insurance_form.reason.data,
+                farmer_id=farmer.id
+            )
+            db.session.add(claim)
+            db.session.commit()
+            flash('Insurance claim submitted successfully!', 'success')
+        else:
+            flash('You must be a registered farmer to submit a claim.', 'danger')
+        return redirect(url_for('main.farmers'))
+
+    if farmer:
+        parcels = Parcel.query.filter_by(farmer_id=farmer.id).all()
+        total_acres = sum(parcel.size for parcel in parcels)
+        vehicles = UserVehicle.query.filter_by(user_id=current_user.id).all()
+        bank_accounts = Account.query.filter_by(user_id=current_user.id).all()
+        insurance_claims = InsuranceClaim.query.filter_by(farmer_id=farmer.id).all()
+    else:
+        parcels = []
+        total_acres = 0
+        vehicles = []
+        bank_accounts = []
+        insurance_claims = []
+
+    return render_template(
+        'main/farmers.html',
+        title='Farmers',
+        parcels=parcels,
+        total_acres=total_acres,
+        vehicles=vehicles,
+        bank_accounts=bank_accounts,
+        insurance_claims=insurance_claims,
+        parcel_form=parcel_form,
+        insurance_form=insurance_form
+    )
+
+main
 from app.models import Company, UserVehicle, Account
 from app.forms import CompanyNameForm
 from app import db
@@ -92,3 +164,23 @@ def claim_contract(contract_id):
 def users():
     users = User.query.all()
     return render_template('main/users.html', title='Users', users=users)
+feature/discord-webhooks
+
+@main_bp.route('/contracts/create', methods=['GET', 'POST'])
+@login_required
+def create_contract():
+    form = ContractForm()
+    if form.validate_on_submit():
+        contract = Contract(
+            title=form.title.data,
+            description=form.description.data,
+            reward=form.reward.data,
+            creator_id=current_user.id
+        )
+        db.session.add(contract)
+        db.session.commit()
+        flash('Contract created successfully!', 'success')
+        return redirect(url_for('main.contracts'))
+    return render_template('main/create_contract.html', title='Create Contract', form=form)
+=======
+ main
