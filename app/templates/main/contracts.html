@@ -12,7 +12,13 @@
                     <h5 class="card-title">{{ contract.title }}</h5>
                     <p class="card-text">{{ contract.description }}</p>
                     <p class="card-text"><strong>Reward:</strong> {{ contract.reward }}</p>
-                    <a href="{{ url_for('main.claim_contract', contract_id=contract.id) }}" class="btn btn-primary">Claim Contract</a>
+                    {% if contract.creator_id == current_user.id %}
+                        <a href="{{ url_for('main.delete_contract', contract_id=contract.id) }}" class="btn btn-danger">Delete Contract</a>
+                    {% elif contract.claimant_id == current_user.id and contract.status == 'CLAIMED' %}
+                        <a href="{{ url_for('main.complete_contract', contract_id=contract.id) }}" class="btn btn-success">Complete Contract</a>
+                    {% else %}
+                        <a href="{{ url_for('main.claim_contract', contract_id=contract.id) }}" class="btn btn-primary">Claim Contract</a>
+                    {% endif %}
                 </div>
             </div>
         </div>
