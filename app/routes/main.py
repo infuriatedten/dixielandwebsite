@@ -44,7 +44,11 @@ def view_rules():
                            current_user=current_user, UserRole=UserRole)
 
 from app.models import Farmer, Parcel, UserVehicle, Account, InsuranceClaim, Contract, ContractStatus
+ feature/discord-webhooks
 from app.forms import ParcelForm, InsuranceClaimForm, ContractForm
+=======
+from app.forms import ParcelForm, InsuranceClaimForm
+main
 from flask import redirect, flash
 from app import db
 from datetime import datetime
@@ -157,6 +161,7 @@ def claim_contract(contract_id):
 def users():
     users = User.query.all()
     return render_template('main/users.html', title='Users', users=users)
+feature/discord-webhooks
 
 @main_bp.route('/contracts/create', methods=['GET', 'POST'])
 @login_required
@@ -174,3 +179,5 @@ def create_contract():
         flash('Contract created successfully!', 'success')
         return redirect(url_for('main.contracts'))
     return render_template('main/create_contract.html', title='Create Contract', form=form)
+=======
+ main
