@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, flash, redirect, url_for, request
 from app.decorators import admin_required
-from app.models import User, Account, Ticket, PermitApplication, Inspection, TaxBracket, PermitApplicationStatus, TicketStatus, Transaction, TransactionType, VehicleRegion, RulesContent, UserRole, InsuranceClaim, InsuranceClaimStatus
+from app.models import User, Account, Ticket, PermitApplication, Inspection, TaxBracket, PermitApplicationStatus, TicketStatus, Transaction, TransactionType, VehicleRegion, RulesContent, UserRole, InsuranceClaim, InsuranceClaimStatus, Contract
 from app.forms import EditRulesForm, EditUserForm, EditAccountForm, EditTicketForm, EditPermitForm, EditInspectionForm, EditTaxBracketForm, EditBalanceForm, EditInsuranceClaimForm
 from app import db
 
@@ -285,3 +285,19 @@ def edit_insurance_claim(claim_id):
         flash('Insurance claim updated successfully.', 'success')
         return redirect(url_for('admin.manage_insurance_claims'))
     return render_template('admin/edit_insurance_claim.html', title='Edit Insurance Claim', form=form, claim=claim)
+
+@admin_bp.route('/contracts')
+@admin_required
+def manage_contracts():
+    page = request.args.get('page', 1, type=int)
+    contracts = Contract.query.order_by(Contract.creation_date.desc()).paginate(page=page, per_page=10)
+    return render_template('admin/manage_contracts.html', title='Manage Contracts', contracts=contracts)
+
+@admin_bp.route('/contract/<int:contract_id>/delete', methods=['POST'])
+@admin_required
+def delete_contract(contract_id):
+    contract = Contract.query.get_or_404(contract_id)
+    db.session.delete(contract)
+    db.session.commit()
+    flash('Contract deleted successfully.', 'success')
+    return redirect(url_for('admin.manage_contracts'))
