@@ -44,9 +44,9 @@ def view_rules():
                            current_user=current_user, UserRole=UserRole)
 
 feature/admin-auction-panel
-=======
+
 feature/admin-auction-panel
-=======
+
 from app.models import Farmer, Parcel, UserVehicle, Account, InsuranceClaim, Contract, ContractStatus
  feature/discord-webhooks
 from app.forms import ParcelForm, InsuranceClaimForm, ContractForm
