@@ -109,7 +109,7 @@ def farmers():
         insurance_form=insurance_form
     )
 
- main
+
 from app.models import Company, UserVehicle, Account
 from app.forms import CompanyNameForm
 from app import db
