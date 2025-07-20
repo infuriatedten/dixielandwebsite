@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, current_user, login_required
 from app import db
-from app.models import User, UserRole
+from app.models import User, UserRole, Farmer, Company
 from app.forms import LoginForm, RegistrationForm
 from urllib.parse import urlparse, urljoin
 
@@ -27,6 +27,16 @@ def register():
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
+
+        if form.account_type.data == 'farmer':
+            farmer = Farmer(user_id=user.id)
+            db.session.add(farmer)
+        elif form.account_type.data == 'company':
+            company = Company(user_id=user.id, name=f"{user.username}'s Company")
+            db.session.add(company)
+
+        db.session.commit()
+
         flash('Congratulations, you are now a registered user!', 'success')
         login_user(user) # Log in the user after registration
         return redirect(url_for('main.index'))

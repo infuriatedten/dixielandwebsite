@@ -407,3 +407,26 @@ class InsuranceClaim(db.Model):
 
     def __repr__(self):
         return f'<InsuranceClaim {self.id}>'
+
+class ContractStatus(enum.Enum):
+    AVAILABLE = "Available"
+    CLAIMED = "Claimed"
+    COMPLETED = "Completed"
+    CANCELLED = "Cancelled"
+
+class Contract(db.Model):
+    __tablename__ = 'contracts'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(128), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    reward = db.Column(db.Numeric(10, 2), nullable=False)
+    status = db.Column(db.Enum(ContractStatus), default=ContractStatus.AVAILABLE, nullable=False)
+    creator_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    claimant_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    creator = db.relationship('User', foreign_keys=[creator_id], backref=db.backref('created_contracts', lazy='dynamic'))
+    claimant = db.relationship('User', foreign_keys=[claimant_id], backref=db.backref('claimed_contracts', lazy='dynamic'))
+    creation_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    claimed_date = db.Column(db.DateTime, nullable=True)
+
+    def __repr__(self):
+        return f'<Contract {self.id}: {self.title}>'
