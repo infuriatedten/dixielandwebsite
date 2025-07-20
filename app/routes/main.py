@@ -151,3 +151,9 @@ def claim_contract(contract_id):
     else:
         flash('This contract is not available to be claimed.', 'danger')
     return redirect(url_for('main.contracts'))
+
+@main_bp.route('/users')
+@login_required
+def users():
+    users = User.query.all()
+    return render_template('main/users.html', title='Users', users=users)
