@@ -149,4 +149,4 @@ def post_auction_to_discord(auction):
 
     payload = {"embeds": [embed]}
     return _post_to_discord(webhook_url, payload)
-main
+
