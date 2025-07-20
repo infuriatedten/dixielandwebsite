@@ -11,6 +11,7 @@
                 {{ wtf.render_field(form.email) }}
                 {{ wtf.render_field(form.password) }}
                 {{ wtf.render_field(form.password2) }}
+                {{ wtf.render_field(form.account_type) }}
                 {# Remove or secure role selection for production #}
                 {# wtf.render_field(form.role) #}
                 {{ wtf.render_field(form.submit, button_map={'submit': 'btn-primary'}) }}

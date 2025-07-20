@@ -36,15 +36,18 @@ class Config:
         print("WARNING: SECRET_KEY is not configured or using default placeholder. Please set a strong secret key.")
 
     # Discord Integration Settings
-    DISCORD_WEBHOOK_URL = os.environ.get('https://discord.com/api/webhooks/1388710143289593967/nrq_UJVcp-Oc6qm63UjntdNm2EThlqzjmb6UthKDiGBp47PSJlYfRodJK7uTBFBCol5i') # For marketplace listings
+    DISCORD_STORE_SALES_WEBHOOK_URL = os.environ.get('DISCORD_STORE_SALES_WEBHOOK_URL', 'https://discord.com/api/webhooks/1388710143289593967/nrq_UJVcp-Oc6qm63UjntdNm2EThlqzjmb6UthKDiGBp47PSJlYfRodJK7uTBFBCol5i') # For marketplace listings
+    DISCORD_PRODUCT_UPDATES_WEBHOOK_URL = os.environ.get('DISCORD_PRODUCT_UPDATES_WEBHOOK_URL', 'https://discord.com/api/webhooks/1388710156275023903/22kqpaQpXC1YqccksvUxg_xJmN-uJaXUz5sXe2VTcwBVH3qhn-u2bbylYcEs5bQW6X30') # For bot reference (Phase 2)
     DISCORD_BOT_TOKEN = os.environ.get('DISCORD_BOT_TOKEN') # For bot commands (Phase 2)
-    DISCORD_MARKETPLACE_CHANNEL_ID = os.environ.get('https://discord.com/api/webhooks/1388710156275023903/22kqpaQpXC1YqccksvUxg_xJmN-uJaXUz5sXe2VTcwBVH3qhn-u2bbylYcEs5bQW6X30') # For bot reference (Phase 2)
 
     # Example Webhook URL (replace with your actual webhook)
     # DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/your_webhook_id/your_webhook_token"
 
-    if not DISCORD_WEBHOOK_URL:
-        print("WARNING: DISCORD_WEBHOOK_URL is not set. Marketplace listings will not be posted to Discord.")
+    if not DISCORD_STORE_SALES_WEBHOOK_URL:
+        print("WARNING: DISCORD_STORE_SALES_WEBHOOK_URL is not set. Marketplace listings will not be posted to Discord.")
+
+    if not DISCORD_PRODUCT_UPDATES_WEBHOOK_URL:
+        print("WARNING: DISCORD_PRODUCT_UPDATES_WEBHOOK_URL is not set. Product updates will not be posted to Discord.")
 
     # Livemap XML Access Configuration
     LIVEMAP_XML_ACCESS_METHOD = os.environ.get('LIVEMAP_XML_ACCESS_METHOD', 'SCP') # 'SCP', 'FTP', or 'LOCAL_PATH'
