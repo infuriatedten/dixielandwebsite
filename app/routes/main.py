@@ -1,42 +1,56 @@
-from flask import Blueprint, render_template, url_for # Added url_for
+from flask import Blueprint, render_template, url_for, redirect, flash, request
 from flask_login import current_user, login_required
 from app.decorators import admin_required, officer_required
-from app.models import UserRole, RulesContent # Consolidated imports
-import mistune # For Markdown to HTML conversion
+from app.models import (
+    User, UserRole, RulesContent, Farmer, Parcel, UserVehicle, 
+    Account, InsuranceClaim, Contract, ContractStatus, Company
+)
+from app.forms import (
+    ParcelForm, InsuranceClaimForm, ContractForm, CompanyNameForm
+)
+from app import db
+import mistune
+from datetime import datetime
 
 main_bp = Blueprint('main', __name__)
 
+# Home route
 @main_bp.route('/', endpoint='index')
 def main_index():
     return render_template('main/index.html', title='Home')
 
+
+# Admin dashboard
 @main_bp.route('/admin-dashboard')
 @admin_required
 def admin_dashboard():
     stats = {
-        'total_users': 0,
-        'pending_permits': 0,
-        'open_tickets': 0,
-        'revenue': 0
+        'total_users': User.query.count(),
+        'pending_permits': 0,  # Add logic later
+        'open_tickets': 0,     # Add logic later
+        'revenue': 0           # Add logic later
     }
     return render_template('admin/dashboard.html', title='Admin Dashboard', stats=stats)
 
+
+# Officer area
 @main_bp.route('/officer-area')
 @officer_required
 def officer_area():
     return render_template('officer/area.html', title='Officer Area')
 
+
+# Rules page (Markdown-based)
 @main_bp.route('/rules', endpoint='view_rules')
 def view_rules():
     rules_entry = RulesContent.query.first()
-    rules_content_html = ""
+    markdown_parser = mistune.create_markdown(escape=False)
+    
     if rules_entry and rules_entry.content_markdown:
-        markdown_parser = mistune.create_markdown(escape=False)
         rules_content_html = markdown_parser(rules_entry.content_markdown)
     else:
         rules_content_html = "<p>The rules have not been set yet. Please check back later.</p>"
-        # Check if current_user is authenticated and is an admin before suggesting to set rules
-        if current_user.is_authenticated and hasattr(current_user, 'role') and current_user.role.value == UserRole.ADMIN.value:
+        if current_user.is_authenticated and current_user.role == UserRole.ADMIN:
             rules_content_html += f'<p><a href="{url_for("admin.edit_rules")}">Set the rules now.</a></p>'
 
     return render_template('main/rules.html', title='Rules',
@@ -44,33 +58,30 @@ def view_rules():
                            current_user=current_user, UserRole=UserRole)
 
 
-from app.models import Farmer, Parcel, UserVehicle, Account, InsuranceClaim, Contract, ContractStatus
-from app.forms import ParcelForm, InsuranceClaimForm, ContractForm
-from flask import redirect, flash
-from app import db
-from datetime import datetime
-
+# Farmer area: parcels, claims, etc.
 @main_bp.route('/farmers', methods=['GET', 'POST'])
+@login_required
 def farmers():
     parcel_form = ParcelForm()
     insurance_form = InsuranceClaimForm()
-
     farmer = Farmer.query.filter_by(user_id=current_user.id).first()
 
+    # Handle parcel submission
     if parcel_form.validate_on_submit() and parcel_form.submit.data:
         if farmer:
-            parcel = Parcel(
+            new_parcel = Parcel(
                 location=parcel_form.location.data,
                 size=parcel_form.size.data,
                 farmer_id=farmer.id
             )
-            db.session.add(parcel)
+            db.session.add(new_parcel)
             db.session.commit()
             flash('Parcel added successfully!', 'success')
         else:
             flash('You must be a registered farmer to add a parcel.', 'danger')
         return redirect(url_for('main.farmers'))
 
+    # Handle insurance claim
     if insurance_form.validate_on_submit() and insurance_form.submit.data:
         if farmer:
             claim = InsuranceClaim(
@@ -84,18 +95,12 @@ def farmers():
             flash('You must be a registered farmer to submit a claim.', 'danger')
         return redirect(url_for('main.farmers'))
 
-    if farmer:
-        parcels = Parcel.query.filter_by(farmer_id=farmer.id).all()
-        total_acres = sum(parcel.size for parcel in parcels)
-        vehicles = UserVehicle.query.filter_by(user_id=current_user.id).all()
-        bank_accounts = Account.query.filter_by(user_id=current_user.id).all()
-        insurance_claims = InsuranceClaim.query.filter_by(farmer_id=farmer.id).all()
-    else:
-        parcels = []
-        total_acres = 0
-        vehicles = []
-        bank_accounts = []
-        insurance_claims = []
+    # Gather related data
+    parcels = Parcel.query.filter_by(farmer_id=farmer.id).all() if farmer else []
+    total_acres = sum(parcel.size for parcel in parcels)
+    vehicles = UserVehicle.query.filter_by(user_id=current_user.id).all()
+    bank_accounts = Account.query.filter_by(user_id=current_user.id).all()
+    insurance_claims = InsuranceClaim.query.filter_by(farmer_id=farmer.id).all() if farmer else []
 
     return render_template(
         'main/farmers.html',
@@ -110,36 +115,37 @@ def farmers():
     )
 
 
-from app.models import Company, UserVehicle, Account
-from app.forms import CompanyNameForm
-from app import db
-
+# Company registration and dashboard
 @main_bp.route('/company', methods=['GET', 'POST'])
+@login_required
 def company():
     form = CompanyNameForm()
+    company = Company.query.filter_by(user_id=current_user.id).first()
+
     if form.validate_on_submit():
-        company = Company.query.filter_by(user_id=current_user.id).first()
         if not company:
             company = Company(user_id=current_user.id)
+            db.session.add(company)
         company.name = form.name.data
-        db.session.add(company)
         db.session.commit()
         return redirect(url_for('main.company'))
 
-    company = Company.query.filter_by(user_id=current_user.id).first()
-    vehicles = []
+    vehicles = UserVehicle.query.filter_by(user_id=current_user.id).all()
     if company:
-        vehicles = UserVehicle.query.filter_by(user_id=current_user.id).all()
         form.name.data = company.name
 
     return render_template('main/company.html', title='Company', form=form, vehicles=vehicles)
 
+
+# View available contracts
 @main_bp.route('/contracts')
 @login_required
 def contracts():
-    contracts = Contract.query.filter_by(status=ContractStatus.AVAILABLE).all()
-    return render_template('main/contracts.html', title='Contracts', contracts=contracts)
+    available_contracts = Contract.query.filter_by(status=ContractStatus.AVAILABLE).all()
+    return render_template('main/contracts.html', title='Contracts', contracts=available_contracts)
 
+
+# Claim a contract
 @main_bp.route('/contract/<int:contract_id>/claim', methods=['POST'])
 @login_required
 def claim_contract(contract_id):
@@ -152,27 +158,30 @@ def claim_contract(contract_id):
         flash('Contract claimed successfully!', 'success')
     else:
         flash('This contract is not available to be claimed.', 'danger')
-    return redirect(url_for('main.contracts'))
+    return redirect(request.referrer or url_for('main.contracts'))
 
+
+# List users
 @main_bp.route('/users')
-@login_required
+@admin_required
 def users():
-    users = User.query.all()
-    return render_template('main/users.html', title='Users', users=users)
+    all_users = User.query.all()
+    return render_template('main/users.html', title='Users', users=all_users)
 
 
+# Create a contract
 @main_bp.route('/contracts/create', methods=['GET', 'POST'])
 @login_required
 def create_contract():
     form = ContractForm()
     if form.validate_on_submit():
-        contract = Contract(
+        new_contract = Contract(
             title=form.title.data,
             description=form.description.data,
             reward=form.reward.data,
             creator_id=current_user.id
         )
-        db.session.add(contract)
+        db.session.add(new_contract)
         db.session.commit()
         flash('Contract created successfully!', 'success')
         return redirect(url_for('main.contracts'))
