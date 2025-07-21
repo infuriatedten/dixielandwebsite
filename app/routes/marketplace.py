@@ -9,7 +9,11 @@ from app.forms import CreateListingForm, EditListingForm
 from app.services.discord_webhook_service import (
     post_store_sale_to_discord, post_product_update_to_discord
 )
+
+from app.decorators import admin_required
+
 from app.decorators import admin_required  # Assuming you have this decorator
+
 
 bp = Blueprint('marketplace', __name__)
 
