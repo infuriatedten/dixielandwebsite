@@ -7,8 +7,21 @@
 <h1 class="mb-4">Edit Account</h1>
 <form method="POST" action="{{ url_for('admin.edit_account', account_id=account.id) }}">
     {{ form.hidden_tag() }}
+
     {{ wtf.render_field(form.balance) }}
+    {% if form.balance.errors %}
+        <div class="invalid-feedback d-block">
+            {{ form.balance.errors[0] }}
+        </div>
+    {% endif %}
+
     {{ wtf.render_field(form.is_company) }}
+    {% if form.is_company.errors %}
+        <div class="invalid-feedback d-block">
+            {{ form.is_company.errors[0] }}
+        </div>
+    {% endif %}
+
     {{ wtf.render_field(form.submit) }}
 </form>
 {% endblock %}

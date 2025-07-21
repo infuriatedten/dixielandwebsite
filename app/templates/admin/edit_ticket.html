@@ -4,11 +4,33 @@
 {% block title %}Edit Ticket{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Edit Ticket</h1>
-<form method="POST" action="{{ url_for('admin.edit_ticket', ticket_id=ticket.id) }}">
-    {{ form.hidden_tag() }}
-    {{ wtf.render_field(form.fine_amount) }}
-    {{ wtf.render_field(form.status) }}
-    {{ wtf.render_field(form.submit) }}
-</form>
+<div class="container mt-4">
+    <h1 class="mb-4">Edit Ticket #{{ ticket.id }}</h1>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('admin.edit_ticket', ticket_id=ticket.id) }}">
+                {{ form.hidden_tag() }}
+
+                <div class="mb-3">
+                    {{ wtf.render_field(form.fine_amount, class="form-control") }}
+                    {% if form.fine_amount.errors %}
+                        <div class="text-danger small">{{ form.fine_amount.errors[0] }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    {{ wtf.render_field(form.status, class="form-select") }}
+                    {% if form.status.errors %}
+                        <div class="text-danger small">{{ form.status.errors[0] }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="text-end">
+                    {{ wtf.render_field(form.submit, class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}

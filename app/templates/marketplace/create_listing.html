@@ -3,35 +3,43 @@
 
 {% block content %}
 <div class="container mt-4">
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
-            <h1 class="mb-4">{{ title }}</h1>
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h1 class="mb-3">{{ title }}</h1>
             <p class="text-muted">Fill out the details below to list your item on the marketplace. It will also be posted to Discord if configured.</p>
-            <div class="card">
+
+            <div class="card shadow-sm">
                 <div class="card-body">
                     <form method="POST" action="{{ url_for('marketplace.create_listing') }}" novalidate>
                         {{ form.hidden_tag() }}
+
                         {{ wtf.render_field(form.item_name, placeholder="e.g., Refined Iron Ore, Vintage Spaceship Model") }}
                         {{ wtf.render_field(form.description, rows=5, placeholder="Provide a detailed description of your item, condition, location, etc.") }}
 
-                        <div class="form-row">
+                        <div class="row">
                             <div class="col-md-4 mb-3">
                                 {{ wtf.render_field(form.price, placeholder="e.g., 100.00") }}
                             </div>
                             <div class="col-md-4 mb-3">
                                 {{ wtf.render_field(form.quantity, placeholder="e.g., 10 or 50.5") }}
                             </div>
-                             <div class="col-md-4 mb-3">
+                            <div class="col-md-4 mb-3">
                                 {{ wtf.render_field(form.unit, placeholder="e.g., items, liters, kg") }}
                             </div>
                         </div>
 
-                        <p class="small text-muted">By creating this listing, you agree to handle inquiries and sales responsibly. Your website username will be displayed with the listing.</p>
+                        <p class="small text-muted">
+                            By creating this listing, you agree to handle inquiries and sales responsibly. Your website username will be displayed with the listing.
+                        </p>
+
                         {{ wtf.render_field(form.submit, button_map={'submit': 'btn-success w-100'}) }}
                     </form>
                 </div>
             </div>
-            <a href="{{ url_for('marketplace.index') }}" class="btn btn-secondary mt-3">Back to Marketplace</a>
+
+            <a href="{{ url_for('marketplace.index') }}" class="btn btn-outline-secondary mt-3">
+                Back to Marketplace
+            </a>
         </div>
     </div>
 </div>

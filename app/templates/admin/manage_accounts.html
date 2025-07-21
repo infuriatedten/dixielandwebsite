@@ -3,60 +3,101 @@
 {% block title %}Manage Accounts{% endblock %}
 
 {% block content %}
-{% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        {% for category, message in messages %}
-            <div class="alert alert-{{ category }}">{{ message }}</div>
-        {% endfor %}
-    {% endif %}
-{% endwith %}
-<h1 class="mb-4">Manage Accounts</h1>
-<div class="table-responsive">
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>User</th>
-                <th>Balance</th>
-                <th>Currency</th>
-                <th>Company</th>
-                <th>Last Updated</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for account in accounts.items %}
-            <tr>
-                <td>{{ account.id }}</td>
-                <td>{{ account.user.username }}</td>
-                <td>{{ account.balance }}</td>
-                <td>{{ account.currency }}</td>
-                <td>{{ "Yes" if account.is_company else "No" }}</td>
-                <td>{{ account.last_updated_on.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                <td>
-                    <a href="{{ url_for('admin.edit_account', account_id=account.id) }}" class="btn btn-primary btn-sm">Edit</a>
-                    <a href="{{ url_for('admin.edit_account_balance', account_id=account.id) }}" class="btn btn-secondary btn-sm">Edit Balance</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+<div class="container-fluid mt-4">
 
-<nav aria-label="Page navigation">
-    <ul class="pagination">
-        {% if accounts.has_prev %}
-        <li class="page-item"><a class="page-link" href="{{ url_for('admin.manage_accounts', page=accounts.prev_num) }}">Previous</a></li>
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
         {% endif %}
-        {% for page_num in accounts.iter_pages() %}
-        {% if page_num %}
-        <li class="page-item {% if page_num == accounts.page %}active{% endif %}"><a class="page-link" href="{{ url_for('admin.manage_accounts', page=page_num) }}">{{ page_num }}</a></li>
-        {% else %}
-        <li class="page-item disabled"><span class="page-link">...</span></li>
-        {% endif %}
-        {% endfor %}
-        {% if accounts.has_next %}
-        <li class="page-item"><a class="page-link" href="{{ url_for('admin.manage_accounts', page=accounts.next_num) }}">Next</a></li>
-        {% endif %}
-    </ul>
-</nav>
+    {% endwith %}
+
+    <h1 class="mb-4">Manage Accounts</h1>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            {% if accounts.items %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>User</th>
+                            <th>Balance</th>
+                            <th>Currency</th>
+                            <th>Company</th>
+                            <th>Last Updated</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for account in accounts.items %}
+                        <tr>
+                            <td>{{ account.id }}</td>
+                            <td>{{ account.user.username }}</td>
+                            <td>${{ '{:,.2f}'.format(account.balance) }}</td>
+                            <td>{{ account.currency }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if account.is_company else 'secondary' }}">
+                                    {{ "Yes" if account.is_company else "No" }}
+                                </span>
+                            </td>
+                            <td>{{ account.last_updated_on.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{{ url_for('admin.edit_account', account_id=account.id) }}" class="btn btn-primary">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                    <a href="{{ url_for('admin.edit_account_balance', account_id=account.id) }}" class="btn btn-secondary">
+                                        <i class="fas fa-dollar-sign"></i> Edit Balance
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <nav aria-label="Account pagination">
+                <ul class="pagination justify-content-center">
+                    {% if accounts.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.manage_accounts', page=accounts.prev_num) }}">Previous</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                    {% endif %}
+
+                    {% for page_num in accounts.iter_pages() %}
+                        {% if page_num %}
+                            <li class="page-item {% if page_num == accounts.page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('admin.manage_accounts', page=page_num) }}">{{ page_num }}</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">…</span></li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if accounts.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.manage_accounts', page=accounts.next_num) }}">Next</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link">Next</span></li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% else %}
+            <p class="text-muted">No accounts found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
 {% endblock %}

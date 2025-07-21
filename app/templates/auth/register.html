@@ -2,23 +2,22 @@
 {% import "bootstrap_wtf.html" as wtf %}
 
 {% block content %}
-    <div class="row">
-        <div class="col-md-6 offset-md-3">
-            <h2>{{ title }}</h2>
-            <form method="POST" action="{{ url_for('auth.register') }}" novalidate>
-                {{ form.hidden_tag() }}
-                {{ wtf.render_field(form.username) }}
-                {{ wtf.render_field(form.email) }}
-                {{ wtf.render_field(form.password) }}
-                {{ wtf.render_field(form.password2) }}
-                {{ wtf.render_field(form.account_type) }}
-                {# Remove or secure role selection for production #}
-                {# wtf.render_field(form.role) #}
-                {{ wtf.render_field(form.submit, button_map={'submit': 'btn-primary'}) }}
-            </form>
-            <p class="mt-3">
-                Already have an account? <a href="{{ url_for('auth.login') }}">Click to Login!</a>
-            </p>
-        </div>
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <h2>{{ title }}</h2>
+        <form method="POST" action="{{ url_for('auth.register') }}" novalidate>
+            {{ form.hidden_tag() }}
+            <div class="mb-3">{{ wtf.render_field(form.username, placeholder="Enter your username") }}</div>
+            <div class="mb-3">{{ wtf.render_field(form.email, placeholder="Enter your email address") }}</div>
+            <div class="mb-3">{{ wtf.render_field(form.password, placeholder="Create a password") }}</div>
+            <div class="mb-3">{{ wtf.render_field(form.password2, placeholder="Confirm your password") }}</div>
+            <div class="mb-3">{{ wtf.render_field(form.account_type) }}</div>
+            {# wtf.render_field(form.role) #} {# Only if admin use #}
+            {{ wtf.render_field(form.submit, button_map={'submit': 'btn-primary w-100'}) }}
+        </form>
+        <p class="mt-3">
+            Already have an account? <a href="{{ url_for('auth.login') }}">Click to Login!</a>
+        </p>
     </div>
+</div>
 {% endblock %}

@@ -8,98 +8,100 @@
         color: white;
         padding: 100px 0;
         text-align: center;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.6);
     }
-    .card-deck .card {
+    .card {
         min-width: 220px;
+        border-radius: 0.5rem;
+        box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
     }
 </style>
 
-<div class="hero-section">
-    <h1 class="display-4">Welcome to the Game Portal!</h1>
-    <p class="lead">Your central hub for all in-game activities.</p>
-    {% if current_user.is_authenticated %}
-        <a class="btn btn-primary btn-lg" href="{{ url_for('auth.profile') }}" role="button">View Profile</a>
-    {% else %}
-        <a class="btn btn-primary btn-lg" href="{{ url_for('auth.login') }}" role="button">Login</a>
-        <a class="btn btn-secondary btn-lg" href="{{ url_for('auth.register') }}" role="button">Register</a>
-    {% endif %}
+<div class="hero-section mb-5">
+    <div class="container">
+        <h1 class="display-4 fw-bold">Welcome to the Game Portal!</h1>
+        <p class="lead mb-4">Your central hub for all in-game activities.</p>
+        {% if current_user.is_authenticated %}
+            <a class="btn btn-primary btn-lg me-2" href="{{ url_for('auth.profile') }}" role="button">View Profile</a>
+        {% else %}
+            <a class="btn btn-primary btn-lg me-2" href="{{ url_for('auth.login') }}" role="button">Login</a>
+            <a class="btn btn-outline-light btn-lg" href="{{ url_for('auth.register') }}" role="button">Register</a>
+        {% endif %}
+    </div>
 </div>
 
-<div class="container mt-5">
+<div class="container">
     <!-- Announcements Section -->
-    <div class="row mb-5">
-        <div class="col-md-12">
-            <h2>Recent Announcements</h2>
-            <div id="announcementsCarousel" class="carousel slide" data-ride="carousel">
-                <div class="carousel-inner">
-                    {% for announcement in announcements %}
-                    <div class="carousel-item {% if loop.first %}active{% endif %}">
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">{{ announcement.title }}</h5>
-                                <p class="card-text">{{ announcement.content }}</p>
-                            </div>
+    <div class="mb-5">
+        <h2 class="mb-4">Recent Announcements</h2>
+        <div id="announcementsCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                {% for announcement in announcements %}
+                <div class="carousel-item {% if loop.first %}active{% endif %}">
+                    <div class="card p-4 mx-auto" style="max-width: 700px;">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ announcement.title }}</h5>
+                            <p class="card-text">{{ announcement.content }}</p>
                         </div>
                     </div>
-                    {% endfor %}
                 </div>
-                <a class="carousel-control-prev" href="#announcementsCarousel" role="button" data-slide="prev">
-                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                    <span class="sr-only">Previous</span>
-                </a>
-                <a class="carousel-control-next" href="#announcementsCarousel" role="button" data-slide="next">
-                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                    <span class="sr-only">Next</span>
-                </a>
+                {% endfor %}
             </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#announcementsCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#announcementsCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
         </div>
     </div>
 
     <!-- Featured Marketplace Items -->
-    <div class="row mb-5">
-        <div class="col-md-12">
-            <h2>Featured Marketplace Items</h2>
-            <div class="card-deck">
-                {% for listing in recent_listings %}
-                <div class="card">
-                    <div class="card-body">
+    <div class="mb-5">
+        <h2 class="mb-4">Featured Marketplace Items</h2>
+        <div class="row g-4">
+            {% for listing in recent_listings %}
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 d-flex">
+                <div class="card flex-fill">
+                    <div class="card-body d-flex flex-column">
                         <h5 class="card-title">{{ listing.item_name }}</h5>
-                        <p class="card-text">{{ listing.description | truncate(100) }}</p>
+                        <p class="card-text flex-grow-1">{{ listing.description | truncate(100) }}</p>
                         <p class="card-text"><small class="text-muted">Price: ${{ listing.price }}</small></p>
-                        <a href="{{ url_for('marketplace.view_listing_detail', listing_id=listing.id) }}" class="btn btn-sm btn-primary">View Item</a>
+                        <a href="{{ url_for('marketplace.view_listing_detail', listing_id=listing.id) }}" class="btn btn-primary btn-sm mt-auto">View Item</a>
                     </div>
                 </div>
-                {% else %}
-                <p>No featured items at the moment. Check back later!</p>
-                {% endfor %}
             </div>
+            {% else %}
+            <p>No featured items at the moment. Check back later!</p>
+            {% endfor %}
         </div>
     </div>
 
     <!-- Game Statistics -->
-    <div class="row text-center">
+    <div class="row text-center g-4">
         <div class="col-md-4">
-            <div class="card">
+            <div class="card py-4 shadow-sm">
                 <div class="card-body">
-                    <h3>{{ stats.active_players }}</h3>
-                    <p>Active Players</p>
+                    <h3 class="display-5 text-primary">{{ stats.active_players }}</h3>
+                    <p class="fs-5 fw-semibold">Active Players</p>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card">
+            <div class="card py-4 shadow-sm">
                 <div class="card-body">
-                    <h3>{{ stats.open_tickets }}</h3>
-                    <p>Open Tickets</p>
+                    <h3 class="display-5 text-warning">{{ stats.open_tickets }}</h3>
+                    <p class="fs-5 fw-semibold">Open Tickets</p>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card">
+            <div class="card py-4 shadow-sm">
                 <div class="card-body">
-                    <h3>{{ stats.pending_permits }}</h3>
-                    <p>Pending Permits</p>
+                    <h3 class="display-5 text-info">{{ stats.pending_permits }}</h3>
+                    <p class="fs-5 fw-semibold">Pending Permits</p>
                 </div>
             </div>
         </div>

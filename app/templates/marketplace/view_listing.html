@@ -2,49 +2,77 @@
 
 {% block content %}
 <div class="container mt-4">
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
             <div class="card shadow-lg">
                 <div class="card-header bg-primary text-white">
                     <h2 class="mb-0">{{ listing.item_name }}</h2>
                 </div>
                 <div class="card-body">
-                    <p class="lead"><strong>Seller:</strong> {{ listing.seller.username if listing.seller else 'Unknown User' }}
-                        (<a href="discord://-/users/{{ listing.seller.discord_user_id if listing.seller and listing.seller.discord_user_id else '' }}" target="_blank" title="Open Discord DM (requires Discord app)">@{{ listing.seller.username if listing.seller else 'DiscordUser' }} on Discord</a>)
+                    <p class="lead">
+                        <strong>Seller:</strong>
+                        {{ listing.seller.username if listing.seller else 'Unknown User' }}
+                        {% if listing.seller and listing.seller.discord_user_id %}
+                            (<a href="discord://-/users/{{ listing.seller.discord_user_id }}"
+                                target="_blank"
+                                title="Open in Discord app">
+                                @{{ listing.seller.username }}
+                            </a>)
+                        {% endif %}
                     </p>
-                    <hr>
-                    <p><strong>Price:</strong> <span class="font-weight-bold text-success h4">{{ "%.2f"|format(listing.price) }} {{ listing.seller.accounts.first().currency if listing.seller.accounts.first() else 'credits' }}</span></p>
+
+                    <hr class="my-3">
+
+                    <p><strong>Price:</strong>
+                        <span class="fw-bold text-success h4">
+                            {{ "%.2f"|format(listing.price) }}
+                            {{ listing.seller.accounts.first().currency if listing.seller.accounts.first() else 'credits' }}
+                        </span>
+                    </p>
+
                     <p><strong>Available Quantity:</strong> {{ listing.quantity }} {{ listing.unit }}</p>
+
                     <p><strong>Status:</strong>
-                        <span class="badge badge-{{ 'success' if listing.status == MarketplaceItemStatus.AVAILABLE else 'warning' if listing.status == MarketplaceItemStatus.SOLD_PENDING_RELIST else 'danger' if listing.status == MarketplaceItemStatus.SOLD_OUT else 'secondary' }}">
+                        <span class="badge bg-{{
+                            'success' if listing.status == MarketplaceItemStatus.AVAILABLE
+                            else 'warning' if listing.status == MarketplaceItemStatus.SOLD_PENDING_RELIST
+                            else 'danger' if listing.status == MarketplaceItemStatus.SOLD_OUT
+                            else 'secondary' }}">
                             {{ listing.status.value }}
                         </span>
                     </p>
 
                     {% if listing.description %}
                         <h5 class="mt-4">Description:</h5>
-                        <p class="bg-light p-3 rounded">{{ listing.description|safe|nl2br }}</p>
+                        <p class="bg-light p-3 rounded">
+                            {{ listing.description|safe|nl2br }}
+                        </p>
                     {% else %}
                         <p class="text-muted">No detailed description provided by the seller.</p>
                     {% endif %}
 
-                    <hr>
+                    <hr class="my-3">
                     <p class="small text-muted">
-                        Listing ID: {{ listing.id }} <br>
-                        Posted on: {{ listing.creation_date.strftime('%Y-%m-%d %H:%M UTC') }} <br>
-                        Last Updated: {{ listing.last_update_date.strftime('%Y-%m-%d %H:%M UTC') }}
+                        <strong>Listing ID:</strong> {{ listing.id }}<br>
+                        <strong>Posted on:</strong> {{ listing.creation_date.strftime('%Y-%m-%d %H:%M UTC') }}<br>
+                        <strong>Last Updated:</strong> {{ listing.last_update_date.strftime('%Y-%m-%d %H:%M UTC') }}
                     </p>
                 </div>
-                <div class="card-footer text-right">
+                <div class="card-footer text-end">
                     {% if current_user.is_authenticated and current_user.id == listing.seller_user_id %}
-                        {# <a href="{{ url_for('marketplace.edit_listing', listing_id=listing.id) }}" class="btn btn-sm btn-outline-warning">Edit Listing (Web)</a> #}
-                        <p class="text-muted small">Manage this listing (mark sold, cancel) via Discord commands: `!sold {{listing.id}}` or `!cancel {{listing.id}}`.</p>
+                        <p class="text-muted small">
+                            Manage this listing via Discord commands: <code>!sold {{ listing.id }}</code> or <code>!cancel {{ listing.id }}</code>.
+                        </p>
                     {% else %}
-                        <p class="text-muted small">To purchase, please contact the seller directly on Discord: <strong>@{{ listing.seller.username if listing.seller else 'Seller' }}</strong></p>
-                        {# If Discord ID is available and you want a direct mention hint: #}
-                        {# {% if listing.seller and listing.seller.discord_user_id %} (Discord User ID: {{ listing.seller.discord_user_id }}) {% endif %} #}
+                        <p class="text-muted small">
+                            To purchase, contact the seller on Discord:
+                            <strong>
+                                @{{ listing.seller.username if listing.seller else 'Seller' }}
+                            </strong>
+                        </p>
                     {% endif %}
-                    <a href="{{ url_for('marketplace.index') }}" class="btn btn-secondary">Back to Marketplace</a>
+
+                    <a href="{{ url_for('marketplace.index') }}" class="btn btn-secondary mt-2">Back to Marketplace</a>
                 </div>
             </div>
         </div>

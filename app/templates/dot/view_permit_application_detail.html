@@ -4,11 +4,11 @@
 <div class="container mt-4">
     <h1 class="mb-4">{{ title }}</h1>
 
-    <div class="card">
-        <div class="card-header">
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
             <div class="d-flex justify-content-between align-items-center">
-                <span>Application ID: {{ application.id }}</span>
-                <span class="badge badge-lg badge-{{
+                <span><strong>Application ID:</strong> {{ application.id }}</span>
+                <span class="badge bg-{{
                     'primary' if application.status == PermitApplicationStatus.PENDING_REVIEW
                     else 'info' if application.status == PermitApplicationStatus.REQUIRES_MODIFICATION
                     else 'warning' if application.status == PermitApplicationStatus.APPROVED_PENDING_PAYMENT
@@ -17,29 +17,40 @@
                     else 'danger' if application.status == PermitApplicationStatus.REJECTED or application.status == PermitApplicationStatus.CANCELLED_BY_ADMIN
                     else 'dark' if application.status == PermitApplicationStatus.CANCELLED_BY_USER
                     else 'light' }}">
-                    Status: {{ application.status.value }}
+                    {{ application.status.value }}
                 </span>
             </div>
         </div>
+
         <div class="card-body">
             <p><strong>Applicant:</strong> {{ application.applicant.username if application.applicant else 'N/A' }}</p>
-            <p><strong>Application Date:</strong> {{ application.application_date.strftime('%Y-%m-%d %H:%M:%S UTC') }}</p>
+            <p><strong>Application Date:</strong> {{ application.application_date.strftime('%Y-%m-%d %H:%M:%S UTC') if application.application_date else 'N/A' }}</p>
             <hr>
-            <h5 class="mt-3">Permit Details:</h5>
-            <p><strong>Vehicle Type/Description:</strong> {{ application.vehicle_type }}</p>
-            <p><strong>Proposed Route:</strong><br>{{ application.route_details|safe|nl2br }}</p>
-            <p><strong>Travel Start Date:</strong> {{ application.travel_start_date.strftime('%Y-%m-%d') }}</p>
-            <p><strong>Travel End Date:</strong> {{ application.travel_end_date.strftime('%Y-%m-%d') }}</p>
+
+            <h5 class="mb-3">Permit Details</h5>
+            <dl class="row">
+                <dt class="col-sm-4">Vehicle Type / Description:</dt>
+                <dd class="col-sm-8">{{ application.vehicle_type or 'N/A' }}</dd>
+
+                <dt class="col-sm-4">Proposed Route:</dt>
+                <dd class="col-sm-8 white-space-pre-line">{{ application.route_details|default('N/A') }}</dd>
+
+                <dt class="col-sm-4">Travel Start Date:</dt>
+                <dd class="col-sm-8">{{ application.travel_start_date.strftime('%Y-%m-%d') if application.travel_start_date else 'N/A' }}</dd>
+
+                <dt class="col-sm-4">Travel End Date:</dt>
+                <dd class="col-sm-8">{{ application.travel_end_date.strftime('%Y-%m-%d') if application.travel_end_date else 'N/A' }}</dd>
+            </dl>
 
             {% if application.user_notes %}
-            <h5 class="mt-3">User Notes:</h5>
-            <p class="bg-light p-2 rounded">{{ application.user_notes|safe|nl2br }}</p>
+            <h5>User Notes</h5>
+            <p class="bg-light p-3 rounded white-space-pre-line">{{ application.user_notes }}</p>
             {% endif %}
 
             {% if application.officer_notes %}
-            <h5 class="mt-3">Officer/Admin Notes:</h5>
-            <p class="bg-light p-2 rounded">
-                {{ application.officer_notes|safe|nl2br }}
+            <h5>Officer / Admin Notes</h5>
+            <p class="bg-light p-3 rounded white-space-pre-line">
+                {{ application.officer_notes }}
                 {% if application.reviewer_officer %}
                 <br><small class="text-muted">Reviewed by: {{ application.reviewer_officer.username }}</small>
                 {% endif %}
@@ -47,62 +58,70 @@
             {% endif %}
 
             {% if application.status == PermitApplicationStatus.APPROVED_PENDING_PAYMENT or application.permit_fee %}
-            <h5 class="mt-3">Permit Fee:</h5>
+            <h5>Permit Fee</h5>
             <p><strong>{{ "%.2f"|format(application.permit_fee) }} {{ current_user.accounts.first().currency if current_user.accounts.first() else '' }}</strong></p>
             {% endif %}
 
             {% if application.status == PermitApplicationStatus.PAID_AWAITING_ISSUANCE and application.payment_transaction %}
-            <h5 class="mt-3">Payment Information:</h5>
+            <h5>Payment Information</h5>
             <p>Paid on: {{ application.payment_transaction.timestamp.strftime('%Y-%m-%d %H:%M:%S UTC') }}</p>
             <p>Banking Transaction ID: {{ application.banking_transaction_id }}</p>
             {% endif %}
 
             {% if application.status == PermitApplicationStatus.ISSUED %}
-            <h5 class="mt-3 text-success">Permit Issued!</h5>
-            <p><strong>Issued Permit ID:</strong> <span class="font-weight-bold">{{ application.issued_permit_id_str }}</span></p>
+            <h5 class="text-success">Permit Issued!</h5>
+            <p><strong>Issued Permit ID:</strong> <span class="fw-bold">{{ application.issued_permit_id_str }}</span></p>
             <p><strong>Issued On:</strong> {{ application.issued_on_date.strftime('%Y-%m-%d %H:%M:%S UTC') if application.issued_on_date else 'N/A' }}</p>
             <p><strong>Issued By:</strong> {{ application.issuer_officer.username if application.issuer_officer else 'System/Admin' }}</p>
-            <div class="alert alert-success">This permit is valid from {{ application.travel_start_date.strftime('%Y-%m-%d') }} to {{ application.travel_end_date.strftime('%Y-%m-%d') }}. Please keep this ID for reference.</div>
+            <div class="alert alert-success mt-3">
+                This permit is valid from {{ application.travel_start_date.strftime('%Y-%m-%d') }} to {{ application.travel_end_date.strftime('%Y-%m-%d') }}. Please keep this ID for reference.
+            </div>
             {% endif %}
-
         </div>
-        <div class="card-footer text-right">
+
+        <div class="card-footer text-end">
             {# User Actions #}
             {% if application.user_id == current_user.id %}
                 {% if application.status == PermitApplicationStatus.APPROVED_PENDING_PAYMENT %}
-                    <form method="POST" action="{{ url_for('dot.pay_for_permit', application_id=application.id) }}" style="display:inline;" onsubmit="return confirm('Confirm payment of {{ "%.2f"|format(application.permit_fee) }} for this permit?');">
-                        <input type="submit" value="Pay Permit Fee ({{ "%.2f"|format(application.permit_fee) }})" class="btn btn-success">
+                    <form method="POST" action="{{ url_for('dot.pay_for_permit', application_id=application.id) }}" class="d-inline me-2" onsubmit="return confirm('Confirm payment of {{ "%.2f"|format(application.permit_fee) }} for this permit?');">
+                        <button type="submit" class="btn btn-success">Pay Permit Fee ({{ "%.2f"|format(application.permit_fee) }})</button>
                     </form>
                 {% endif %}
-                {% if application.status == PermitApplicationStatus.PENDING_REVIEW or application.status == PermitApplicationStatus.REQUIRES_MODIFICATION %}
-                    <form method="POST" action="{{ url_for('dot.cancel_permit_application_by_user', application_id=application.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to cancel this permit application?');">
-                        <input type="submit" value="Cancel My Application" class="btn btn-danger">
+
+                {% if application.status in [PermitApplicationStatus.PENDING_REVIEW, PermitApplicationStatus.REQUIRES_MODIFICATION] %}
+                    <form method="POST" action="{{ url_for('dot.cancel_permit_application_by_user', application_id=application.id) }}" class="d-inline me-2" onsubmit="return confirm('Are you sure you want to cancel this permit application?');">
+                        <button type="submit" class="btn btn-danger">Cancel My Application</button>
                     </form>
-                    {# Add Edit button if status is REQUIRES_MODIFICATION #}
+
                     {% if application.status == PermitApplicationStatus.REQUIRES_MODIFICATION %}
-                         <!-- <a href="{{ url_for('dot.edit_my_application', application_id=application.id) }}" class="btn btn-warning">Edit Application</a> -->
+                        <a href="{{ url_for('dot.edit_my_application', application_id=application.id) }}" class="btn btn-warning me-2">Edit Application</a>
                     {% endif %}
                 {% endif %}
+
                 <a href="{{ url_for('dot.my_permit_applications') }}" class="btn btn-secondary">Back to My Applications</a>
             {% endif %}
 
-            {# Officer/Admin Actions - Show if current user is officer/admin AND not the applicant #}
+            {# Officer/Admin Actions (not applicant) #}
             {% if current_user.role in [UserRole.OFFICER, UserRole.ADMIN] and application.user_id != current_user.id %}
-                 <a href="{{ url_for('dot.review_permit_applications_list') }}" class="btn btn-secondary">Back to Review List</a>
+                <a href="{{ url_for('dot.review_permit_applications_list') }}" class="btn btn-secondary me-2">Back to Review List</a>
+
                 {% if application.status in [PermitApplicationStatus.PENDING_REVIEW, PermitApplicationStatus.REQUIRES_MODIFICATION] %}
-                    <a href="{{ url_for('dot.review_permit_application', application_id=application.id) }}" class="btn btn-primary">Review/Process Application</a>
+                    <a href="{{ url_for('dot.review_permit_application', application_id=application.id) }}" class="btn btn-primary me-2">Review / Process Application</a>
                 {% endif %}
-                 {% if application.status == PermitApplicationStatus.PAID_AWAITING_ISSUANCE %}
-                    <form method="POST" action="{{ url_for('dot.issue_final_permit', application_id=application.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to mark this permit as officially ISSUED?');">
-                        <input type="submit" value="Issue Final Permit" class="btn btn-success">
+
+                {% if application.status == PermitApplicationStatus.PAID_AWAITING_ISSUANCE %}
+                    <form method="POST" action="{{ url_for('dot.issue_final_permit', application_id=application.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to mark this permit as officially ISSUED?');">
+                        <button type="submit" class="btn btn-success">Issue Final Permit</button>
                     </form>
-                 {% endif %}
-            {# Admin viewing their own application (edge case, admin usually doesn't apply for self) #}
-            {% elif current_user.role == UserRole.ADMIN and application.user_id == current_user.id %}
-                 <a href="{{ url_for('main.admin_dashboard') }}" class="btn btn-secondary">Back to Admin Panel</a>
-                 {% if application.status in [PermitApplicationStatus.PENDING_REVIEW, PermitApplicationStatus.REQUIRES_MODIFICATION, PermitApplicationStatus.PAID_AWAITING_ISSUANCE] %}
-                    <span class="text-muted small"> (As admin, manage this application via Officer Review List if needed)</span>
-                 {% endif %}
+                {% endif %}
+            {% endif %}
+
+            {# Admin viewing their own application (rare edge case) #}
+            {% if current_user.role == UserRole.ADMIN and application.user_id == current_user.id %}
+                <a href="{{ url_for('main.admin_dashboard') }}" class="btn btn-secondary">Back to Admin Panel</a>
+                {% if application.status in [PermitApplicationStatus.PENDING_REVIEW, PermitApplicationStatus.REQUIRES_MODIFICATION, PermitApplicationStatus.PAID_AWAITING_ISSUANCE] %}
+                    <small class="text-muted d-block mt-2">(Manage this application via Officer Review List if needed)</small>
+                {% endif %}
             {% endif %}
         </div>
     </div>

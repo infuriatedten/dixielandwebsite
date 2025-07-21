@@ -2,18 +2,21 @@
 
 {% block admin_content %}
     <h2>Validate Parcels</h2>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Location</th>
-                <th>Size</th>
-                <th>Farmer</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for parcel in parcels %}
+
+    {% if parcels %}
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Location</th>
+                    <th scope="col">Size</th>
+                    <th scope="col">Farmer</th>
+                    <th scope="col">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for parcel in parcels %}
                 <tr>
                     <td>{{ parcel.id }}</td>
                     <td>{{ parcel.location }}</td>
@@ -21,12 +24,17 @@
                     <td>{{ parcel.farmer.user.username }}</td>
                     <td>
                         <form method="POST" action="{{ url_for('admin.validate_parcels') }}">
+                            {{ csrf_token() }}
                             <input type="hidden" name="parcel_id" value="{{ parcel.id }}">
-                            <button type="submit" class="btn btn-success">Validate</button>
+                            <button type="submit" class="btn btn-success" onclick="return confirm('Are you sure you want to validate this parcel?');">Validate</button>
                         </form>
                     </td>
                 </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <div class="alert alert-info">No parcels awaiting validation.</div>
+    {% endif %}
 {% endblock %}
