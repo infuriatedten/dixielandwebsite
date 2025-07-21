@@ -1,46 +1,43 @@
-{% macro render_field(field, label_visible=true, form_type="basic", horizontal_columns=('lg', 2, 8), button_map=None, extra_attrs=None) %}
-    {%- set button_map = button_map or {} -%}
-    {%- set extra_attrs = extra_attrs or {} -%}
-    
-    {% if field.type in ['CSRFTokenField', 'HiddenField'] %}
+{% macro render_field(field, label_visible=true, form_type="basic", horizontal_columns=('lg', 2, 8), button_map={}, extra_attrs={}) %}
+    {% if field.type == 'CSRFTokenField' or field.type == 'HiddenField' %}
         {{ field() }}
     {% else %}
         <div class="mb-3 {% if field.errors %}has-error{% endif %}">
             {% if label_visible %}
-                {{ field.label(class_="form-label " ~ ( "col-" ~ horizontal_columns[0] ~ "-" ~ horizontal_columns[1] if form_type == "horizontal" else "" )) }}
+                {{ field.label(class_="form-label " + ( "col-" + horizontal_columns[0] + "-" + horizontal_columns[1] if form_type == "horizontal" else "" )) }}
             {% endif %}
 
             {% if form_type == "horizontal" %}
-                <div class="col-{{ horizontal_columns[0] }}-{{ horizontal_columns[2] }}">
+            <div class="col-{{ horizontal_columns[0] }}-{{ horizontal_columns[2] }}">
             {% endif %}
 
             {% if field.type == 'SubmitField' %}
-                {%- set classes = "btn " ~ button_map.get(field.id, "btn-primary") -%}
-                {%- set attrs = extra_attrs.copy() -%}
-                {%- do attrs.update({'class_': classes}) -%}
+                {% set classes = "btn " + button_map.get(field.id, "btn-primary") %}
+                {% set attrs = extra_attrs.copy() %}
+                {% set _ = attrs.update({'class_': classes}) %}
                 {{ field(**attrs) }}
             {% elif field.type == 'BooleanField' %}
                 <div class="form-check">
-                    {%- set classes = "form-check-input " ~ ("is-invalid" if field.errors else "") -%}
-                    {%- set attrs = extra_attrs.copy() -%}
-                    {%- do attrs.update({'class_': classes, 'id': field.id}) -%}
+                    {% set classes = "form-check-input " + ("is-invalid" if field.errors else "") %}
+                    {% set attrs = extra_attrs.copy() %}
+                    {% set _ = attrs.update({'class_': classes, 'id': field.id}) %}
                     {{ field(**attrs) }}
                     {{ field.label(class_="form-check-label", for=field.id) }}
                 </div>
             {% elif field.type == 'TextAreaField' %}
-                {%- set classes = "form-control" ~ (" is-invalid" if field.errors else "") -%}
-                {%- set attrs = extra_attrs.copy() -%}
-                {%- do attrs.update({'class_': classes, 'rows': 4}) -%}
+                {% set classes = "form-control" + (" is-invalid" if field.errors else "") %}
+                {% set attrs = extra_attrs.copy() %}
+                {% set _ = attrs.update({'class_': classes, 'rows': 4}) %}
                 {{ field(**attrs) }}
             {% elif field.type == 'SelectField' %}
-                {%- set classes = "form-select" ~ (" is-invalid" if field.errors else "") -%}
-                {%- set attrs = extra_attrs.copy() -%}
-                {%- do attrs.update({'class_': classes}) -%}
+                {% set classes = "form-select" + (" is-invalid" if field.errors else "") %}
+                {% set attrs = extra_attrs.copy() %}
+                {% set _ = attrs.update({'class_': classes}) %}
                 {{ field(**attrs) }}
             {% else %}
-                {%- set classes = "form-control" ~ (" is-invalid" if field.errors else "") -%}
-                {%- set attrs = extra_attrs.copy() -%}
-                {%- do attrs.update({'class_': classes}) -%}
+                {% set classes = "form-control" + (" is-invalid" if field.errors else "") %}
+                {% set attrs = extra_attrs.copy() %}
+                {% set _ = attrs.update({'class_': classes}) %}
                 {{ field(**attrs) }}
             {% endif %}
 
@@ -51,18 +48,16 @@
             {% endif %}
 
             {% if form_type == "horizontal" %}
-                </div>
+            </div>
             {% endif %}
         </div>
     {% endif %}
 {% endmacro %}
 
-{% macro render_form(form, action_url, form_type="basic", horizontal_columns=('lg', 2, 8), button_map=None, extra_attrs=None) %}
-    {%- set button_map = button_map or {} -%}
-    {%- set extra_attrs = extra_attrs or {} -%}
+{% macro render_form(form, action_url, form_type="basic", horizontal_columns=('lg', 2, 8), button_map={}, extra_attrs={}) %}
     <form method="POST" action="{{ action_url }}" novalidate
-          {% if form_type == "horizontal" %}class="row g-3 align-items-center"{% endif %}
-          {{ extra_attrs|xmlattr }}>
+        {% if form_type == "horizontal" %}class="row g-3 align-items-center"{% endif %}
+        {{ extra_attrs|xmlattr }}>
         {{ form.hidden_tag() }}
         {% for field in form %}
             {{ render_field(field, label_visible=true, form_type=form_type, horizontal_columns=horizontal_columns, button_map=button_map, extra_attrs=extra_attrs) }}
