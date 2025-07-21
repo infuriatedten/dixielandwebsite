@@ -70,6 +70,11 @@ def view_rules():
                            rules_content_html=rules_content_html,
                            current_user=current_user, UserRole=UserRole)
 
+
+from app.models import Company, UserVehicle, Account
+from app.forms import CompanyNameForm
+from app import db
+
 #feature/admin-auction-panel
 from app.models import Company, UserVehicle, Account
 from app.forms import CompanyNameForm
@@ -149,6 +154,7 @@ def farmers():
         parcel_form=parcel_form,
         insurance_form=insurance_form
     )
+
 
 
 # ------------------------ COMPANY ------------------------

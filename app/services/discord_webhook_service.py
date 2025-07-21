@@ -148,4 +148,8 @@ def post_auction_to_discord(auction):
         embed["image"] = {"url": auction.image_url}
 
     payload = {"embeds": [embed]}
+
     return _post_to_discord(webhook_url, payload)
+
+    return _post_to_discord(webhook_url, payload)
+
