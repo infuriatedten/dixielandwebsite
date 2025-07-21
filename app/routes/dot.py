@@ -67,6 +67,9 @@ def list_issued_tickets():
     query = Ticket.query
     if current_user.role == UserRole.OFFICER:
         query = query.filter_by(issued_by_officer_id=current_user.id)
+    elif current_user.role != UserRole.ADMIN:
+        # This case should not be reached due to @officer_required, but as a safeguard
+        query = query.filter_by(issued_by_officer_id=-1) # Return no tickets
 
     tickets_pagination = query.order_by(Ticket.issue_date.desc()).paginate(page=page, per_page=10)
     return render_template('dot/list_issued_tickets.html', title='My Issued Tickets', tickets_pagination=tickets_pagination, TicketStatus=TicketStatus)
