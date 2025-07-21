@@ -89,7 +89,7 @@ def profile():
         current_user.email = form.email.data
         current_user.about_me = form.about_me.data
 
-        # Optional fields
+        # Handle optional fields
         if hasattr(form, 'region') and form.region.data:
             current_user.region = form.region.data
 
@@ -97,8 +97,13 @@ def profile():
         flash('Your profile has been updated.', 'success')
         return redirect(url_for('auth.profile'))
 
-    # Pre-fill region manually only on GET
+    # Pre-fill optional fields only on GET
     if request.method == 'GET' and hasattr(form, 'region'):
-        form.region.data = current_user.region if current_user.region else 'OTHER_DEFAULT'
+        form.region.data = current_user.region or 'OTHER_DEFAULT'
 
-    return render_template('auth/profile.html', title='My Profile', form=form, user=current_user)
+    return render_template(
+        'auth/profile.html',
+        title='My Profile',
+        form=form,
+        user=current_user
+    )
