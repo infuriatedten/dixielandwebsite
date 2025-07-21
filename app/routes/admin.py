@@ -67,12 +67,18 @@ def manage_users():
     users = User.query.order_by(User.username).paginate(page=page, per_page=10)
     return render_template('admin/manage_users.html', title='Manage Users', users=users)
 
-@admin_bp.route('/user/<int:user_id>/edit', methods=['GET', 'POST'])
+@bp.route('/admin/user/<int:user_id>/edit', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def edit_user(user_id):
     user = User.query.get_or_404(user_id)
-    form = EditUserForm(obj=user)
+
+    form = EditUserForm(
+        original_username=user.username,
+        original_email=user.email,
+        obj=user
+    )
+
     if form.validate_on_submit():
         user.username = form.username.data
         user.email = form.email.data
@@ -82,7 +88,6 @@ def edit_user(user_id):
         flash('User updated successfully.', 'success')
         return redirect(url_for('admin.manage_users'))
 
-    form.region.data = user.region
     return render_template('admin/edit_user.html', title='Edit User', form=form, user=user)
 
 @admin_bp.route('/user/<int:user_id>/delete', methods=['POST'])

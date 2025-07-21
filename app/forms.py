@@ -121,22 +121,24 @@ class EditListingForm(FlaskForm):
             raise ValidationError('Quantity must be a positive value.')
 
 
-class EditProfileForm(FlaskForm):
+class EditUserForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
-    about_me = TextAreaField('About me', validators=[Length(min=0, max=140)])
-    submit = SubmitField('Save')
+    role = SelectField('Role', choices=[...], validators=[DataRequired()])
+    region = SelectField('Region', choices=[...], validators=[Optional()])
 
-    def __init__(self, original_email, *args, **kwargs):
+    def __init__(self, original_username, original_email, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.original_username = original_username
         self.original_email = original_email
 
-    def validate_email(self, email):
-        if email.data != self.original_email:
-            user = User.query.filter_by(email=email.data).first()
-            if user:
-                raise ValidationError('This email is already in use.')
+    def validate_username(self, field):
+        if field.data != self.original_username and User.query.filter_by(username=field.data).first():
+            raise ValidationError('Username is already taken.')
 
+    def validate_email(self, field):
+        if field.data != self.original_email and User.query.filter_by(email=field.data).first():
+            raise ValidationError('Email is already registered.')
 
 class EditRulesForm(FlaskForm):
     content_markdown = TextAreaField('Rules Content (Markdown Format)',
