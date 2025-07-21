@@ -89,27 +89,25 @@ def manage_tax_brackets():
     tax_brackets = TaxBracket.query.order_by(TaxBracket.min_balance).paginate(page=page, per_page=10)
     return render_template('admin/manage_tax_brackets.html', title='Manage Tax Brackets', tax_brackets=tax_brackets)
 
-@admin_bp.route('/user/<int:user_id>/edit', methods=['GET', 'POST'])
+@bp.route('/admin/user/<int:user_id>/edit', methods=['GET', 'POST'])
+@login_required
 @admin_required
 def edit_user(user_id):
     user = User.query.get_or_404(user_id)
-    form = EditUserForm(original_username=user.username, original_email=user.email, obj=user)
+    form = EditUserForm(obj=user)
+
     if form.validate_on_submit():
         user.username = form.username.data
         user.email = form.email.data
-        user.role = UserRole[form.role.data]
-        user.discord_user_id = form.discord_user_id.data
-        user.region = VehicleRegion[form.region.data]
+        user.role = form.role.data
+        user.region = form.region.data
         db.session.commit()
         flash('User updated successfully.', 'success')
         return redirect(url_for('admin.manage_users'))
-    elif request.method == 'GET':
-        form.username.data = user.username
-        form.email.data = user.email
-        form.role.data = user.role.name
-        form.discord_user_id.data = user.discord_user_id
-        if user.region:
-            form.region.data = user.region.name
+
+    # Fix this line:
+    form.region.data = user.region  # Not user.region.name
+
     return render_template('admin/edit_user.html', title='Edit User', form=form, user=user)
 
 @admin_bp.route('/account/<int:account_id>/edit', methods=['GET', 'POST'])
