@@ -40,7 +40,6 @@ class Account(db.Model):
     is_company = db.Column(db.Boolean, default=False, nullable=False)
     last_updated_on = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     user = db.relationship('User', backref=db.backref('accounts', lazy='dynamic'))
-    owner_user = db.relationship('User', backref=db.backref('owned_accounts', lazy='dynamic'))
     transactions = db.relationship('Transaction', backref='account', lazy='dynamic', cascade="all, delete-orphan")
 
     def __repr__(self):

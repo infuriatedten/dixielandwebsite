@@ -46,7 +46,7 @@
 
                         {{ nav.dot_services_dropdown(current_user, UserRole) }}
 
-                        {% if current_user.role is defined and current_user.role.value == UserRole.ADMIN.value %}
+                        {% if current_user.role == UserRole.ADMIN %}
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('main.admin_dashboard') }}">Admin Panel</a>
                             </li>
@@ -64,9 +64,8 @@
                                 Farmers
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="farmersDropdown">
-                                <li><a class="dropdown-item" href="{{ url_for('main.farmers') }}">Farmers</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('main.farmers') }}">Dashboard</a></li>
                                 <li><a class="dropdown-item" href="{{ url_for('main.contracts') }}">Contracts</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('main.users') }}">Users</a></li>
                             </ul>
                         </li>
 
@@ -137,7 +136,7 @@
 
     <footer class="footer mt-auto py-3 bg-light">
         <div class="container">
-            <span class="text-muted">© {{ SCRIPT_YEAR }} Dixieland RolePlay</span>
+            <span class="text-muted">© 2024 Dixieland RolePlay</span>
         </div>
     </footer>
 

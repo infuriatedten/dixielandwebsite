@@ -71,16 +71,6 @@ def view_rules():
                            current_user=current_user, UserRole=UserRole)
 
 
-from app.models import Company, UserVehicle, Account
-from app.forms import CompanyNameForm
-from app import db
-
-#feature/admin-auction-panel
-from app.models import Company, UserVehicle, Account
-from app.forms import CompanyNameForm
-from app import db
-
-
 # ------------------------ ADMIN ------------------------
 
 @main_bp.route('/admin-dashboard')
