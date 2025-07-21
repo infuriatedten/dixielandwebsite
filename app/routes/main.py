@@ -50,12 +50,14 @@ def main_index():
                            stats=stats)
 
 
+# Create markdown parser once (reuse)
+markdown_parser = mistune.create_markdown(escape=False)
+
 # ------------------------ RULES ------------------------
 
 @main_bp.route('/rules', endpoint='view_rules')
 def view_rules():
     rules_entry = RulesContent.query.first()
-    markdown_parser = mistune.create_markdown(escape=False)
 
     if rules_entry and rules_entry.content_markdown:
         rules_content_html = markdown_parser(rules_entry.content_markdown)
@@ -89,8 +91,6 @@ def admin_dashboard():
 @officer_required
 def officer_area():
     return render_template('officer/area.html', title='Officer Area')
-
-
 # ------------------------ FARMERS ------------------------
 
 @main_bp.route('/farmers', methods=['GET', 'POST'])
