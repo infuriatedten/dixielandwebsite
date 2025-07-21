@@ -70,7 +70,7 @@ def view_rules():
                            rules_content_html=rules_content_html,
                            current_user=current_user, UserRole=UserRole)
 
-feature/admin-auction-panel
+#feature/admin-auction-panel
 from app.models import Company, UserVehicle, Account
 from app.forms import CompanyNameForm
 from app import db
