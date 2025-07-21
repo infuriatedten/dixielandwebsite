@@ -39,6 +39,7 @@ def index():
     }
     return render_template('admin/dashboard.html', title='Admin Dashboard', stats=stats)
 
+
 # ---------------- Rules ---------------- #
 
 @admin_bp.route('/rules/edit', methods=['GET', 'POST'])
@@ -58,6 +59,7 @@ def edit_rules():
         return redirect(url_for('main.view_rules'))
     return render_template('admin/edit_rules.html', title='Edit Rules', form=form)
 
+
 # ---------------- User Management ---------------- #
 
 @admin_bp.route('/users')
@@ -67,7 +69,7 @@ def manage_users():
     users = User.query.order_by(User.username).paginate(page=page, per_page=10)
     return render_template('admin/manage_users.html', title='Manage Users', users=users)
 
-@bp.route('/admin/user/<int:user_id>/edit', methods=['GET', 'POST'])
+@admin_bp.route('/user/<int:user_id>/edit', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def edit_user(user_id):
@@ -116,6 +118,7 @@ def delete_user(user_id):
     flash('User deleted successfully.', 'success')
     return redirect(url_for('admin.manage_users'))
 
+
 # ---------------- Account Management ---------------- #
 
 @admin_bp.route('/accounts')
@@ -163,6 +166,7 @@ def edit_account_balance(account_id):
         return redirect(url_for('admin.manage_accounts'))
     return render_template('admin/edit_account_balance.html', title='Edit Account Balance', form=form, account=account)
 
+
 # ---------------- Ticket Management ---------------- #
 
 @admin_bp.route('/tickets')
@@ -184,6 +188,7 @@ def edit_ticket(ticket_id):
         flash('Ticket updated successfully.', 'success')
         return redirect(url_for('admin.tickets'))
     return render_template('admin/edit_ticket.html', title='Edit Ticket', form=form, ticket=ticket)
+
 
 # ---------------- Permit & Inspection ---------------- #
 
@@ -227,6 +232,7 @@ def edit_inspection(inspection_id):
         return redirect(url_for('admin.manage_inspections'))
     return render_template('admin/edit_inspection.html', title='Edit Inspection', form=form, inspection=inspection)
 
+
 # ---------------- Tax ---------------- #
 
 @admin_bp.route('/tax_brackets')
@@ -252,6 +258,7 @@ def edit_tax_bracket(bracket_id):
         return redirect(url_for('admin.manage_tax_brackets'))
     return render_template('admin/edit_tax_bracket.html', title='Edit Tax Bracket', form=form, bracket=bracket)
 
+
 # ---------------- Contracts ---------------- #
 
 @admin_bp.route('/contracts')
@@ -269,6 +276,7 @@ def delete_contract(contract_id):
     db.session.commit()
     flash('Contract deleted successfully.', 'success')
     return redirect(url_for('admin.manage_contracts'))
+
 
 # ---------------- Insurance Claims ---------------- #
 
@@ -291,24 +299,20 @@ def edit_insurance_claim(claim_id):
         return redirect(url_for('admin.manage_insurance_claims'))
     return render_template('admin/edit_insurance_claim.html', title='Edit Insurance Claim', form=form, claim=claim)
 
+
 # ---------------- Messaging (System Conversations) ---------------- #
 
 @admin_bp.route('/conversations', methods=['GET'])
 @admin_required
 def admin_list_all_conversations():
     page = request.args.get('page', 1, type=int)
-    filter_unread = request.args.get('unread', 'false').lower() == 'true'
-    from app.services import messaging_service
-    from app.models import ConversationStatus
+    conversations = Conversation.query.order_by(Conversation.last_message_date.desc()).paginate(page=page, per_page=10)
+    return render_template('admin/conversations.html', title='All Conversations', conversations=conversations)
 
-    conversations_pagination = messaging_service.get_admin_conversations_list(
-        admin_user_id=None,
-        page=page,
-        filter_unread=filter_unread
-    )
-
-    return render_template('admin/messaging/admin_conversation_list.html',
-                           title='All System Conversations',
-                           conversations_pagination=conversations_pagination,
-                           filter_unread=filter_unread,
-                           ConversationStatus=ConversationStatus)
+@admin_bp.route('/conversation/<int:conversation_id>', methods=['GET', 'POST'])
+@admin_required
+def admin_view_conversation(conversation_id):
+    conversation = Conversation.query.get_or_404(conversation_id)
+    messages = Message.query.filter_by(conversation_id=conversation_id).order_by(Message.timestamp).all()
+    # Form to send new messages could go here (not shown)
+    return render_template('admin/view_conversation.html', title='Conversation Details', conversation=conversation, messages=messages)
