@@ -26,9 +26,11 @@
                 <td>{{ item.submission_time.strftime('%Y-%m-%d %H:%M') }}</td>
                 <td>{{ "%.2f"|format(item.suggested_starting_bid) if item.suggested_starting_bid is not none else 'N/A' }}</td>
                 <td>
-                    <a href="{{ url_for('auction.approve_auction_item', item_id=item.id) }}" class="btn btn-xs btn-primary">Review & Process</a>
-                    {# Quick view link to the item's eventual public page, might be disabled if not yet viewable #}
-                    <a href="{{ url_for('auction.view_auction', auction_id=item.id) }}" class="btn btn-xs btn-info" target="_blank">View Submission</a>
+                    <a href="{{ url_for('auction.approve_auction_item', item_id=item.id) }}" class="btn btn-xs btn-success">Accept</a>
+                    <form action="{{ url_for('auction.reject_auction', item_id=item.id) }}" method="POST" style="display:inline;">
+                        <button type="submit" class="btn btn-xs btn-danger" onclick="return confirm('Are you sure you want to reject this item?');">Reject</button>
+                    </form>
+                    <a href="{{ url_for('auction.view_auction', auction_id=item.id) }}" class="btn btn-xs btn-info" target="_blank">View</a>
                 </td>
             </tr>
             {% endfor %}

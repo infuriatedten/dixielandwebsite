@@ -68,6 +68,11 @@ def view_rules():
                            rules_content_html=rules_content_html,
                            current_user=current_user, UserRole=UserRole)
 
+feature/admin-auction-panel
+from app.models import Company, UserVehicle, Account
+from app.forms import CompanyNameForm
+from app import db
+
 
 # ------------------------ ADMIN ------------------------
 
@@ -147,7 +152,6 @@ def farmers():
 
 
 # ------------------------ COMPANY ------------------------
-
 @main_bp.route('/company', methods=['GET', 'POST'])
 @login_required
 def company():
@@ -188,6 +192,8 @@ def claim_contract(contract_id):
         contract.claimed_date = datetime.utcnow()
         db.session.commit()
         flash('Contract claimed successfully!', 'success')
+    elif contract.claimant_id == current_user.id:
+        flash('You have already claimed this contract.', 'info')
     else:
         flash('This contract is not available to be claimed.', 'danger')
     return redirect(request.referrer or url_for('main.contracts'))
