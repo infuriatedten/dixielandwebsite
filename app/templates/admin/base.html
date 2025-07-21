@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{{ title or "Game Website" }} - My Application</title>
+    <title>{{ title or "Admin Dashboard" }} - My Application</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
 </head>
@@ -30,31 +30,7 @@
 
                     {{ nav.dot_services_dropdown(current_user, UserRole) }}
 
-
-                    {% if current_user.is_authenticated and current_user.role is defined and current_user.role.value is defined and current_user.role.value == UserRole.ADMIN.value %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Admin Panel
-                        </a>
-                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <a class="dropdown-item" href="{{ url_for('admin.index') }}">Dashboard</a>
-                            <a class="dropdown-item" href="{{ url_for('admin.manage_users') }}">Manage Users</a>
-                            <a class="dropdown-item" href="{{ url_for('admin.manage_accounts') }}">Manage Accounts</a>
-                            <a class="dropdown-item" href="{{ url_for('admin.tickets') }}">Manage Tickets</a>
-                            <a class="dropdown-item" href="{{ url_for('admin.manage_permits') }}">Manage Permits</a>
-                            <a class="dropdown-item" href="{{ url_for('admin.manage_inspections') }}">Manage Inspections</a>
-                            <a class="dropdown-item" href="{{ url_for('admin.manage_tax_brackets') }}">Manage Tax Brackets</a>
-                            <a class="dropdown-item" href="{{ url_for('admin.manage_contracts') }}">Manage Contracts</a>
-                            <div class="dropdown-divider"></div>
-                            <h6 class="dropdown-header">Auction Management</h6>
-                            <a class="dropdown-item" href="{{ url_for('auction.list_pending_auctions') }}">Pending Approvals</a>
-                            <a class="dropdown-item" href="{{ url_for('auction.manage_all_auctions') }}">All Auctions</a>
-                             <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="{{ url_for('admin.edit_rules') }}">Edit Rules</a>
-                        </div>
-                    </li>
-
-                    {% if current_user.role is defined and current_user.role.value == UserRole.ADMIN.value %}
+                    {% if current_user.role is defined and current_user.role.value is defined and current_user.role.value == UserRole.ADMIN.value %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
                                data-bs-toggle="dropdown" aria-expanded="false">
@@ -79,7 +55,6 @@
                                 <li><a class="dropdown-item" href="{{ url_for('admin.edit_rules') }}">Edit Rules</a></li>
                             </ul>
                         </li>
-
                     {% endif %}
 
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('marketplace.index') }}">Marketplace</a></li>
@@ -148,7 +123,7 @@
         </div>
     </footer>
 
-    <!-- Bootstrap 5 JS (no jQuery needed) -->
+    <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
