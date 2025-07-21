@@ -1,30 +1,110 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <div class="jumbotron">
-        <h1 class="display-4">Welcome to the Game Portal!</h1>
-        <p class="lead">This is the central hub for all your in-game activities, including banking, taxes, tickets, permits, and the marketplace.</p>
-        <hr class="my-4">
+<style>
+    .hero-section {
+        background: url('https://via.placeholder.com/1920x400') no-repeat center center;
+        background-size: cover;
+        color: white;
+        padding: 100px 0;
+        text-align: center;
+        text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.6);
+    }
+    .card {
+        min-width: 220px;
+        border-radius: 0.5rem;
+        box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
+    }
+</style>
+
+<div class="hero-section mb-5">
+    <div class="container">
+        <h1 class="display-4 fw-bold">Welcome to the Game Portal!</h1>
+        <p class="lead mb-4">Your central hub for all in-game activities.</p>
         {% if current_user.is_authenticated %}
-            <p>You are logged in as {{ current_user.username }}. Explore the available services through the navigation bar.</p>
-            <a class="btn btn-primary btn-lg" href="{{ url_for('auth.profile') }}" role="button">View Profile</a>
+            <a class="btn btn-primary btn-lg me-2" href="{{ url_for('auth.profile') }}" role="button">View Profile</a>
         {% else %}
-            <p>Please log in or register to access all features.</p>
-            <a class="btn btn-primary btn-lg" href="{{ url_for('auth.login') }}" role="button">Login</a>
-            <a class="btn btn-secondary btn-lg" href="{{ url_for('auth.register') }}" role="button">Register</a>
+            <a class="btn btn-primary btn-lg me-2" href="{{ url_for('auth.login') }}" role="button">Login</a>
+            <a class="btn btn-outline-light btn-lg" href="{{ url_for('auth.register') }}" role="button">Register</a>
         {% endif %}
     </div>
+</div>
 
-    <h2>Features Overview</h2>
-    <ul>
-        <li>View Bank Information (Balance, History, Statements)</li>
-        <li>Pay Taxes</li>
-        <li>Manage and Pay Tickets</li>
-        <li>Apply for Vehicle Permits</li>
-        <li>DOT System (Inspections, Ticket Issuance, Permit Management)</li>
-        <li>Marketplace with Discord Integration</li>
-        <li>Farmer specific features (acres, insurance claims)</li>
-    </ul>
-    <p><em>Modules will become accessible as they are developed.</em></p>
+<div class="container">
+    <!-- Announcements Section -->
+    <div class="mb-5">
+        <h2 class="mb-4">Recent Announcements</h2>
+        <div id="announcementsCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                {% for announcement in announcements %}
+                <div class="carousel-item {% if loop.first %}active{% endif %}">
+                    <div class="card p-4 mx-auto" style="max-width: 700px;">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ announcement.title }}</h5>
+                            <p class="card-text">{{ announcement.content }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#announcementsCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#announcementsCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
+        </div>
+    </div>
 
+    <!-- Featured Marketplace Items -->
+    <div class="mb-5">
+        <h2 class="mb-4">Featured Marketplace Items</h2>
+        <div class="row g-4">
+            {% for listing in recent_listings %}
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 d-flex">
+                <div class="card flex-fill">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">{{ listing.item_name }}</h5>
+                        <p class="card-text flex-grow-1">{{ listing.description | truncate(100) }}</p>
+                        <p class="card-text"><small class="text-muted">Price: ${{ listing.price }}</small></p>
+                        <a href="{{ url_for('marketplace.view_listing_detail', listing_id=listing.id) }}" class="btn btn-primary btn-sm mt-auto">View Item</a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <p>No featured items at the moment. Check back later!</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Game Statistics -->
+    <div class="row text-center g-4">
+        <div class="col-md-4">
+            <div class="card py-4 shadow-sm">
+                <div class="card-body">
+                    <h3 class="display-5 text-primary">{{ stats.active_players }}</h3>
+                    <p class="fs-5 fw-semibold">Active Players</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card py-4 shadow-sm">
+                <div class="card-body">
+                    <h3 class="display-5 text-warning">{{ stats.open_tickets }}</h3>
+                    <p class="fs-5 fw-semibold">Open Tickets</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card py-4 shadow-sm">
+                <div class="card-body">
+                    <h3 class="display-5 text-info">{{ stats.pending_permits }}</h3>
+                    <p class="fs-5 fw-semibold">Pending Permits</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

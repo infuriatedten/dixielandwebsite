@@ -4,11 +4,17 @@
 {% block title %}Edit Permit Application{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Edit Permit Application</h1>
-<form method="POST" action="{{ url_for('admin.edit_permit', permit_id=permit.id) }}">
-    {{ form.hidden_tag() }}
-    {{ wtf.render_field(form.status) }}
-    {{ wtf.render_field(form.permit_fee) }}
-    {{ wtf.render_field(form.submit) }}
-</form>
+<div class="container mt-4">
+    <h1 class="mb-4">Edit Permit Application</h1>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('admin.edit_permit', permit_id=permit.id) }}">
+                {{ form.hidden_tag() }}
+                {{ wtf.render_field(form.status) }}
+                {{ wtf.render_field(form.permit_fee) }}
+                {{ wtf.render_field(form.submit, class="btn btn-primary") }}
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}

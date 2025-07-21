@@ -3,67 +3,78 @@
 {% block title %}Tax Brackets{% endblock %}
 
 {% block content %}
+<div class="container my-4">
   <h1>Manage Tax Brackets</h1>
 
-  <form method="POST" action="{{ url_for('admin.tax') }}">
+  <form method="POST" action="{{ url_for('admin.tax') }}" novalidate>
     {{ form.hidden_tag() }}
 
-    <p>
-      {{ form.name.label }}<br>
-      {{ form.name(size=40) }}<br>
+    <div class="mb-3">
+      {{ form.name.label(class="form-label") }}
+      {{ form.name(class="form-control", placeholder="Name of tax bracket") }}
       {% for error in form.name.errors %}
-        <span style="color: red;">{{ error }}</span>
+        <div class="text-danger small">{{ error }}</div>
       {% endfor %}
-    </p>
+    </div>
 
-    <p>
-      {{ form.description.label }}<br>
-      {{ form.description(rows=3, cols=40) }}<br>
+    <div class="mb-3">
+      {{ form.description.label(class="form-label") }}
+      {{ form.description(class="form-control", rows=3, placeholder="Description (optional)") }}
       {% for error in form.description.errors %}
-        <span style="color: red;">{{ error }}</span>
+        <div class="text-danger small">{{ error }}</div>
       {% endfor %}
-    </p>
+    </div>
 
-    <p>
-      {{ form.min_balance.label }}<br>
-      {{ form.min_balance() }}<br>
-      {% for error in form.min_balance.errors %}
-        <span style="color: red;">{{ error }}</span>
-      {% endfor %}
-    </p>
+    <div class="row mb-3">
+      <div class="col-md-6">
+        {{ form.min_balance.label(class="form-label") }}
+        {{ form.min_balance(class="form-control", placeholder="Minimum balance") }}
+        {% for error in form.min_balance.errors %}
+          <div class="text-danger small">{{ error }}</div>
+        {% endfor %}
+      </div>
+      <div class="col-md-6">
+        {{ form.max_balance.label(class="form-label") }}
+        {{ form.max_balance(class="form-control", placeholder="Maximum balance (leave empty for no max)") }}
+        {% for error in form.max_balance.errors %}
+          <div class="text-danger small">{{ error }}</div>
+        {% endfor %}
+      </div>
+    </div>
 
-    <p>
-      {{ form.max_balance.label }}<br>
-      {{ form.max_balance() }}<br>
-      {% for error in form.max_balance.errors %}
-        <span style="color: red;">{{ error }}</span>
-      {% endfor %}
-    </p>
-
-    <p>
-      {{ form.tax_rate.label }}<br>
-      {{ form.tax_rate() }}<br>
+    <div class="mb-3">
+      {{ form.tax_rate.label(class="form-label") }}
+      {{ form.tax_rate(class="form-control", placeholder="Tax rate as percentage") }}
       {% for error in form.tax_rate.errors %}
-        <span style="color: red;">{{ error }}</span>
+        <div class="text-danger small">{{ error }}</div>
       {% endfor %}
-    </p>
+    </div>
 
-    <p>
-      {{ form.is_active() }} {{ form.is_active.label }}
-    </p>
+    <div class="form-check mb-3">
+      {{ form.is_active(class="form-check-input") }}
+      {{ form.is_active.label(class="form-check-label") }}
+    </div>
 
-    <p>{{ form.submit() }}</p>
+    <button type="submit" class="btn btn-primary">{{ form.submit.label.text }}</button>
   </form>
 
+  <hr>
+
   <h2>Existing Tax Brackets</h2>
-  <ul>
+  <ul class="list-group">
     {% for bracket in tax_brackets %}
-      <li>
-        {{ bracket.name }}: {{ bracket.min_balance }} to {{ bracket.max_balance or '∞' }} at {{ bracket.tax_rate }}%
-        {% if not bracket.is_active %}(Inactive){% endif %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+          <strong>{{ bracket.name }}</strong>: 
+          {{ bracket.min_balance }} to {{ bracket.max_balance if bracket.max_balance is not none else '∞' }} at {{ bracket.tax_rate }}%
+          {% if not bracket.is_active %}
+            <span class="badge bg-secondary ms-2">Inactive</span>
+          {% endif %}
+        </div>
       </li>
     {% else %}
-      <li>No tax brackets defined yet.</li>
+      <li class="list-group-item">No tax brackets defined yet.</li>
     {% endfor %}
   </ul>
+</div>
 {% endblock %}

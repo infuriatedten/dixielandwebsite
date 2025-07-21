@@ -3,38 +3,48 @@
 {% block content %}
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>{{ title }}</h1>
+        <h1 class="mb-0">{{ title }}</h1>
         {% if current_user.is_authenticated %}
-            <a href="{{ url_for('marketplace.create_listing') }}" class="btn btn-success">Create New Listing</a>
+        <a href="{{ url_for('marketplace.create_listing') }}" class="btn btn-success">
+            <i class="bi bi-plus-circle me-1"></i> Create New Listing
+        </a>
         {% endif %}
     </div>
-    <p class="text-muted">Browse items currently available for sale from other users. Contact sellers directly to purchase (details for contact TBD or via Discord profile if linked).</p>
+
+    <p class="text-muted">
+        Browse items currently available for sale from other users. Contact sellers directly to purchase (contact method TBD or via Discord if linked).
+    </p>
 
     {% if listings_pagination.items %}
     <div class="row">
         {% for listing in listings_pagination.items %}
-        <div class="col-md-4 col-lg-3 mb-4 d-flex align-items-stretch">
-            <div class="card h-100 w-100"> {# Added w-100 for full width within col if needed #}
+        <div class="col-md-6 col-lg-4 col-xl-3 mb-4 d-flex align-items-stretch">
+            <div class="card shadow-sm w-100 h-100">
+                {# Optional image placeholder #}
                 {# <img src="..." class="card-img-top" alt="Item image placeholder"> #}
                 <div class="card-body d-flex flex-column">
                     <h5 class="card-title">{{ listing.item_name }}</h5>
-                    <h6 class="card-subtitle mb-2 text-success font-weight-bold">
+                    <h6 class="card-subtitle text-success fw-bold mb-2">
                         {{ "%.2f"|format(listing.price) }} {{ listing.seller.accounts.first().currency if listing.seller.accounts.first() else 'GDC' }}
                     </h6>
-                    <p class="card-text small text-muted">
-                        Quantity: {{ listing.quantity }} {{ listing.unit }}<br>
-                        Seller: {{ listing.seller.username }}
-                         {% if listing.seller.discord_username %}
-                            <small> (Discord: {{ listing.seller.discord_username }})</small>
+                    <p class="card-text small text-muted mb-1">
+                        <strong>Qty:</strong> {{ listing.quantity }} {{ listing.unit }}<br>
+                        <strong>Seller:</strong> {{ listing.seller.username }}
+                        {% if listing.seller.discord_username %}
+                        <br><small>(Discord: {{ listing.seller.discord_username }})</small>
                         {% endif %}
                     </p>
-                    <p class="card-text flex-grow-1">{{ listing.description|truncate(100, True)|default('No description.', True) }}</p>
-                    <a href="{{ url_for('marketplace.view_listing_detail', listing_id=listing.id) }}" class="btn btn-primary mt-auto">View Details</a>
+                    <p class="card-text flex-grow-1">
+                        {{ listing.description|truncate(100, True)|default('No description.', True) }}
+                    </p>
+                    <a href="{{ url_for('marketplace.view_listing_detail', listing_id=listing.id) }}" class="btn btn-outline-primary mt-auto">
+                        View Details
+                    </a>
                 </div>
-                <div class="card-footer text-muted small">
-                    Posted: {{ listing.creation_date.strftime('%Y-%m-%d %H:%M') }}
+                <div class="card-footer text-muted d-flex justify-content-between align-items-center small">
+                    <span>Posted: {{ listing.creation_date.strftime('%Y-%m-%d %H:%M') }}</span>
                     {% if listing.status == MarketplaceListingStatus.SOLD_MORE_AVAILABLE %}
-                        <span class="badge badge-info float-right">{{ listing.status.value }}</span>
+                    <span class="badge bg-info text-dark">{{ listing.status.value }}</span>
                     {% endif %}
                 </div>
             </div>
@@ -45,32 +55,34 @@
     <nav aria-label="Marketplace pagination">
         <ul class="pagination justify-content-center">
             {% if listings_pagination.has_prev %}
-            <li class="page-item"><a class="page-link" href="{{ url_for('marketplace.index', page=listings_pagination.prev_num) }}">Previous</a></li>
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('marketplace.index', page=listings_pagination.prev_num) }}">Previous</a>
+            </li>
             {% else %}
             <li class="page-item disabled"><span class="page-link">Previous</span></li>
             {% endif %}
 
             {% for page_num in listings_pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
-            {% if page_num %}
-            {% if listings_pagination.page == page_num %}
-            <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
-            {% else %}
-            <li class="page-item"><a class="page-link" href="{{ url_for('marketplace.index', page=page_num) }}">{{ page_num }}</a></li>
-            {% endif %}
-            {% else %}
-            <li class="page-item disabled"><span class="page-link">...</span></li>
-            {% endif %}
+                {% if page_num %}
+                    <li class="page-item {% if listings_pagination.page == page_num %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('marketplace.index', page=page_num) }}">{{ page_num }}</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                {% endif %}
             {% endfor %}
 
             {% if listings_pagination.has_next %}
-            <li class="page-item"><a class="page-link" href="{{ url_for('marketplace.index', page=listings_pagination.next_num) }}">Next</a></li>
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('marketplace.index', page=listings_pagination.next_num) }}">Next</a>
+            </li>
             {% else %}
             <li class="page-item disabled"><span class="page-link">Next</span></li>
             {% endif %}
         </ul>
     </nav>
     {% else %}
-    <div class="alert alert-info">No marketplace listings are currently available. Be the first to post something!</div>
+    <div class="alert alert-info mt-4">No marketplace listings are currently available. Be the first to post something!</div>
     {% endif %}
 </div>
 {% endblock %}

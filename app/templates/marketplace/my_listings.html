@@ -3,49 +3,62 @@
 {% block content %}
 <div class="container mt-4">
     <h1 class="mb-4">{{ title }}</h1>
-    <p>Manage your marketplace listings here. You can edit details for available items or update their status.</p>
+    <p class="text-muted">Manage your marketplace listings here. You can edit details for available items or update their status.</p>
 
     <div class="mb-3">
-        <a href="{{ url_for('marketplace.create_listing') }}" class="btn btn-success">Create New Listing</a>
+        <a href="{{ url_for('marketplace.create_listing') }}" class="btn btn-success">
+            <i class="bi bi-plus-circle me-1"></i> Create New Listing
+        </a>
     </div>
 
     <div class="mb-3">
-        Filter by status:
-        <a href="{{ url_for('marketplace.my_listings') }}" class="btn btn-sm btn-outline-primary {{ 'active' if not current_status_filter_str else '' }}">All</a>
-        {% for status_enum_member in MarketplaceListingStatus %} {# Ensure MarketplaceListingStatus is passed to template context #}
-            <a href="{{ url_for('marketplace.my_listings', status=status_enum_member.name.lower()) }}"
-               class="btn btn-sm btn-outline-primary {{ 'active' if current_status_filter_str == status_enum_member.name.lower() else '' }}">
-               {{ status_enum_member.value }}
-            </a>
+        <span class="me-2">Filter by status:</span>
+        <a href="{{ url_for('marketplace.my_listings') }}"
+           class="btn btn-sm btn-outline-primary {{ 'active' if not current_status_filter_str else '' }}">
+            All
+        </a>
+        {% for status_enum_member in MarketplaceListingStatus %}
+        <a href="{{ url_for('marketplace.my_listings', status=status_enum_member.name.lower()) }}"
+           class="btn btn-sm btn-outline-primary {{ 'active' if current_status_filter_str == status_enum_member.name.lower() else '' }}">
+           {{ status_enum_member.value }}
+        </a>
         {% endfor %}
     </div>
 
     {% if listings_pagination.items %}
     <div class="list-group">
         {% for listing in listings_pagination.items %}
-        <div class="list-group-item list-group-item-action flex-column align-items-start mb-2">
-            <div class="d-flex w-100 justify-content-between">
+        <div class="list-group-item list-group-item-action flex-column align-items-start border rounded mb-3 shadow-sm">
+            <div class="d-flex w-100 justify-content-between align-items-start">
                 <h5 class="mb-1">{{ listing.item_name }}</h5>
-                <small>Posted: {{ listing.creation_date.strftime('%Y-%m-%d %H:%M') }}</small>
+                <small class="text-muted">Posted: {{ listing.creation_date.strftime('%Y-%m-%d %H:%M') }}</small>
             </div>
             <p class="mb-1">
-                Price: {{ "%.2f"|format(listing.price) }} {{ listing.seller.accounts.first().currency if listing.seller.accounts.first() else 'GDC' }} |
-                Quantity: {{ listing.quantity }} {{ listing.unit }}
+                <strong>Price:</strong> {{ "%.2f"|format(listing.price) }}
+                {{ listing.seller.accounts.first().currency if listing.seller.accounts.first() else 'GDC' }}
+                &nbsp; | &nbsp;
+                <strong>Qty:</strong> {{ listing.quantity }} {{ listing.unit }}
             </p>
-            <p class="mb-1 small text-muted">Description: {{ listing.description|truncate(150, True)|default('N/A', True) }}</p>
-            <div class="d-flex justify-content-between align-items-center">
-                <span class="badge badge-{{
+            <p class="mb-1 text-muted small">
+                <strong>Description:</strong> {{ listing.description|truncate(150, True)|default('N/A', True) }}
+            </p>
+            <div class="d-flex justify-content-between align-items-center mt-2">
+                <span class="badge bg-{{
                     'success' if listing.status == MarketplaceListingStatus.AVAILABLE
                     else 'info' if listing.status == MarketplaceListingStatus.SOLD_MORE_AVAILABLE
                     else 'secondary' if listing.status == MarketplaceListingStatus.SOLD_OUT
                     else 'danger' if listing.status == MarketplaceListingStatus.CANCELLED
                     else 'light' }}">
-                    Status: {{ listing.status.value }}
+                    {{ listing.status.value }}
                 </span>
-                <div>
-                    <a href="{{ url_for('marketplace.view_listing_detail', listing_id=listing.id) }}" class="btn btn-sm btn-info">View</a>
-                    {% if listing.status == MarketplaceListingStatus.AVAILABLE or listing.status == MarketplaceListingStatus.SOLD_MORE_AVAILABLE %}
-                        <a href="{{ url_for('marketplace.edit_listing', listing_id=listing.id) }}" class="btn btn-sm btn-warning">Edit</a>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('marketplace.view_listing_detail', listing_id=listing.id) }}" class="btn btn-sm btn-outline-info">
+                        View
+                    </a>
+                    {% if listing.status in [MarketplaceListingStatus.AVAILABLE, MarketplaceListingStatus.SOLD_MORE_AVAILABLE] %}
+                    <a href="{{ url_for('marketplace.edit_listing', listing_id=listing.id) }}" class="btn btn-sm btn-outline-warning">
+                        Edit
+                    </a>
                     {% endif %}
                 </div>
             </div>
@@ -53,36 +66,34 @@
         {% endfor %}
     </div>
 
-    <nav aria-label="My listings pagination">
+    <nav aria-label="Listings pagination">
         <ul class="pagination justify-content-center mt-4">
             {% set url_args = {'status': current_status_filter_str} if current_status_filter_str else {} %}
-            {% if listings_pagination.has_prev %}
-            <li class="page-item"><a class="page-link" href="{{ url_for('marketplace.my_listings', page=listings_pagination.prev_num, **url_args) }}">Previous</a></li>
-            {% else %}
-            <li class="page-item disabled"><span class="page-link">Previous</span></li>
-            {% endif %}
+            <li class="page-item {% if not listings_pagination.has_prev %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('marketplace.my_listings', page=listings_pagination.prev_num, **url_args) }}">
+                    Previous
+                </a>
+            </li>
 
             {% for page_num in listings_pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
-            {% if page_num %}
-            {% if listings_pagination.page == page_num %}
-            <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
-            {% else %}
-            <li class="page-item"><a class="page-link" href="{{ url_for('marketplace.my_listings', page=page_num, **url_args) }}">{{ page_num }}</a></li>
-            {% endif %}
-            {% else %}
-            <li class="page-item disabled"><span class="page-link">...</span></li>
-            {% endif %}
+                {% if page_num %}
+                    <li class="page-item {% if listings_pagination.page == page_num %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('marketplace.my_listings', page=page_num, **url_args) }}">{{ page_num }}</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                {% endif %}
             {% endfor %}
 
-            {% if listings_pagination.has_next %}
-            <li class="page-item"><a class="page-link" href="{{ url_for('marketplace.my_listings', page=listings_pagination.next_num, **url_args) }}">Next</a></li>
-            {% else %}
-            <li class="page-item disabled"><span class="page-link">Next</span></li>
-            {% endif %}
+            <li class="page-item {% if not listings_pagination.has_next %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('marketplace.my_listings', page=listings_pagination.next_num, **url_args) }}">
+                    Next
+                </a>
+            </li>
         </ul>
     </nav>
     {% else %}
-    <div class="alert alert-info">You have no marketplace listings matching the current filter.</div>
+    <div class="alert alert-info mt-4">You have no marketplace listings matching the current filter.</div>
     {% endif %}
 </div>
 {% endblock %}

@@ -3,18 +3,19 @@
 
 {% block content %}
 <div class="container mt-4">
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
             <h1 class="mb-4">{{ title }}</h1>
             <p class="text-muted">Complete the form below to apply for a vehicle movement permit. Your application will be reviewed by a DOT officer.</p>
-            <div class="card">
+            <div class="card shadow-sm">
                 <div class="card-body">
                     <form method="POST" action="{{ url_for('dot.apply_for_permit') }}" novalidate>
                         {{ form.hidden_tag() }}
+
                         {{ wtf.render_field(form.vehicle_type, placeholder="e.g., Heavy Goods Vehicle, Wide Load Transporter, Agricultural Machinery") }}
                         {{ wtf.render_field(form.route_details, rows=4, placeholder="Clearly describe the intended route: Starting point, major roads/landmarks, and destination.") }}
 
-                        <div class="form-row">
+                        <div class="row">
                             <div class="col-md-6 mb-3">
                                 {{ wtf.render_field(form.travel_start_date, type="date") }}
                             </div>

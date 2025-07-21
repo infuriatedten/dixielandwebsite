@@ -13,6 +13,12 @@
                     <form method="POST" action="{{ url_for('auction.submit_auction_item') }}" novalidate>
                         {{ form.hidden_tag() }}
 
+                        {% if form.csrf_token.errors %}
+                            <div class="alert alert-danger">
+                                {{ form.csrf_token.errors[0] }}
+                            </div>
+                        {% endif %}
+
                         {{ wtf.render_field(form.item_name, placeholder="e.g., Rare Spaceship Collectible, Stack of 1000 Iron Ingots") }}
                         {{ wtf.render_field(form.item_description, rows=6, placeholder="Describe your item in detail. Include condition, quantity (if applicable and not covered by a quantity field), any special attributes, etc.") }}
                         {{ wtf.render_field(form.suggested_starting_bid, placeholder="e.g., 100.00 (Optional, admin will set final)") }}
@@ -22,13 +28,13 @@
                             By submitting this item, you agree that if approved and sold, the item must be made available to the winning bidder as described.
                             Payment will be transferred to your account upon successful collection from the winner.
                         </p>
-                        {{ wtf.render_field(form.submit, button_map={'submit': 'btn-primary btn-block'}) }}
+                        {{ wtf.render_field(form.submit, button_map={'submit': 'btn-primary w-100'}) }}
                     </form>
                 </div>
             </div>
             <div class="mt-3">
                 <a href="{{ url_for('auction.my_submissions') }}" class="btn btn-outline-secondary">View My Submissions</a>
-                <a href="{{ url_for('auction.index') }}" class="btn btn-outline-info float-right">Back to Active Auctions</a>
+                <a href="{{ url_for('auction.index') }}" class="btn btn-outline-info float-end">Back to Active Auctions</a>
             </div>
         </div>
     </div>

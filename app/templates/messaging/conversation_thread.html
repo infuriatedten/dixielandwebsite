@@ -11,14 +11,15 @@
         {% else %}
             User {{ conversation.user_participant.username }}
         {% endif %}
-        | Status: <span class="font-weight-bold">{{ conversation.status.value }}</span>
+        | Status: <span class="fw-bold">{{ conversation.status.value }}</span>
     </p>
     <hr>
 
-    <div id="message-list" class="mb-4" style="max-height: 500px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 5px; background-color: #f9f9f9;">
+    <div id="message-list" class="mb-4" style="max-height: 500px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 5px; background-color: #f9f9f9;" aria-live="polite">
         {% if messages %}
             {% for message in messages %}
-            <div class="card mb-2 {% if message.sender_id == current_user.id %}ml-auto bg-primary text-white{% else %}mr-auto bg-light{% endif %}" style="width: 75%; {% if message.sender_id == current_user.id %}border-top-right-radius: 0;{% else %}border-top-left-radius: 0;{% endif %}">
+            <div class="card mb-2 {% if message.sender_id == current_user.id %}ms-auto bg-primary text-white{% else %}me-auto bg-light{% endif %} w-100 w-md-75"
+                 style="{% if message.sender_id == current_user.id %}border-top-right-radius: 0;{% else %}border-top-left-radius: 0;{% endif %}">
                 <div class="card-body p-2">
                     <p class="card-text mb-1" style="white-space: pre-wrap;">{{ message.body|safe }}</p>
                     <small class="{% if message.sender_id == current_user.id %}text-light-emphasis{% else %}text-muted{% endif %}" style="font-size: 0.75rem;">
@@ -33,13 +34,12 @@
         <div id="bottom-of-chat-marker"></div> {# Marker to scroll to #}
     </div>
 
-
     {% if conversation.status == ConversationStatus.OPEN %}
     <hr>
     <h4>Reply:</h4>
     <form method="POST" action="{{ url_for('messaging.view_conversation', conversation_id=conversation.id) }}" novalidate>
         {{ form.hidden_tag() }}
-        {{ wtf.render_field(form.body, rows=4, placeholder="Type your reply...") }} {# Assuming form.body is correct for SendMessageForm #}
+        {{ wtf.render_field(form.body, rows=4, placeholder="Type your reply...") }}
         {{ wtf.render_field(form.submit, button_map={'submit': 'btn-primary'}) }}
     </form>
 
@@ -47,12 +47,11 @@
         <input type="submit" value="Close Conversation" class="btn btn-sm btn-outline-danger">
     </form>
 
-    {% elif conversation.status != ConversationStatus.OPEN %}
-    <div class="alert alert-info mt-3">
+    {% else %}
+    <div class="alert alert-info mt-3" role="alert">
         This conversation is closed (Status: {{ conversation.status.value }}). You can no longer send messages.
     </div>
     {% endif %}
-
 
     <div class="mt-4">
         {% if current_user.role == UserRole.ADMIN %}
@@ -68,7 +67,6 @@
         var chatWindow = document.getElementById('message-list');
         var bottomMarker = document.getElementById('bottom-of-chat-marker');
         if (chatWindow && bottomMarker) {
-            // Scroll to the marker element instead of just scrollHeight for more reliability
             bottomMarker.scrollIntoView();
         }
     });
