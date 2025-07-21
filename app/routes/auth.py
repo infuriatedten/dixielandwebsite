@@ -78,7 +78,11 @@ from app.models import Company, Farmer, Parcel
 @bp.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
-    form = EditProfileForm(original_email=current_user.email, obj=current_user)
+    form = EditProfileForm(
+        original_username=current_user.username,
+        original_email=current_user.email,
+        obj=current_user
+    )
 
     if form.validate_on_submit():
         current_user.username = form.username.data
