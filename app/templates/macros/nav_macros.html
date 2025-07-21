@@ -1,24 +1,25 @@
 {% macro dot_services_dropdown(current_user, UserRole) %}
 <li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle" href="#" id="dotDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    <a class="nav-link dropdown-toggle" href="#" id="dotDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
         DOT Services
     </a>
-    <div class="dropdown-menu" aria-labelledby="dotDropdown">
-        <a class="dropdown-item" href="{{ url_for('dot.my_tickets') }}">My Tickets</a>
-        <a class="dropdown-item" href="{{ url_for('dot.registered_vehicles') }}">My Registered Vehicles</a>
-        <div class="dropdown-divider"></div>
-        <a class="dropdown-item" href="{{ url_for('dot.apply_for_permit') }}">Apply for New Permit</a>
-        <a class="dropdown-item" href="{{ url_for('dot.my_permit_applications') }}">My Permit Applications</a>
+    <ul class="dropdown-menu" aria-labelledby="dotDropdown">
+        <li><a class="dropdown-item" href="{{ url_for('dot.my_tickets') }}">My Tickets</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('dot.registered_vehicles') }}">My Registered Vehicles</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="{{ url_for('dot.apply_for_permit') }}">Apply for New Permit</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('dot.my_permit_applications') }}">My Permit Applications</a></li>
+
         {% if current_user.role in [UserRole.OFFICER, UserRole.ADMIN] %}
-            <div class="dropdown-divider"></div>
-            <h6 class="dropdown-header">Officer Tools</h6>
-            <a class="dropdown-item" href="{{ url_for('dot.issue_ticket') }}">Issue Ticket</a>
-            <a class="dropdown-item" href="{{ url_for('dot.list_issued_tickets') }}">My Issued Tickets</a>
-            <a class="dropdown-item" href="{{ url_for('dot.review_permit_applications_list') }}">Review Permit Apps</a>
-            <div class="dropdown-divider"></div>
-            <a class="dropdown-item" href="{{ url_for('dot.record_inspection') }}">Record Inspection</a>
-            <a class="dropdown-item" href="{{ url_for('dot.list_my_conducted_inspections') }}">My Conducted Inspections</a>
+            <li><hr class="dropdown-divider"></li>
+            <li><h6 class="dropdown-header">Officer Tools</h6></li>
+            <li><a class="dropdown-item" href="{{ url_for('dot.issue_ticket') }}">Issue Ticket</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('dot.list_issued_tickets') }}">My Issued Tickets</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('dot.review_permit_applications_list') }}">Review Permit Apps</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{{ url_for('dot.record_inspection') }}">Record Inspection</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('dot.list_my_conducted_inspections') }}">My Conducted Inspections</a></li>
         {% endif %}
-    </div>
+    </ul>
 </li>
 {% endmacro %}

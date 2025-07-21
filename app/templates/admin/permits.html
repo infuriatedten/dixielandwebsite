@@ -1,16 +1,16 @@
-<!-- templates/admin/permits.html -->
-
 {% extends "base.html" %}
 
 {% block title %}Permit Applications{% endblock %}
 
 {% block content %}
-<h1>Permit Applications</h1>
+<div class="container mt-4">
+    <h1>Permit Applications</h1>
 
-{% if permits %}
-<table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%;">
-    <thead>
-        <tr>
+    {% if permits %}
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover align-middle">
+        <thead class="table-light">
+          <tr>
             <th>ID</th>
             <th>User ID</th>
             <th>Vehicle Type</th>
@@ -23,29 +23,38 @@
             <th>Officer Notes</th>
             <th>Issued Permit ID</th>
             <th>Issued On</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for permit in permits %}
-        <tr>
+          </tr>
+        </thead>
+        <tbody>
+          {% for permit in permits %}
+          <tr>
             <td>{{ permit.id }}</td>
             <td>{{ permit.user_id }}</td>
             <td>{{ permit.vehicle_type }}</td>
             <td>{{ permit.route_details }}</td>
             <td>{{ permit.travel_start_date.strftime('%Y-%m-%d') if permit.travel_start_date else '' }}</td>
             <td>{{ permit.travel_end_date.strftime('%Y-%m-%d') if permit.travel_end_date else '' }}</td>
-            <td>{{ permit.status.value }}</td>
+            <td>
+              <span class="badge 
+                {% if permit.status.value == 'Approved' %}bg-success
+                {% elif permit.status.value == 'Pending' %}bg-warning text-dark
+                {% elif permit.status.value == 'Denied' %}bg-danger
+                {% else %}bg-secondary{% endif %}">
+                {{ permit.status.value }}
+              </span>
+            </td>
             <td>{{ permit.created_at.strftime('%Y-%m-%d %H:%M:%S') if permit.created_at else '' }}</td>
             <td>{{ permit.permit_fee if permit.permit_fee else 'N/A' }}</td>
-            <td>{{ permit.officer_notes if permit.officer_notes else '' }}</td>
-            <td>{{ permit.issued_permit_id_str if permit.issued_permit_id_str else '' }}</td>
+            <td>{{ permit.officer_notes or '' }}</td>
+            <td>{{ permit.issued_permit_id_str or '' }}</td>
             <td>{{ permit.issued_on_date.strftime('%Y-%m-%d') if permit.issued_on_date else '' }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% else %}
-<p>No permit applications found.</p>
-{% endif %}
-
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p>No permit applications found.</p>
+    {% endif %}
+</div>
 {% endblock %}

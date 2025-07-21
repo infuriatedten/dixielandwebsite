@@ -4,24 +4,45 @@
 {% block title %}Edit User{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Edit User</h1>
-<form method="POST" action="{{ url_for('admin.edit_user', user_id=user.id) }}">
-    {{ form.hidden_tag() }}
-    {{ wtf.render_field(form.username) }}
-    {% if form.username.errors %}
-        <div class="alert alert-danger">
-            {{ form.username.errors[0] }}
+<div class="container mt-4">
+    <h1 class="mb-4">Edit User</h1>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('admin.edit_user', user_id=user.id) }}">
+                {{ form.hidden_tag() }}
+
+                <div class="mb-3">
+                    {{ wtf.render_field(form.username, class="form-control") }}
+                    {% if form.username.errors %}
+                        <div class="text-danger small">{{ form.username.errors[0] }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    {{ wtf.render_field(form.email, class="form-control") }}
+                    {% if form.email.errors %}
+                        <div class="text-danger small">{{ form.email.errors[0] }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    {{ wtf.render_field(form.role, class="form-select") }}
+                </div>
+
+                <div class="mb-3">
+                    {{ wtf.render_field(form.discord_user_id, class="form-control") }}
+                </div>
+
+                <div class="mb-3">
+                    {{ wtf.render_field(form.region, class="form-control") }}
+                </div>
+
+                <div class="text-end">
+                    {{ wtf.render_field(form.submit, class="btn btn-primary") }}
+                </div>
+            </form>
         </div>
-    {% endif %}
-    {{ wtf.render_field(form.email) }}
-    {% if form.email.errors %}
-        <div class="alert alert-danger">
-            {{ form.email.errors[0] }}
-        </div>
-    {% endif %}
-    {{ wtf.render_field(form.role) }}
-    {{ wtf.render_field(form.discord_user_id) }}
-    {{ wtf.render_field(form.region) }}
-    {{ wtf.render_field(form.submit) }}
-</form>
+    </div>
+</div>
 {% endblock %}

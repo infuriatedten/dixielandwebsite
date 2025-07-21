@@ -4,16 +4,21 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1>{{ title }}</h1>
-        {# Restored "Edit Rules" button - ensure UserRole and current_user are passed to template from view_rules route #}
-        {% if current_user and current_user.is_authenticated and UserRole and current_user.role is defined and current_user.role.value is defined and current_user.role.value == UserRole.ADMIN.value %}
+        {% if current_user.is_authenticated and UserRole and
+              current_user.role is defined and
+              current_user.role.value is defined and
+              current_user.role.value == UserRole.ADMIN.value %}
             <a href="{{ url_for('admin.edit_rules') }}" class="btn btn-primary">Edit Rules</a>
         {% endif %}
     </div>
 
     <div class="card">
         <div class="card-body">
-            {# Render the HTML content for rules. Make sure this content is safe or sanitized if from user input. #}
-            {{ rules_content_html|safe if rules_content_html else "<p>Rules are not yet defined.</p>" }}
+            {% if rules_content_html %}
+                {{ rules_content_html|safe }}
+            {% else %}
+                <p>Rules are not yet defined.</p>
+            {% endif %}
         </div>
     </div>
 </div>

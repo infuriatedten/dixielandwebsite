@@ -3,50 +3,87 @@
 {% block title %}Manage Inspections{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Manage Inspections</h1>
-<div class="table-responsive">
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Officer</th>
-                <th>Inspected User</th>
-                <th>Vehicle ID</th>
-                <th>Timestamp</th>
-                <th>Pass Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for inspection in inspections.items %}
-            <tr>
-                <td>{{ inspection.id }}</td>
-                <td>{{ inspection.officer.username }}</td>
-                <td>{{ inspection.inspected_user.username }}</td>
-                <td>{{ inspection.vehicle_id }}</td>
-                <td>{{ inspection.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                <td>{{ "Pass" if inspection.pass_status else "Fail" }}</td>
-                <td><a href="{{ url_for('admin.edit_inspection', inspection_id=inspection.id) }}" class="btn btn-primary btn-sm">Edit</a></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+<div class="container-fluid mt-4">
+    <h1 class="mb-4">Manage Vehicle Inspections</h1>
 
-<nav aria-label="Page navigation">
-    <ul class="pagination">
-        {% if inspections.has_prev %}
-        <li class="page-item"><a class="page-link" href="{{ url_for('admin.manage_inspections', page=inspections.prev_num) }}">Previous</a></li>
-        {% endif %}
-        {% for page_num in inspections.iter_pages() %}
-        {% if page_num %}
-        <li class="page-item {% if page_num == inspections.page %}active{% endif %}"><a class="page-link" href="{{ url_for('admin.manage_inspections', page=page_num) }}">{{ page_num }}</a></li>
-        {% else %}
-        <li class="page-item disabled"><span class="page-link">...</span></li>
-        {% endif %}
-        {% endfor %}
-        {% if inspections.has_next %}
-        <li class="page-item"><a class="page-link" href="{{ url_for('admin.manage_inspections', page=inspections.next_num) }}">Next</a></li>
-        {% endif %}
-    </ul>
-</nav>
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <i class="fas fa-car me-2"></i> Inspection Records
+        </div>
+
+        <div class="card-body">
+            {% if inspections.items %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Officer</th>
+                            <th scope="col">Inspected User</th>
+                            <th scope="col">Vehicle ID</th>
+                            <th scope="col">Timestamp</th>
+                            <th scope="col">Pass Status</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inspection in inspections.items %}
+                        <tr>
+                            <td>{{ inspection.id }}</td>
+                            <td>{{ inspection.officer.username }}</td>
+                            <td>{{ inspection.inspected_user.username }}</td>
+                            <td>{{ inspection.vehicle_id }}</td>
+                            <td>{{ inspection.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if inspection.pass_status else 'danger' }}">
+                                    {{ "Pass" if inspection.pass_status else "Fail" }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('admin.edit_inspection', inspection_id=inspection.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit me-1"></i> Edit
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <nav aria-label="Inspection pagination">
+                <ul class="pagination justify-content-center">
+                    {% if inspections.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.manage_inspections', page=inspections.prev_num) }}">Previous</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                    {% endif %}
+
+                    {% for page_num in inspections.iter_pages() %}
+                    {% if page_num %}
+                    <li class="page-item {% if page_num == inspections.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.manage_inspections', page=page_num) }}">{{ page_num }}</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if inspections.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.manage_inspections', page=inspections.next_num) }}">Next</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link">Next</span></li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% else %}
+            <p class="text-muted">No inspections have been logged yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
 {% endblock %}
