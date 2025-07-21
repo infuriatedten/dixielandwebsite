@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app as app_flask
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import current_user, login_required
 from app import db
 from app.models import (
@@ -9,8 +9,16 @@ from app.forms import CreateListingForm, EditListingForm
 from app.services.discord_webhook_service import (
     post_store_sale_to_discord, post_product_update_to_discord
 )
+from app.decorators import admin_required  # Assuming you have this decorator
 
 bp = Blueprint('marketplace', __name__)
+
+# Helper functions for permissions (could move to model methods)
+def can_edit_listing(user, listing):
+    return user.is_authenticated and (user.id == listing.seller_user_id or user.role == UserRole.ADMIN)
+
+def can_update_listing_status(user, listing):
+    return user.is_authenticated and (user.id == listing.seller_user_id or user.role == UserRole.ADMIN)
 
 @bp.route('/')
 def index():
@@ -48,16 +56,20 @@ def create_listing():
         )
         db.session.add(new_listing)
         db.session.commit()
-
         db.session.refresh(new_listing)
 
-        discord_post_success = post_store_sale_to_discord(new_listing)
-
-        if discord_post_success:
-            flash('Listing created successfully and an attempt was made to post it to Discord!', 'success')
-        else:
-            app_flask.logger.warning(f"Listing {new_listing.id} created, but Discord post via webhook failed or was not configured.")
-            flash('Listing created successfully, but there was an issue posting it to Discord (webhook may not be configured).', 'warning')
+        try:
+            discord_post_success = post_store_sale_to_discord(new_listing)
+            if discord_post_success:
+                flash('Listing created successfully and posted to Discord!', 'success')
+            else:
+                current_app.logger.warning(
+                    f"Listing {new_listing.id} created, but Discord post via webhook failed or was not configured."
+                )
+                flash('Listing created, but there was an issue posting to Discord (webhook may not be configured).', 'warning')
+        except Exception as e:
+            current_app.logger.error(f"Error posting new listing {new_listing.id} to Discord: {e}")
+            flash('Listing created, but an error occurred posting to Discord.', 'warning')
 
         return redirect(url_for('marketplace.view_listing_detail', listing_id=new_listing.id))
 
@@ -104,12 +116,14 @@ def view_listing_detail(listing_id):
 @login_required
 def edit_listing(listing_id):
     listing = MarketplaceListing.query.get_or_404(listing_id)
-    if listing.seller_user_id != current_user.id and current_user.role != UserRole.ADMIN:
+    if not can_edit_listing(current_user, listing):
         flash('You are not authorized to edit this listing.', 'danger')
         return redirect(url_for('marketplace.index'))
 
-    if listing.status not in [MarketplaceListingStatus.AVAILABLE, MarketplaceListingStatus.SOLD_PENDING_RELIST]:
-        flash('Only listings that are "Available" or "Sold - More Available" can be edited. You may need to cancel and relist for major changes to sold items.', 'warning')
+    allowed_statuses = {MarketplaceListingStatus.AVAILABLE, MarketplaceListingStatus.SOLD_PENDING_RELIST}
+    if listing.status not in allowed_statuses:
+        flash('Only listings that are "Available" or "Sold - More Available" can be edited. '
+              'You may need to cancel and relist for major changes to sold items.', 'warning')
         return redirect(url_for('marketplace.view_listing_detail', listing_id=listing.id))
 
     form = EditListingForm(obj=listing)
@@ -119,10 +133,16 @@ def edit_listing(listing_id):
         listing.price = form.price.data
         listing.quantity = form.quantity.data
         listing.unit = form.unit.data
-        db.session.commit()
 
-        post_product_update_to_discord(listing)
-        flash('Listing updated successfully. Discord update attempted.', 'success')
+        try:
+            db.session.commit()
+            post_product_update_to_discord(listing)
+            flash('Listing updated successfully. Discord update attempted.', 'success')
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error updating listing {listing.id}: {e}")
+            flash('An error occurred while updating the listing.', 'danger')
+
         return redirect(url_for('marketplace.view_listing_detail', listing_id=listing.id))
 
     return render_template('marketplace/edit_listing.html', title=f"Edit Listing: {listing.item_name}", form=form, listing=listing)
@@ -132,7 +152,7 @@ def edit_listing(listing_id):
 @login_required
 def update_listing_status(listing_id):
     listing = MarketplaceListing.query.get_or_404(listing_id)
-    if listing.seller_user_id != current_user.id and current_user.role != UserRole.ADMIN:
+    if not can_update_listing_status(current_user, listing):
         flash('You are not authorized to update this listing status.', 'danger')
         return redirect(url_for('marketplace.index'))
 
@@ -148,14 +168,21 @@ def update_listing_status(listing_id):
         return redirect(url_for('marketplace.view_listing_detail', listing_id=listing.id))
 
     if listing.status == MarketplaceListingStatus.CANCELLED:
-         flash('Cannot change status of a "Cancelled" listing.', 'warning')
-         return redirect(url_for('marketplace.view_listing_detail', listing_id=listing.id))
+        flash('Cannot change status of a "Cancelled" listing.', 'warning')
+        return redirect(url_for('marketplace.view_listing_detail', listing_id=listing.id))
+
+    # Optional: Add allowed status transitions here
 
     listing.status = new_status
-    db.session.commit()
+    try:
+        db.session.commit()
+        post_product_update_to_discord(listing)
+        flash(f'Listing status updated to "{new_status.value}". Discord update attempted.', 'info')
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error updating status for listing {listing.id}: {e}")
+        flash('An error occurred while updating listing status.', 'danger')
 
-    post_product_update_to_discord(listing)
-    flash(f'Listing status updated to "{new_status.value}". Discord update attempted.', 'info')
     return redirect(url_for('marketplace.view_listing_detail', listing_id=listing.id))
 
 
