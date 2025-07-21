@@ -9,6 +9,7 @@ from app.forms import CreateListingForm, EditListingForm
 from app.services.discord_webhook_service import (
     post_store_sale_to_discord, post_product_update_to_discord
 )
+from app.decorators import admin_required
 
 bp = Blueprint('marketplace', __name__)
 
@@ -159,20 +160,10 @@ def update_listing_status(listing_id):
     return redirect(url_for('marketplace.view_listing_detail', listing_id=listing.id))
 
 
-# ======= NEW ADMIN ROUTE TO FIX THE ERROR =======
 @bp.route('/admin/all_listings')
 @login_required
+@admin_required
 def admin_all_listings():
-    # Corrected role check using .value and hasattr for robustness
-    is_admin = (
-        hasattr(current_user, 'role') and
-        hasattr(current_user.role, 'value') and
-        current_user.role.value == UserRole.ADMIN.value
-    )
-    if not is_admin:
-        flash('Unauthorized access.', 'danger')
-        return redirect(url_for('marketplace.index'))
-
     page = request.args.get('page', 1, type=int)
     listings_pagination = MarketplaceListing.query.order_by(MarketplaceListing.creation_date.desc()).paginate(page=page, per_page=20)
 

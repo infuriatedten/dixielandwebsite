@@ -43,71 +43,6 @@ def view_rules():
                            rules_content_html=rules_content_html,
                            current_user=current_user, UserRole=UserRole)
 
-from app.models import Farmer, Parcel, UserVehicle, Account, InsuranceClaim, Contract, ContractStatus
-from app.forms import ParcelForm, InsuranceClaimForm
-from flask import redirect, flash
-from app import db
-from datetime import datetime
-
-@main_bp.route('/farmers', methods=['GET', 'POST'])
-def farmers():
-    parcel_form = ParcelForm()
-    insurance_form = InsuranceClaimForm()
-
-    farmer = Farmer.query.filter_by(user_id=current_user.id).first()
-
-    if parcel_form.validate_on_submit() and parcel_form.submit.data:
-        if farmer:
-            parcel = Parcel(
-                location=parcel_form.location.data,
-                size=parcel_form.size.data,
-                farmer_id=farmer.id
-            )
-            db.session.add(parcel)
-            db.session.commit()
-            flash('Parcel added successfully!', 'success')
-        else:
-            flash('You must be a registered farmer to add a parcel.', 'danger')
-        return redirect(url_for('main.farmers'))
-
-    if insurance_form.validate_on_submit() and insurance_form.submit.data:
-        if farmer:
-            claim = InsuranceClaim(
-                reason=insurance_form.reason.data,
-                farmer_id=farmer.id
-            )
-            db.session.add(claim)
-            db.session.commit()
-            flash('Insurance claim submitted successfully!', 'success')
-        else:
-            flash('You must be a registered farmer to submit a claim.', 'danger')
-        return redirect(url_for('main.farmers'))
-
-    if farmer:
-        parcels = Parcel.query.filter_by(farmer_id=farmer.id).all()
-        total_acres = sum(parcel.size for parcel in parcels)
-        vehicles = UserVehicle.query.filter_by(user_id=current_user.id).all()
-        bank_accounts = Account.query.filter_by(user_id=current_user.id).all()
-        insurance_claims = InsuranceClaim.query.filter_by(farmer_id=farmer.id).all()
-    else:
-        parcels = []
-        total_acres = 0
-        vehicles = []
-        bank_accounts = []
-        insurance_claims = []
-
-    return render_template(
-        'main/farmers.html',
-        title='Farmers',
-        parcels=parcels,
-        total_acres=total_acres,
-        vehicles=vehicles,
-        bank_accounts=bank_accounts,
-        insurance_claims=insurance_claims,
-        parcel_form=parcel_form,
-        insurance_form=insurance_form
-    )
-
 from app.models import Company, UserVehicle, Account
 from app.forms import CompanyNameForm
 from app import db
@@ -148,6 +83,8 @@ def claim_contract(contract_id):
         contract.claimed_date = datetime.utcnow()
         db.session.commit()
         flash('Contract claimed successfully!', 'success')
+    elif contract.claimant_id == current_user.id:
+        flash('You have already claimed this contract.', 'info')
     else:
         flash('This contract is not available to be claimed.', 'danger')
     return redirect(url_for('main.contracts'))
