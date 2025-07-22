@@ -13,33 +13,42 @@
                 {{ form.hidden_tag() }}
 
                 <div class="mb-3">
-                    {{ wtf.render_field(form.username, class="form-control") }}
+                    {{ wtf.render_field(form.username, class_="form-control") }}
                     {% if form.username.errors %}
                         <div class="text-danger small">{{ form.username.errors[0] }}</div>
                     {% endif %}
                 </div>
 
                 <div class="mb-3">
-                    {{ wtf.render_field(form.email, class="form-control") }}
+                    {{ wtf.render_field(form.email, class_="form-control") }}
                     {% if form.email.errors %}
                         <div class="text-danger small">{{ form.email.errors[0] }}</div>
                     {% endif %}
                 </div>
 
                 <div class="mb-3">
-                    {{ wtf.render_field(form.role, class="form-select") }}
+                    {{ wtf.render_field(form.role, class_="form-select") }}
+                    {% if form.role.errors %}
+                        <div class="text-danger small">{{ form.role.errors[0] }}</div>
+                    {% endif %}
                 </div>
 
                 <div class="mb-3">
-                    {{ wtf.render_field(form.discord_user_id, class="form-control") }}
+                    {{ wtf.render_field(form.discord_user_id, class_="form-control") }}
+                    {% if form.discord_user_id.errors %}
+                        <div class="text-danger small">{{ form.discord_user_id.errors[0] }}</div>
+                    {% endif %}
                 </div>
 
                 <div class="mb-3">
-                    {{ wtf.render_field(form.region, class="form-control") }}
+                    {{ wtf.render_field(form.region, class_="form-control") }}
+                    {% if form.region.errors %}
+                        <div class="text-danger small">{{ form.region.errors[0] }}</div>
+                    {% endif %}
                 </div>
 
                 <div class="text-end">
-                    {{ wtf.render_field(form.submit, class="btn btn-primary") }}
+                    {{ wtf.render_field(form.submit, class_="btn btn-primary") }}
                 </div>
             </form>
         </div>

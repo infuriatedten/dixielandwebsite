@@ -3,6 +3,22 @@
 {% block content %}
 <div class="container">
     <h1>Contracts</h1>
+
+    <!-- Simple nav pills for Farmers section navigation -->
+    <nav>
+        <ul class="nav nav-pills mb-3">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('main.farmers') }}">Dashboard</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="{{ url_for('main.contracts') }}">Contracts</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('main.company') }}">Manage Company</a>
+            </li>
+        </ul>
+    </nav>
+
     <a href="{{ url_for('main.create_contract') }}" class="btn btn-primary mb-3">Create Contract</a>
     <div class="row">
         {% if contracts %}
