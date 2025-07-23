@@ -43,6 +43,41 @@
   </div>
 </div>
 
+<!-- Admin Management Buttons -->
+<h3 class="mb-3">Admin Management</h3>
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-md-4 col-lg-3">
+    <a href="{{ url_for('admin.manage_users') }}" class="btn btn-outline-primary w-100">Manage Users</a>
+  </div>
+  <div class="col-sm-6 col-md-4 col-lg-3">
+    <a href="{{ url_for('admin.manage_accounts') }}" class="btn btn-outline-primary w-100">Manage Accounts</a>
+  </div>
+  <div class="col-sm-6 col-md-4 col-lg-3">
+    <a href="{{ url_for('admin.my_tickets') }}" class="btn btn-outline-primary w-100">Manage Tickets</a>
+  </div>
+  <div class="col-sm-6 col-md-4 col-lg-3">
+    <a href="{{ url_for('admin.manage_permits') }}" class="btn btn-outline-primary w-100">Manage Permits</a>
+  </div>
+  <div class="col-sm-6 col-md-4 col-lg-3">
+    <a href="{{ url_for('admin.manage_inspections') }}" class="btn btn-outline-primary w-100">Manage Inspections</a>
+  </div>
+  <div class="col-sm-6 col-md-4 col-lg-3">
+    <a href="{{ url_for('admin.manage_tax_brackets') }}" class="btn btn-outline-primary w-100">Manage Tax Brackets</a>
+  </div>
+  <div class="col-sm-6 col-md-4 col-lg-3">
+    <a href="{{ url_for('admin.manage_contracts') }}" class="btn btn-outline-primary w-100">Manage Contracts</a>
+  </div>
+  <div class="col-sm-6 col-md-4 col-lg-3">
+    <a href="{{ url_for('auction.list_pending_auctions') }}" class="btn btn-outline-primary w-100">Pending Auctions</a>
+  </div>
+  <div class="col-sm-6 col-md-4 col-lg-3">
+    <a href="{{ url_for('auction.manage_all_auctions') }}" class="btn btn-outline-primary w-100">All Auctions</a>
+  </div>
+  <div class="col-sm-6 col-md-4 col-lg-3">
+    <a href="{{ url_for('admin.edit_rules') }}" class="btn btn-outline-primary w-100">Edit Rules</a>
+  </div>
+</div>
+
 <hr />
 
 <h3 class="mb-3">Recent Activity</h3>

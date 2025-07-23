@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <!-- Sidebar -->
+    <nav
+      id="sidebarMenu"
+      class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse"
+      role="navigation"
+    >
+      <div class="position-sticky pt-3">
+        <ul class="nav flex-column">
+          <li class="nav-item mb-2">
+            <a
+              class="nav-link {% if active_page == 'dashboard' %}active fw-bold{% endif %}"
+              aria-current="page"
+              href="{{ url_for('dot.dashboard') }}"
+            >
+              <i class="bi bi-speedometer2"></i> DOT Dashboard
+            </a>
+          </li>
+          <li class="nav-item">
+            <a
+              class="nav-link {% if active_page == 'tickets' %}active{% endif %}"
+              href="{{ url_for('dot.my_tickets') }}"
+            >
+              <i class="bi bi-file-earmark-text"></i> My Tickets
+            </a>
+          </li>
+          <li class="nav-item">
+            <a
+              class="nav-link {% if active_page == 'permits' %}active{% endif %}"
+              href="{{ url_for('dot.my_permit_applications') }}"
+            >
+              <i class="bi bi-file-earmark-check"></i> My Permit Applications
+            </a>
+          </li>
+          <li class="nav-item">
+            <a
+              class="nav-link {% if active_page == 'inspections' %}active{% endif %}"
+              href="{{ url_for('dot.list_my_conducted_inspections') }}"
+            >
+              <i class="bi bi-search"></i> My Inspections
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('dot.new_ticket') }}">
+              <i class="bi bi-plus-circle"></i> Issue New Ticket
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('dot.new_permit_application') }}">
+              <i class="bi bi-file-plus"></i> New Permit Application
+            </a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+      <div
+        class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom"
+      >
+        <h1 class="h2">DOT Dashboard</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+          <div class="btn-group me-2">
+            <a href="{{ url_for('dot.new_ticket') }}" class="btn btn-sm btn-primary">
+              <i class="bi bi-plus-circle"></i> New Ticket
+            </a>
+            <a href="{{ url_for('dot.new_permit_application') }}" class="btn btn-sm btn-secondary">
+              <i class="bi bi-file-plus"></i> New Permit
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dashboard Cards -->
+      <div class="row g-4">
+        <div class="col-md-4">
+          <div class="card text-bg-primary h-100">
+            <div class="card-body">
+              <h5 class="card-title"><i class="bi bi-file-earmark-text"></i> Tickets Issued</h5>
+              <p class="card-text display-6">{{ tickets_issued or 0 }}</p>
+              <a href="{{ url_for('dot.my_tickets') }}" class="btn btn-light btn-sm">View Tickets</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="card text-bg-success h-100">
+            <div class="card-body">
+              <h5 class="card-title"><i class="bi bi-file-earmark-check"></i> Permits Processed</h5>
+              <p class="card-text display-6">{{ permits_processed or 0 }}</p>
+              <a href="{{ url_for('dot.my_permit_applications') }}" class="btn btn-light btn-sm">View Permits</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="card text-bg-info h-100">
+            <div class="card-body">
+              <h5 class="card-title"><i class="bi bi-search"></i> Inspections Conducted</h5>
+              <p class="card-text display-6">{{ inspections_conducted or 0 }}</p>
+              <a href="{{ url_for('dot.list_my_conducted_inspections') }}" class="btn btn-light btn-sm">View Inspections</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Optional: Latest Tickets Table -->
+      {% if latest_tickets %}
+      <div class="mt-5">
+        <h3>Recent Tickets</h3>
+        <div class="table-responsive">
+          <table class="table table-striped table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Ticket ID</th>
+                <th>Issued To</th>
+                <th>Date Issued</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for ticket in latest_tickets %}
+              <tr>
+                <td>{{ ticket.id }}</td>
+                <td>{{ ticket.issued_to_name }}</td>
+                <td>{{ ticket.date_issued.strftime('%Y-%m-%d') }}</td>
+                <td>{{ ticket.status }}</td>
+                <td>
+                  <a href="{{ url_for('dot.view_ticket', ticket_id=ticket.id) }}" class="btn btn-sm btn-outline-primary">
+                    View
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+    </main>
+  </div>
+</div>
+{% endblock %}

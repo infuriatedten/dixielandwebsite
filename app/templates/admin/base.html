@@ -28,33 +28,32 @@
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('banking.dashboard') }}">Banking</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('taxes.tax_info') }}">Tax Info</a></li>
 
-                    {{ nav.dot_services_dropdown(current_user, UserRole) }}
+                    <!-- DOT links as separate nav items -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('dot.my_tickets') }}">My DOT Tickets</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('dot.my_permit_applications') }}">My Permit Applications</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('dot.list_my_conducted_inspections') }}">My DOT Inspections</a>
+                    </li>
 
                     {% if current_user.role is defined and current_user.role.value is defined and current_user.role.value == UserRole.ADMIN.value %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
-                               data-bs-toggle="dropdown" aria-expanded="false">
-                                Admin Panel
-                            </a>
-                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                <li><a class="dropdown-item" href="{{ url_for('admin.index') }}">Dashboard</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('admin.manage_users') }}">Manage Users</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('admin.manage_accounts') }}">Manage Accounts</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('admin.tickets') }}">Manage Tickets</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('admin.manage_permits') }}">Manage Permits</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('admin.manage_inspections') }}">Manage Inspections</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('admin.manage_tax_brackets') }}">Manage Tax Brackets</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('admin.manage_contracts') }}">Manage Contracts</a></li>
+                        <!-- Admin links as separate nav items (no dropdown) -->
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.index') }}">Admin Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.manage_users') }}">Manage Users</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.manage_accounts') }}">Manage Accounts</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.tickets') }}">Manage Tickets</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.manage_permits') }}">Manage Permits</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.manage_inspections') }}">Manage Inspections</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.manage_tax_brackets') }}">Manage Tax Brackets</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.manage_contracts') }}">Manage Contracts</a></li>
 
-                                <li><hr class="dropdown-divider" /></li>
-                                <li><h6 class="dropdown-header">Auction Management</h6></li>
-                                <li><a class="dropdown-item" href="{{ url_for('auction.list_pending_auctions') }}">Pending Approvals</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('auction.manage_all_auctions') }}">All Auctions</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('auction.list_pending_auctions') }}">Pending Auction Approvals</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('auction.manage_all_auctions') }}">Manage All Auctions</a></li>
 
-                                <li><hr class="dropdown-divider" /></li>
-                                <li><a class="dropdown-item" href="{{ url_for('admin.edit_rules') }}">Edit Rules</a></li>
-                            </ul>
-                        </li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.edit_rules') }}">Edit Rules</a></li>
                     {% endif %}
 
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('marketplace.index') }}">Marketplace</a></li>

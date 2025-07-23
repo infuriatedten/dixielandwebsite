@@ -79,19 +79,31 @@ def list_issued_tickets():
 @bp.route('/my_tickets')
 @login_required
 def my_tickets():
-    page = request.args.get('page', 1, type=int)
-    status_filter = request.args.get('status', None)
+    page = request.args.get('page', default=1, type=int)
+    status_filter = request.args.get('status', default=None, type=str)
 
-    query = Ticket.query.filter_by(issued_to_user_id=current_user.id)
+    # Start with user's tickets
+    query = db.session.query(Ticket).filter(Ticket.issued_to_user_id == current_user.id)
 
-    if status_filter and hasattr(TicketStatus, status_filter.upper()):
-        query = query.filter_by(status=TicketStatus[status_filter.upper()])
+    # Apply filter only if it's a valid enum member
+    if status_filter:
+        try:
+            status_enum = TicketStatus[status_filter.upper()]
+            query = query.filter(Ticket.status == status_enum)
+        except KeyError:
+            flash("Invalid status filter applied.", "warning")
+            return redirect(url_for('dot.my_tickets'))
 
+    # Paginate results
     tickets_pagination = query.order_by(Ticket.issue_date.desc()).paginate(page=page, per_page=10)
-    return render_template('dot/my_tickets.html', title='My Tickets',
-                           tickets_pagination=tickets_pagination,
-                           TicketStatus=TicketStatus, # Pass enum for template use
-                           current_status_filter=status_filter)
+
+    return render_template(
+        'dot/my_tickets.html',
+        title='My Tickets',
+        tickets_pagination=tickets_pagination,
+        TicketStatus=TicketStatus,
+        current_status_filter=status_filter
+    )
 
 
 @bp.route('/ticket/<int:ticket_id>/pay', methods=['POST'])

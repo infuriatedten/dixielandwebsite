@@ -1,163 +1,176 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{{ title or "Dixieland RolePlay" }}</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ title or "Dixieland RolePlay" }}</title>
 
-    <!-- Bootstrap 5 CSS -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-      crossorigin="anonymous"
-    />
+  <!-- Bootstrap 5 CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+    crossorigin="anonymous"
+  />
 
-    <!-- Bootstrap Icons -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
-      rel="stylesheet"
-    />
+  <!-- Bootstrap Icons -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+    rel="stylesheet"
+  />
 
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
 </head>
 <body>
-    {% import "macros/nav_macros.html" as nav %}
+  {% import "macros/nav_macros.html" as nav %}
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('main.index') }}">Dixieland RolePlay</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="{{ url_for('main.index') }}">Dixieland RolePlay</a>
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#navbarNav"
+        aria-controls="navbarNav"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
 
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.index') }}">Home</a>
-                    </li>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('main.index') }}">Home</a>
+          </li>
 
-                    {% if current_user.is_authenticated %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('auth.profile') }}">Profile</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('banking.dashboard') }}">Banking</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('taxes.tax_info') }}">Tax Info</a>
-                        </li>
+          {% if current_user.is_authenticated %}
+            <!-- User Navigation Links -->
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('auth.profile') }}">Profile</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('banking.dashboard') }}">Banking</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('taxes.tax_info') }}">Tax Info</a>
+            </li>
 
-                        <!-- Replacing DOT dropdown with separate links -->
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('dot.my_tickets') }}">DOT Tickets</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('dot.permits') }}">DOT Permits</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('dot.inspections') }}">DOT Inspections</a>
-                        </li>
+            <!-- DOT Dashboard - single link -->
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('dot.dashboard') }}">DOT Dashboard</a>
+            </li>
 
-                        {% if current_user.role == UserRole.ADMIN %}
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('main.admin_dashboard') }}">Admin Panel</a>
-                            </li>
-                        {% endif %}
-
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('marketplace.index') }}">Marketplace</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('auction.index') }}">Auctions</a>
-                        </li>
-
-                        <!-- Farmers links as separate nav items -->
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('main.farmers') }}">Farmers Dashboard</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('main.contracts') }}">Available Contracts</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('main.company') }}">Manage Company</a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('livemap.server_status') }}">Server Status</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('main.view_rules') }}">Rules</a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('messaging.list_my_conversations') }}">
-                                Messages
-                                {% if unread_message_count and unread_message_count > 0 %}
-                                    <span class="badge bg-danger rounded-pill">{{ unread_message_count }}</span>
-                                {% endif %}
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('notifications.list_notifications') }}">
-                                Notifications
-                                {% if unread_notification_count and unread_notification_count > 0 %}
-                                    <span class="badge bg-warning text-dark rounded-pill">{{ unread_notification_count }}</span>
-                                {% endif %}
-                            </a>
-                        </li>
-                    {% endif %}
-                </ul>
-
-                <ul class="navbar-nav ms-auto">
-                    {% if current_user.is_authenticated %}
-                        <li class="nav-item nav-link text-dark">
-                            Welcome, {{ current_user.username }} ({{ current_user.role.name.capitalize() }})
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link btn btn-outline-secondary btn-sm" href="{{ url_for('auth.logout') }}">Logout</a>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('auth.register') }}">Register</a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <main class="container mt-4">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
+            {% if current_user.role == UserRole.ADMIN %}
+              <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('main.admin_dashboard') }}">Admin Panel</a>
+              </li>
             {% endif %}
-        {% endwith %}
 
-        {% block content %}{% endblock %}
-    </main>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('marketplace.index') }}">Marketplace</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('auction.index') }}">Auctions</a>
+            </li>
 
-    <footer class="footer mt-auto py-3 bg-light">
-        <div class="container">
-            <span class="text-muted">© 2024 Dixieland RolePlay</span>
-        </div>
-    </footer>
+            <!-- Farmers links -->
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('main.farmers') }}">Farmers Dashboard</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('main.contracts') }}">Available Contracts</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('main.company') }}">Manage Company</a>
+            </li>
 
-    <!-- Bootstrap JS Bundle -->
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-GOaAY1wOa4CD78qCQkgOpTqQF6vFb9mL0pXt+kR3n7oJ1hJbXG9y8zFYlq6MN9c3"
-      crossorigin="anonymous"
-    ></script>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('livemap.server_status') }}">Server Status</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('main.view_rules') }}">Rules</a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('messaging.list_my_conversations') }}">
+                Messages
+                {% if unread_message_count and unread_message_count > 0 %}
+                  <span class="badge bg-danger rounded-pill">{{ unread_message_count }}</span>
+                {% endif %}
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('notifications.list_notifications') }}">
+                Notifications
+                {% if unread_notification_count and unread_notification_count > 0 %}
+                  <span class="badge bg-warning text-dark rounded-pill">{{ unread_notification_count }}</span>
+                {% endif %}
+              </a>
+            </li>
+          {% endif %}
+        </ul>
+
+        <ul class="navbar-nav ms-auto">
+          {% if current_user.is_authenticated %}
+            <li class="nav-item nav-link text-dark">
+              Welcome, {{ current_user.username }} ({{ current_user.role.name.capitalize() }})
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link btn btn-outline-secondary btn-sm"
+                href="{{ url_for('auth.logout') }}"
+              >Logout</a>
+            </li>
+          {% else %}
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('auth.register') }}">Register</a>
+            </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container mt-4">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div
+            class="alert alert-{{ category }} alert-dismissible fade show"
+            role="alert"
+          >
+            {{ message }}
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="alert"
+              aria-label="Close"
+            ></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer mt-auto py-3 bg-light">
+    <div class="container">
+      <span class="text-muted">© 2024 Dixieland RolePlay</span>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS Bundle -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-GOaAY1wOa4CD78qCQkgOpTqQF6vFb9mL0pXt+kR3n7oJ1hJbXG9y8zFYlq6MN9c3"
+    crossorigin="anonymous"
+  ></script>
 </body>
 </html>
