@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="my-4">DOT Dashboard</h1>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Tickets</h5>
+                    <p class="card-text">Issue new tickets and view existing ones.</p>
+                    <a href="{{ url_for('dot.issue_ticket') }}" class="btn btn-primary">Issue Ticket</a>
+                    <a href="{{ url_for('dot.list_issued_tickets') }}" class="btn btn-secondary">View Issued Tickets</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Permits</h5>
+                    <p class="card-text">Manage permit applications.</p>
+                    <a href="{{ url_for('dot.apply_for_permit') }}" class="btn btn-primary">Apply for Permit</a>
+                    <a href="{{ url_for('dot.my_permit_applications') }}" class="btn btn-secondary">My Applications</a>
+                    <a href="{{ url_for('dot.review_permit_applications_list') }}" class="btn btn-info">Review Applications</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Inspections</h5>
+                    <p class="card-text">Record and view vehicle inspections.</p>
+                    <a href="{{ url_for('dot.record_inspection') }}" class="btn btn-primary">Record Inspection</a>
+                    <a href="{{ url_for('dot.list_my_conducted_inspections') }}" class="btn btn-secondary">My Inspections</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

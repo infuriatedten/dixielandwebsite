@@ -79,19 +79,31 @@ def list_issued_tickets():
 @bp.route('/my_tickets')
 @login_required
 def my_tickets():
-    page = request.args.get('page', 1, type=int)
-    status_filter = request.args.get('status', None)
+    page = request.args.get('page', default=1, type=int)
+    status_filter = request.args.get('status', default=None, type=str)
 
-    query = Ticket.query.filter_by(issued_to_user_id=current_user.id)
+    # Start with user's tickets
+    query = db.session.query(Ticket).filter(Ticket.issued_to_user_id == current_user.id)
 
-    if status_filter and hasattr(TicketStatus, status_filter.upper()):
-        query = query.filter_by(status=TicketStatus[status_filter.upper()])
+    # Apply filter only if it's a valid enum member
+    if status_filter:
+        try:
+            status_enum = TicketStatus[status_filter.upper()]
+            query = query.filter(Ticket.status == status_enum)
+        except KeyError:
+            flash("Invalid status filter applied.", "warning")
+            return redirect(url_for('dot.my_tickets'))
 
+    # Paginate results
     tickets_pagination = query.order_by(Ticket.issue_date.desc()).paginate(page=page, per_page=10)
-    return render_template('dot/my_tickets.html', title='My Tickets',
-                           tickets_pagination=tickets_pagination,
-                           TicketStatus=TicketStatus, # Pass enum for template use
-                           current_status_filter=status_filter)
+
+    return render_template(
+        'dot/my_tickets.html',
+        title='My Tickets',
+        tickets_pagination=tickets_pagination,
+        TicketStatus=TicketStatus,
+        current_status_filter=status_filter
+    )
 
 
 @bp.route('/ticket/<int:ticket_id>/pay', methods=['POST'])
@@ -605,55 +617,11 @@ def list_permit_applications_for_review():
                            PermitApplicationStatus=PermitApplicationStatus)
 
 
-@bp.route('/permits/process_application/<int:application_id>', methods=['GET', 'POST'])
+@bp.route('/dashboard')
 @login_required
-@officer_required
-def process_permit_application(application_id):
-    application = PermitApplication.query.get_or_404(application_id)
-    form = ReviewPermitApplicationForm(obj=application) # Pre-populate with existing data if any
-
-    # Customize form choices based on current status
-    current_status = application.status
-    if current_status == PermitApplicationStatus.PENDING_REVIEW or current_status == PermitApplicationStatus.REQUIRES_MODIFICATION:
-        form.new_status.choices = [
-            (PermitApplicationStatus.APPROVED_PENDING_PAYMENT.value, "Approve (Set Fee, Awaiting Payment)"),
-            (PermitApplicationStatus.REQUIRES_MODIFICATION.value, "Requires User Modification (Send Back)"),
-            (PermitApplicationStatus.REJECTED.value, "Reject Application"),
-        ]
-    elif current_status == PermitApplicationStatus.PAID_AWAITING_ISSUANCE:
-         # This state is for final issuance, not fee setting.
-         # The form might not be ideal here, direct "Issue Permit" button might be better.
-         # Or a simplified form for just notes + issue button.
-         # For now, we'll skip form validation if just issuing.
-         pass # Handled by specific 'issue' route/button later
-    else:
-        flash(f"Application is in status '{current_status.value}' and cannot be processed this way.", "warning")
-        return redirect(url_for('dot.list_permit_applications_for_review'))
-
-
-    if form.validate_on_submit() and current_status not in [PermitApplicationStatus.PAID_AWAITING_ISSUANCE]:
-        new_status_enum = PermitApplicationStatus(form.new_status.data)
-
-        application.status = new_status_enum
-        application.officer_notes = form.officer_notes.data
-        application.reviewed_by_officer_id = current_user.id
-
-        if new_status_enum == PermitApplicationStatus.APPROVED_PENDING_PAYMENT:
-            application.permit_fee = form.permit_fee.data
-            if not application.permit_fee or application.permit_fee <= 0:
-                flash("A positive permit fee must be set when approving.", "danger")
-                # This should be caught by form validator, but double check.
-                return render_template('dot/process_permit_application.html', title=f'Process Permit App #{application.id}', form=form, application=application, PermitApplicationStatus=PermitApplicationStatus)
-
-        db.session.commit()
-        flash(f'Permit Application #{application.id} updated to {new_status_enum.value}.', 'success')
-        # TODO: Notify user of status change, especially if REQUIRES_MODIFICATION or APPROVED
-        return redirect(url_for('dot.list_permit_applications_for_review'))
-
-    return render_template('dot/process_permit_application.html',
-                           title=f'Process Permit App #{application.id}',
-                           form=form, application=application,
-                           PermitApplicationStatus=PermitApplicationStatus)
+def dashboard():
+    # Add your logic here (e.g., query data for dashboard)
+    return render_template('dot/dashboard.html', title='DOT Dashboard')
 
 
 
