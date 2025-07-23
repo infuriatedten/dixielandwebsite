@@ -1,4 +1,4 @@
-{% macro render_field(field, label_visible=True, class_='', id=None, placeholder=None, field_attrs={}) %}
+{% macro render_field(field, label_visible=True, class_='', id=None, placeholder=None, rows=None, button_map={}, field_attrs={}) %}
     <div class="mb-3">
         {# Render the label if visible #}
         {% if label_visible %}
@@ -9,43 +9,14 @@
         {% set attrs = {
             'class': class_,
             'id': id if id else field.id,
-            'placeholder': placeholder
+            'placeholder': placeholder,
+            'rows': rows
         } %}
 
-        {# Merge extra field attributes passed in field_attrs #}
-        {% for key, value in field_attrs.items() %}
-            {% set _ = attrs.update({key: value}) %}
-        {% endfor %}
-
-        {# Filter out None values so we don't pass 'placeholder=None', etc. #}
-        {% set clean_attrs = {} %}
-        {% for k, v in attrs.items() if v is not none %}
-            {% set _ = clean_attrs.update({k: v}) %}
-        {% endfor %}
-
-        {{ field(**clean_attrs) }}
-
-        {# Display validation errors, if any #}
-        {% if field.errors %}
-            <div class="invalid-feedback d-block">
-                {{ field.errors[0] }}
-            </div>
+        {# Add button classes if it's a submit button #}
+        {% if field.type == 'SubmitField' and field.name in button_map %}
+            {% set _ = attrs.update({'class': attrs.get('class', '') + ' ' + button_map[field.name]}) %}
         {% endif %}
-    </div>
-{% endmacro %}
-{% macro render_field(field, label_visible=True, class_='', id=None, placeholder=None, field_attrs={}) %}
-    <div class="mb-3">
-        {# Render the label if visible #}
-        {% if label_visible %}
-            {{ field.label(class="form-label") }}
-        {% endif %}
-
-        {# Combine all attributes into one dictionary #}
-        {% set attrs = {
-            'class': class_,
-            'id': id if id else field.id,
-            'placeholder': placeholder
-        } %}
 
         {# Merge extra field attributes passed in field_attrs #}
         {% for key, value in field_attrs.items() %}
