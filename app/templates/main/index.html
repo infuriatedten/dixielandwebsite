@@ -82,7 +82,11 @@
     <!-- Insurance Rates Section -->
     <div class="mb-5">
         <h2 class="mb-4">Insurance Rates</h2>
+
         {% for type in insurance_rates|map(attribute='rate_type')|unique %}
+
+        {% for type in insurance_rates|map(attribute='rate_type')|unique|sort %}
+
         <div class="mb-4">
             <h3 class="mb-3">{{ type.value }}</h3>
             <div class="row g-4">

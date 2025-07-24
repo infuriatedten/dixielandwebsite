@@ -44,7 +44,11 @@ def main_index():
         'pending_permits': PermitApplication.query.filter_by(status='PENDING_REVIEW').count(),
     }
 
+
     insurance_rates = InsuranceRate.query.order_by(InsuranceRate.rate_type).all()
+
+    insurance_rates = InsuranceRate.query.all()
+
 
     return render_template('main/index.html', title='Home',
                            recent_listings=recent_listings,
