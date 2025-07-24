@@ -41,6 +41,23 @@ def make_shell_context():
         'Inspection': Inspection
     }
 
+def seed_insurance_rates():
+    from app.models import InsuranceRate, InsuranceRateType
+    # Check if rates already exist
+    if InsuranceRate.query.count() > 4:
+        return
+
+    rates = [
+        InsuranceRate(rate_type=InsuranceRateType.FARM, name='Farm Liability', rate=500.00, description='General liability coverage for farm operations.'),
+        InsuranceRate(rate_type=InsuranceRateType.CROP, name='Crop Hail', rate=100.00, description='Coverage for hail damage to crops.'),
+        InsuranceRate(rate_type=InsuranceRateType.ANIMAL, name='Livestock', rate=50.00, description='Coverage for livestock mortality.')
+    ]
+
+    for rate in rates:
+        db.session.add(rate)
+    db.session.commit()
+
+
 if __name__ == '__main__':
     # Setup logger
     logging.basicConfig(level=logging.INFO)
@@ -58,6 +75,8 @@ if __name__ == '__main__':
         except Exception as e:
             logger.error("Failed to initialize database.")
             logger.exception(e)
+
+        seed_insurance_rates()
 
         # Create default admin if it doesn't exist
         admin_username = 'admin'

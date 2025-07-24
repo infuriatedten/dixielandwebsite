@@ -407,6 +407,26 @@ class InsuranceClaim(db.Model):
     def __repr__(self):
         return f'<InsuranceClaim {self.id}>'
 
+
+import enum
+
+class InsuranceRateType(enum.Enum):
+    VEHICLE = "Vehicle"
+    FARM = "Farm"
+    CROP = "Crop"
+    ANIMAL = "Animal"
+
+class InsuranceRate(db.Model):
+    __tablename__ = 'insurance_rates'
+    id = db.Column(db.Integer, primary_key=True)
+    rate_type = db.Column(db.Enum(InsuranceRateType), default=InsuranceRateType.VEHICLE, nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    rate = db.Column(db.Numeric(10, 2), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+
+    def __repr__(self):
+        return f'<InsuranceRate {self.name}: {self.rate}>'
+
 class ContractStatus(enum.Enum):
     AVAILABLE = "Available"
     CLAIMED = "Claimed"
