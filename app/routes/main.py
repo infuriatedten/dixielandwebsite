@@ -9,7 +9,7 @@ from app.models import (
     User, UserRole, RulesContent, Farmer, Parcel, UserVehicle,
     Account, InsuranceClaim, Contract, ContractStatus, Company,
     MarketplaceListing, MarketplaceListingStatus, Ticket, PermitApplication,
-    Transaction, TransactionType
+    Transaction, TransactionType, InsuranceRate
 )
 from app.forms import (
     ParcelForm, InsuranceClaimForm, ContractForm, CompanyNameForm
@@ -44,10 +44,13 @@ def main_index():
         'pending_permits': PermitApplication.query.filter_by(status='PENDING_REVIEW').count(),
     }
 
+    insurance_rates = InsuranceRate.query.order_by(InsuranceRate.rate_type).all()
+
     return render_template('main/index.html', title='Home',
                            recent_listings=recent_listings,
                            announcements=announcements,
-                           stats=stats)
+                           stats=stats,
+                           insurance_rates=insurance_rates)
 
 
 # Create markdown parser once (reuse)
