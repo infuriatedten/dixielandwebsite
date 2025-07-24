@@ -141,6 +141,8 @@ def edit_account(account_id):
         return redirect(url_for('admin.manage_accounts'))
     return render_template('admin/edit_account.html', title='Edit Account', form=form, account=account)
 
+import logging
+
 @admin_bp.route('/account/<int:account_id>/edit_balance', methods=['GET', 'POST'])
 @admin_required
 def edit_account_balance(account_id):
@@ -149,6 +151,7 @@ def edit_account_balance(account_id):
     if form.validate_on_submit():
         amount = form.amount.data
         description = form.description.data
+        logging.info(f"Attempting to update balance for account {account_id} by {amount}")
         try:
             transaction = Transaction(
                 account_id=account.id,
@@ -160,9 +163,11 @@ def edit_account_balance(account_id):
             account.balance += amount
             db.session.commit()
             flash('Account balance updated successfully.', 'success')
+            logging.info(f"Successfully updated balance for account {account_id}")
         except Exception as e:
             db.session.rollback()
             flash(f'Error updating account balance: {e}', 'danger')
+            logging.error(f"Error updating balance for account {account_id}: {e}")
         return redirect(url_for('admin.manage_accounts'))
     return render_template('admin/edit_account_balance.html', title='Edit Account Balance', form=form, account=account)
 
