@@ -42,16 +42,15 @@ def make_shell_context():
     }
 
 def seed_insurance_rates():
-    from app.models import InsuranceRate
+    from app.models import InsuranceRate, InsuranceRateType
     # Check if rates already exist
-    if InsuranceRate.query.count() > 0:
+    if InsuranceRate.query.count() > 4:
         return
 
     rates = [
-        InsuranceRate(vehicle_type='Sedan', rate=100.00, description='Basic coverage for sedans.'),
-        InsuranceRate(vehicle_type='SUV', rate=150.00, description='Basic coverage for SUVs.'),
-        InsuranceRate(vehicle_type='Truck', rate=200.00, description='Basic coverage for trucks.'),
-        InsuranceRate(vehicle_type='Motorcycle', rate=80.00, description='Basic coverage for motorcycles.')
+        InsuranceRate(rate_type=InsuranceRateType.FARM, name='Farm Liability', rate=500.00, description='General liability coverage for farm operations.'),
+        InsuranceRate(rate_type=InsuranceRateType.CROP, name='Crop Hail', rate=100.00, description='Coverage for hail damage to crops.'),
+        InsuranceRate(rate_type=InsuranceRateType.ANIMAL, name='Livestock', rate=50.00, description='Coverage for livestock mortality.')
     ]
 
     for rate in rates:
