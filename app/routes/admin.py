@@ -9,7 +9,8 @@ from app.models import (
 )
 from app.forms import (
     EditRulesForm, EditUserForm, EditAccountForm, EditTicketForm, EditPermitForm,
-    EditInspectionForm, EditTaxBracketForm, EditBalanceForm, EditInsuranceClaimForm
+    EditInspectionForm, EditTaxBracketForm, EditBalanceForm, EditInsuranceClaimForm,
+    EditBankForm
 )
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -170,6 +171,21 @@ def edit_account_balance(account_id):
             logging.error(f"Error updating balance for account {account_id}: {e}")
         return redirect(url_for('admin.manage_accounts'))
     return render_template('admin/edit_account_balance.html', title='Edit Account Balance', form=form, account=account)
+
+
+@admin_bp.route('/account/<int:account_id>/edit_bank', methods=['GET', 'POST'])
+@admin_required
+def edit_bank(account_id):
+    account = Account.query.get_or_404(account_id)
+    form = EditBankForm(obj=account)
+    if form.validate_on_submit():
+        account.bank_name = form.bank_name.data
+        account.account_number = form.account_number.data
+        account.routing_number = form.routing_number.data
+        db.session.commit()
+        flash('Bank details updated successfully.', 'success')
+        return redirect(url_for('admin.manage_accounts'))
+    return render_template('admin/edit_bank.html', title='Edit Bank Details', form=form, account=account)
 
 
 # ---------------- Ticket Management ---------------- #

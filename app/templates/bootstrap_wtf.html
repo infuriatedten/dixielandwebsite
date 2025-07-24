@@ -1,41 +1,51 @@
-{% macro render_field(field, label_visible=True, class_='', id=None, placeholder=None, rows=None, button_map={}, field_attrs={}) %}
-    <div class="mb-3">
-        {# Render the label if visible #}
-        {% if label_visible %}
+{% macro quick_form(form, action_url='', method='post', enctype=None, button_map={'submit': 'primary'}) -%}
+    <form
+        {% if action_url %} action="{{ action_url }}" {% endif %}
+        method="{{ method }}"
+        role="form"
+        {% if enctype %} enctype="{{ enctype }}" {% endif %}
+    >
+        {{ form.hidden_tag() }}
+        {% for field in form if not field.flags.hidden %}
+            {{ render_field(field, button_map=button_map) }}
+        {% endfor %}
+    </form>
+{%- endmacro %}
+
+{% macro render_field(field, label_visible=True, class_='form-control', id=None, placeholder=None, rows=None, button_map={}) %}
+    <div class="form-group mb-3">
+        {% if label_visible and field.type != 'SubmitField' %}
             {{ field.label(class="form-label") }}
         {% endif %}
 
-        {# Combine all attributes into one dictionary #}
-        {% set attrs = {
-            'class': class_,
-            'id': id if id else field.id,
-            'placeholder': placeholder,
-            'rows': rows
-        } %}
-
-        {# Add button classes if it's a submit button #}
-        {% if field.type == 'SubmitField' and field.name in button_map %}
-            {% set _ = attrs.update({'class': attrs.get('class', '') + ' ' + button_map[field.name]}) %}
+        {% if field.type == 'BooleanField' %}
+            <div class="form-check">
+                {{ field(class="form-check-input") }}
+                {{ field.label(class="form-check-label") }}
+            </div>
+        {% elif field.type == 'RadioField' %}
+            {% for subfield in field %}
+                <div class="form-check">
+                    {{ subfield(class="form-check-input") }}
+                    {{ subfield.label(class="form-check-label") }}
+                </div>
+            {% endfor %}
+        {% elif field.type == 'SubmitField' %}
+            {{ field(class='btn btn-' + button_map.get(field.name, 'secondary')) }}
+        {% else %}
+            {% set field_class = class_ %}
+            {% if field.errors %}
+                {% set field_class = field_class + ' is-invalid' %}
+            {% endif %}
+            {{ field(class=field_class, id=id or field.id, placeholder=placeholder or field.label.text, rows=rows) }}
         {% endif %}
 
-        {# Merge extra field attributes passed in field_attrs #}
-        {% for key, value in field_attrs.items() %}
-            {% set _ = attrs.update({key: value}) %}
-        {% endfor %}
-
-        {# Filter out None values so we don't pass 'placeholder=None', etc. #}
-        {% set clean_attrs = {} %}
-        {% for k, v in attrs.items() if v is not none %}
-            {% set _ = clean_attrs.update({k: v}) %}
-        {% endfor %}
-
-        {{ field(**clean_attrs) }}
-
-        {# Display validation errors, if any #}
         {% if field.errors %}
-            <div class="invalid-feedback d-block">
-                {{ field.errors[0] }}
-            </div>
+            {% for error in field.errors %}
+                <div class="invalid-feedback d-block">
+                    {{ error }}
+                </div>
+            {% endfor %}
         {% endif %}
     </div>
 {% endmacro %}
