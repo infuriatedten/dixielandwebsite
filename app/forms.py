@@ -258,6 +258,13 @@ class EditInsuranceClaimForm(FlaskForm):
     submit = SubmitField('Update Claim')
 
 
+class EditBankForm(FlaskForm):
+    bank_name = StringField('Bank Name', validators=[DataRequired(), Length(min=2, max=100)])
+    account_number = StringField('Account Number', validators=[DataRequired(), Length(min=5, max=20)])
+    routing_number = StringField('Routing Number', validators=[DataRequired(), Length(min=9, max=9)])
+    submit = SubmitField('Update Bank Details')
+
+
 class ContractForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired(), Length(min=5, max=128)])
     description = TextAreaField('Description', validators=[DataRequired(), Length(min=10)])

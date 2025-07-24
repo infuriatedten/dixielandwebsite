@@ -6,8 +6,7 @@
     <h1>Create Contract</h1>
     <div class="row">
         <div class="col-md-6">
-            {{ wtf.render_form(form, action_url=url_for('main.create_contract'), method="POST") }}
-            <a href="{{ url_for('main.contracts') }}" class="btn btn-secondary mt-2">Cancel</a>
+            {{ wtf.quick_form(form, action_url=url_for('main.create_contract'), method="POST") }}
         </div>
     </div>
 </div>
