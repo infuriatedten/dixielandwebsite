@@ -9,7 +9,7 @@ from app.models import (
     User, UserRole, RulesContent, Farmer, Parcel, UserVehicle,
     Account, InsuranceClaim, Contract, ContractStatus, Company,
     MarketplaceListing, MarketplaceListingStatus, Ticket, PermitApplication,
-    Transaction, TransactionType
+    Transaction, TransactionType, InsuranceRate
 )
 from app.forms import (
     ParcelForm, InsuranceClaimForm, ContractForm, CompanyNameForm
