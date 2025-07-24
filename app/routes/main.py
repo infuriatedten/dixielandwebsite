@@ -44,10 +44,13 @@ def main_index():
         'pending_permits': PermitApplication.query.filter_by(status='PENDING_REVIEW').count(),
     }
 
+    insurance_rates = InsuranceRate.query.all()
+
     return render_template('main/index.html', title='Home',
                            recent_listings=recent_listings,
                            announcements=announcements,
-                           stats=stats)
+                           stats=stats,
+                           insurance_rates=insurance_rates)
 
 
 # Create markdown parser once (reuse)
