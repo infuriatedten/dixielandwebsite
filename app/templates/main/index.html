@@ -79,6 +79,26 @@
         </div>
     </div>
 
+    <!-- Insurance Rates Section -->
+    <div class="mb-5">
+        <h2 class="mb-4">Insurance Rates</h2>
+        <div class="row g-4">
+            {% for rate in insurance_rates %}
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 d-flex">
+                <div class="card flex-fill">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">{{ rate.vehicle_type }}</h5>
+                        <p class="card-text flex-grow-1">{{ rate.description }}</p>
+                        <p class="card-text"><small class="text-muted">Rate: ${{ rate.rate }}</small></p>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <p>No insurance rates available at the moment. Check back later!</p>
+            {% endfor %}
+        </div>
+    </div>
+
     <!-- Game Statistics -->
     <div class="row text-center g-4">
         <div class="col-md-4">

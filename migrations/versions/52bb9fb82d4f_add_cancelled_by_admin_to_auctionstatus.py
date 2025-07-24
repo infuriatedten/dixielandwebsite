@@ -17,7 +17,7 @@ depends_on = None
 
 
 def upgrade():
-    op.execute("ALTER TYPE auctionstatus ADD VALUE 'CANCELLED_BY_ADMIN'")
+    pass
 
 
 def downgrade():
