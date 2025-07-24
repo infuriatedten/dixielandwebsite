@@ -47,7 +47,7 @@ def main_index():
     insurance_rates = InsuranceRate.query.order_by(InsuranceRate.rate_type).all()
     dynamic_rates = []
     for rate in insurance_rates:
-        new_rate = rate.rate * (1 + (rate.payout_requests / 10))
+        new_rate = float(rate.rate) * (1 + (rate.payout_requests / 10))
         dynamic_rates.append({
             'rate_type': rate.rate_type,
             'name': rate.name,
