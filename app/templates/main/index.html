@@ -85,7 +85,11 @@
 
         {% for type in insurance_rates|map(attribute='rate_type')|unique %}
 
+
+        {% for type in insurance_rates|map(attribute='rate_type')|unique %}
+
         {% for type in insurance_rates|map(attribute='rate_type')|unique|sort %}
+
 
         <div class="mb-4">
             <h3 class="mb-3">{{ type.value }}</h3>
@@ -103,8 +107,11 @@
                 {% endfor %}
             </div>
         </div>
+
+
         {% else %}
         <p>No insurance rates available at the moment. Check back later!</p>
+
         {% endfor %}
     </div>
 

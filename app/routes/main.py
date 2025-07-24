@@ -47,7 +47,12 @@ def main_index():
 
     insurance_rates = InsuranceRate.query.order_by(InsuranceRate.rate_type).all()
 
+
+
+    insurance_rates = InsuranceRate.query.order_by(InsuranceRate.rate_type).all()
+
     insurance_rates = InsuranceRate.query.all()
+
 
 
     return render_template('main/index.html', title='Home',
