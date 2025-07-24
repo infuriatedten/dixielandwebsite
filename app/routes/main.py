@@ -44,22 +44,22 @@ def main_index():
         'pending_permits': PermitApplication.query.filter_by(status='PENDING_REVIEW').count(),
     }
 
-
     insurance_rates = InsuranceRate.query.order_by(InsuranceRate.rate_type).all()
-
-
-
-    insurance_rates = InsuranceRate.query.order_by(InsuranceRate.rate_type).all()
-
-    insurance_rates = InsuranceRate.query.all()
-
-
+    dynamic_rates = []
+    for rate in insurance_rates:
+        new_rate = rate.rate * (1 + (rate.payout_requests / 10))
+        dynamic_rates.append({
+            'rate_type': rate.rate_type,
+            'name': rate.name,
+            'description': rate.description,
+            'rate': new_rate
+        })
 
     return render_template('main/index.html', title='Home',
                            recent_listings=recent_listings,
                            announcements=announcements,
                            stats=stats,
-                           insurance_rates=insurance_rates)
+                           insurance_rates=dynamic_rates)
 
 
 # Create markdown parser once (reuse)
@@ -133,6 +133,11 @@ def farmers():
                 farmer_id=farmer.id
             )
             db.session.add(claim)
+
+            rate_to_update = InsuranceRate.query.filter_by(name=insurance_form.reason.data).first()
+            if rate_to_update:
+                rate_to_update.payout_requests += 1
+
             db.session.commit()
             flash('Insurance claim submitted successfully!', 'success')
         else:

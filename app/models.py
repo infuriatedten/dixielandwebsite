@@ -423,6 +423,7 @@ class InsuranceRate(db.Model):
     name = db.Column(db.String(100), nullable=False)
     rate = db.Column(db.Numeric(10, 2), nullable=False)
     description = db.Column(db.Text, nullable=True)
+    payout_requests = db.Column(db.Integer, default=0, nullable=False)
 
     def __repr__(self):
         return f'<InsuranceRate {self.name}: {self.rate}>'
