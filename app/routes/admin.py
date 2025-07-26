@@ -5,15 +5,18 @@ from app.decorators import admin_required
 from app.models import (
     User, Account, Ticket, PermitApplication, Inspection, TaxBracket, Transaction,
     TransactionType, VehicleRegion, RulesContent, UserRole, InsuranceClaim,
-    InsuranceClaimStatus, PermitApplicationStatus, TicketStatus, Contract
+    InsuranceClaimStatus, PermitApplicationStatus, TicketStatus, Contract,
+    Conversation, Message
 )
 from app.forms import (
     EditRulesForm, EditUserForm, EditAccountForm, EditTicketForm, EditPermitForm,
     EditInspectionForm, EditTaxBracketForm, EditBalanceForm, EditInsuranceClaimForm,
-    EditBankForm
+    EditBankForm, DeleteUserForm
 )
+import logging
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+
 
 # ---------------- Dashboard ---------------- #
 
@@ -63,34 +66,27 @@ def edit_rules():
 
 # ---------------- User Management ---------------- #
 
-@admin_bp.route('/users')
-@admin_required
-def manage_users():
-    page = request.args.get('page', 1, type=int)
-    users = User.query.order_by(User.username).paginate(page=page, per_page=10)
-    return render_template('admin/manage_users.html', title='Manage Users', users=users)
-
 @admin_bp.route('/users', methods=['GET', 'POST'])
 @admin_required
 def manage_users():
     page = request.args.get('page', 1, type=int)
-    users = User.query.paginate(page=page, per_page=10)
+    users = User.query.order_by(User.username).paginate(page=page, per_page=10)
 
-    delete_forms = {user.id: DeleteUserForm() for user in users.items}
-    return render_template("admin/manage_users.html", users=users, delete_forms=delete_forms)
+    # Create one DeleteUserForm per user with unique prefix to avoid CSRF conflicts
+    delete_forms = {user.id: DeleteUserForm(prefix=str(user.id)) for user in users.items}
 
-@admin_bp.route('/users/delete/<int:user_id>', methods=['POST'])
-@admin_required
-def delete_user(user_id):
-    form = DeleteUserForm()
-    if form.validate_on_submit():
-        user = User.query.get_or_404(user_id)
-        db.session.delete(user)
-        db.session.commit()
-        flash(f"User {user.username} deleted.", "success")
-    else:
-        flash("CSRF validation failed.", "danger")
-    return redirect(url_for("admin.manage_users"))
+    if request.method == 'POST':
+        # Find which delete form was submitted
+        for user_id, form in delete_forms.items():
+            if form.submit.data and form.validate_on_submit():
+                user_to_delete = User.query.get_or_404(user_id)
+                db.session.delete(user_to_delete)
+                db.session.commit()
+                flash(f"User {user_to_delete.username} deleted.", "success")
+                return redirect(url_for('admin.manage_users', page=page))
+        flash("CSRF validation failed or no valid form submitted.", "danger")
+
+    return render_template('admin/manage_users.html', title='Manage Users', users=users, delete_forms=delete_forms)
 
 
 # ---------------- Account Management ---------------- #
@@ -114,8 +110,6 @@ def edit_account(account_id):
         flash('Account updated successfully.', 'success')
         return redirect(url_for('admin.manage_accounts'))
     return render_template('admin/edit_account.html', title='Edit Account', form=form, account=account)
-
-import logging
 
 @admin_bp.route('/account/<int:account_id>/edit_balance', methods=['GET', 'POST'])
 @admin_required
@@ -144,7 +138,6 @@ def edit_account_balance(account_id):
             logging.error(f"Error updating balance for account {account_id}: {e}")
         return redirect(url_for('admin.manage_accounts'))
     return render_template('admin/edit_account_balance.html', title='Edit Account Balance', form=form, account=account)
-
 
 @admin_bp.route('/account/<int:account_id>/edit_bank', methods=['GET', 'POST'])
 @admin_required
@@ -276,10 +269,10 @@ def delete_contract(contract_id):
 
 @admin_bp.route('/insurance_claims')
 @admin_required
-def manage_insurance_claims():
+def insurance_claims():
     page = request.args.get('page', 1, type=int)
-    claims = InsuranceClaim.query.order_by(InsuranceClaim.claim_date.desc()).paginate(page=page, per_page=10)
-    return render_template('admin/manage_insurance_claims.html', title='Manage Insurance Claims', claims=claims)
+    claims = InsuranceClaim.query.order_by(InsuranceClaim.date_submitted.desc()).paginate(page=page, per_page=10)
+    return render_template('admin/insurance_claims.html', title='Manage Insurance Claims', claims=claims)
 
 @admin_bp.route('/insurance_claim/<int:claim_id>/edit', methods=['GET', 'POST'])
 @admin_required
@@ -288,25 +281,26 @@ def edit_insurance_claim(claim_id):
     form = EditInsuranceClaimForm(obj=claim)
     if form.validate_on_submit():
         claim.status = InsuranceClaimStatus[form.status.data]
+        claim.payout_amount = form.payout_amount.data
+        claim.notes = form.notes.data
         db.session.commit()
         flash('Insurance claim updated successfully.', 'success')
-        return redirect(url_for('admin.manage_insurance_claims'))
+        return redirect(url_for('admin.insurance_claims'))
     return render_template('admin/edit_insurance_claim.html', title='Edit Insurance Claim', form=form, claim=claim)
 
 
-# ---------------- Messaging (System Conversations) ---------------- #
+# ---------------- Misc ---------------- #
 
-@admin_bp.route('/conversations', methods=['GET'])
+@admin_bp.route('/vehicle_regions')
 @admin_required
-def admin_list_all_conversations():
+def vehicle_regions():
     page = request.args.get('page', 1, type=int)
-    conversations = Conversation.query.order_by(Conversation.last_message_date.desc()).paginate(page=page, per_page=10)
-    return render_template('admin/conversations.html', title='All Conversations', conversations=conversations)
+    regions = VehicleRegion.query.order_by(VehicleRegion.name).paginate(page=page, per_page=10)
+    return render_template('admin/vehicle_regions.html', title='Manage Vehicle Regions', regions=regions)
 
-@admin_bp.route('/conversation/<int:conversation_id>', methods=['GET', 'POST'])
+@admin_bp.route('/users/roles')
 @admin_required
-def admin_view_conversation(conversation_id):
-    conversation = Conversation.query.get_or_404(conversation_id)
-    messages = Message.query.filter_by(conversation_id=conversation_id).order_by(Message.timestamp).all()
-    # Form to send new messages could go here (not shown)
-    return render_template('admin/view_conversation.html', title='Conversation Details', conversation=conversation, messages=messages)
+def manage_user_roles():
+    roles = UserRole.query.all()
+    return render_template('admin/user_roles.html', title='Manage User Roles', roles=roles)
+
