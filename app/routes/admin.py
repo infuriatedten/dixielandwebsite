@@ -98,20 +98,32 @@ def edit_user(user_id):
 def delete_user(user_id):
     user = User.query.get_or_404(user_id)
 
-    related_objects = [
-        user.accounts.first(), user.tickets_received.first(), user.tickets_issued.first(),
-        user.permit_applications.first(), user.marketplace_listings.first(),
-        user.inspections_conducted.first(), user.inspections_received.first(),
-        user.vehicles.first(), user.conversations_as_user_participant.first(),
-        user.conversations_as_admin_participant.first(), user.sent_messages.first(),
-        user.notifications.first(), user.submitted_auction_items.first(),
-        user.approved_auction_items.first(), user.auctions_won.first(),
-        user.auction_bids_placed.first(), getattr(user, 'company', None),
-        getattr(user, 'farmer', None)
-    ]
+    related_counts = {
+        "accounts": user.accounts.count(),
+        "tickets_received": user.tickets_received.count(),
+        "tickets_issued": user.tickets_issued.count(),
+        "permit_applications": user.permit_applications.count(),
+        "marketplace_listings": user.marketplace_listings.count(),
+        "inspections_conducted": user.inspections_conducted.count(),
+        "inspections_received": user.inspections_received.count(),
+        "vehicles": user.vehicles.count(),
+        "conversations_as_user": user.conversations_as_user_participant.count(),
+        "conversations_as_admin": user.conversations_as_admin_participant.count(),
+        "sent_messages": user.sent_messages.count(),
+        "notifications": user.notifications.count(),
+        "submitted_auction_items": user.submitted_auction_items.count(),
+        "approved_auction_items": user.approved_auction_items.count(),
+        "auctions_won": user.auctions_won.count(),
+        "auction_bids_placed": user.auction_bids_placed.count(),
+        "company": 1 if hasattr(user, 'company') and user.company else 0,
+        "farmer": 1 if hasattr(user, 'farmer') and user.farmer else 0,
+    }
 
-    if any(related_objects):
-        flash('Cannot delete user with related objects. Please reassign or delete them first.', 'danger')
+    active_relations = [name for name, count in related_counts.items() if count > 0]
+
+    if active_relations:
+        error_message = f"Cannot delete user with related objects: {', '.join(active_relations)}. Please reassign or delete them first."
+        flash(error_message, 'danger')
         return redirect(url_for('admin.manage_users'))
 
     db.session.delete(user)
