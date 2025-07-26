@@ -226,7 +226,12 @@ class IssueTicketForm(FlaskForm):
     fine_amount = DecimalField('Fine Amount', places=2, validators=[DataRequired()])
     submit = SubmitField('Issue Ticket')
 
+from flask_wtf import FlaskForm
+from wtforms import SubmitField
 
+class DeleteUserForm(FlaskForm):
+    submit = SubmitField('Delete')
+    
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=4, max=64)])
     password = PasswordField('Password', validators=[DataRequired()])
