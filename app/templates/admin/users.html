@@ -24,9 +24,9 @@
                     <td><span class="badge bg-secondary">{{ user.role.name.capitalize() }}</span></td>
                     <td>
                         {% if user.id != current_user.id %}
-                        <form method="POST" action="{{ url_for('admin.users') }}" class="d-flex align-items-center">
-                            <input type="hidden" name="user_id" value="{{ user.id }}">
+                        <form method="POST" action="{{ url_for('admin.users') }}" class="d-flex align-items-center mb-0">
                             {{ form.hidden_tag() }}
+                            <input type="hidden" name="user_id" value="{{ user.id }}">
                             <div class="form-group me-2 mb-0">
                                 {{ form.role(class="form-control form-control-sm") }}
                             </div>
