@@ -70,66 +70,27 @@ def manage_users():
     users = User.query.order_by(User.username).paginate(page=page, per_page=10)
     return render_template('admin/manage_users.html', title='Manage Users', users=users)
 
-@admin_bp.route('/user/<int:user_id>/edit', methods=['GET', 'POST'])
-@login_required
+@admin_bp.route('/users', methods=['GET', 'POST'])
 @admin_required
-def edit_user(user_id):
-    user = User.query.get_or_404(user_id)
+def manage_users():
+    page = request.args.get('page', 1, type=int)
+    users = User.query.paginate(page=page, per_page=10)
 
-    form = EditUserForm(
-        original_username=user.username,
-        original_email=user.email,
-        obj=user
-    )
+    delete_forms = {user.id: DeleteUserForm() for user in users.items}
+    return render_template("admin/manage_users.html", users=users, delete_forms=delete_forms)
 
-    if form.validate_on_submit():
-        user.username = form.username.data
-        user.email = form.email.data
-        user.role = form.role.data
-        user.region = form.region.data
-        db.session.commit()
-        flash('User updated successfully.', 'success')
-        return redirect(url_for('admin.manage_users'))
-
-    return render_template('admin/edit_user.html', title='Edit User', form=form, user=user)
-
-@admin_bp.route('/user/<int:user_id>/delete', methods=['POST'])
+@admin_bp.route('/users/delete/<int:user_id>', methods=['POST'])
 @admin_required
 def delete_user(user_id):
-    user = User.query.get_or_404(user_id)
-
-    related_counts = {
-        "accounts": user.accounts.count(),
-        "tickets_received": user.tickets_received.count(),
-        "tickets_issued": user.tickets_issued.count(),
-        "permit_applications": user.permit_applications.count(),
-        "marketplace_listings": user.marketplace_listings.count(),
-        "inspections_conducted": user.inspections_conducted.count(),
-        "inspections_received": user.inspections_received.count(),
-        "vehicles": user.vehicles.count(),
-        "conversations_as_user": user.conversations_as_user_participant.count(),
-        "conversations_as_admin": user.conversations_as_admin_participant.count(),
-        "sent_messages": user.sent_messages.count(),
-        "notifications": user.notifications.count(),
-        "submitted_auction_items": user.submitted_auction_items.count(),
-        "approved_auction_items": user.approved_auction_items.count(),
-        "auctions_won": user.auctions_won.count(),
-        "auction_bids_placed": user.auction_bids_placed.count(),
-        "company": 1 if hasattr(user, 'company') and user.company else 0,
-        "farmer": 1 if hasattr(user, 'farmer') and user.farmer else 0,
-    }
-
-    active_relations = [name for name, count in related_counts.items() if count > 0]
-
-    if active_relations:
-        error_message = f"Cannot delete user with related objects: {', '.join(active_relations)}. Please reassign or delete them first."
-        flash(error_message, 'danger')
-        return redirect(url_for('admin.manage_users'))
-
-    db.session.delete(user)
-    db.session.commit()
-    flash('User deleted successfully.', 'success')
-    return redirect(url_for('admin.manage_users'))
+    form = DeleteUserForm()
+    if form.validate_on_submit():
+        user = User.query.get_or_404(user_id)
+        db.session.delete(user)
+        db.session.commit()
+        flash(f"User {user.username} deleted.", "success")
+    else:
+        flash("CSRF validation failed.", "danger")
+    return redirect(url_for("admin.manage_users"))
 
 
 # ---------------- Account Management ---------------- #

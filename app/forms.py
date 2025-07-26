@@ -16,7 +16,6 @@ from app.models import (
 )
 from app.custom_validators import must_be_positive
 
-
 class AccountForm(FlaskForm):
     user_id = SelectField('User', coerce=int, validators=[DataRequired()])
     name = StringField('Account Name (Optional)', validators=[Optional(), Length(max=100)])
@@ -97,7 +96,11 @@ class CreateListingForm(FlaskForm):
     unit = StringField('Unit (e.g., items, liters, kg)', validators=[DataRequired(), Length(max=50)])
     submit = SubmitField('Create Listing')
 
+from flask_wtf import FlaskForm
+from wtforms import SubmitField
 
+class DeleteUserForm(FlaskForm):
+    submit = SubmitField("Delete")
 class EditBalanceForm(FlaskForm):
     amount = DecimalField('Amount to Add/Subtract (+/-)', places=2, validators=[DataRequired()])
     description = TextAreaField('Reason/Description', validators=[DataRequired(), Length(min=5, max=255)])
