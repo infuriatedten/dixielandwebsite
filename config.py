@@ -43,3 +43,8 @@ class Config:
     AUCTION_ANTI_SNIPE_EXTENSION_MINUTES = int(os.environ.get('AUCTION_ANTI_SNIPE_EXTENSION_MINUTES', 5))
     AUCTION_DEFAULT_MIN_BID_INCREMENT = float(os.environ.get('AUCTION_DEFAULT_MIN_BID_INCREMENT', 1.0))
     AUCTION_JOB_RUN_INTERVAL_SECONDS = int(os.environ.get('AUCTION_JOB_RUN_INTERVAL_SECONDS', 60))
+
+class TestingConfig(Config):
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    WTF_CSRF_ENABLED = False
