@@ -74,7 +74,7 @@ def manage_users():
 @admin_bp.route('/user/<int:user_id>/delete', methods=['POST'])
 @admin_required
 def delete_user(user_id):
-    form = DeleteUserForm()
+    form = DeleteUserForm(prefix=str(user_id))
     if form.validate_on_submit():
         user_to_delete = User.query.get_or_404(user_id)
         db.session.delete(user_to_delete)

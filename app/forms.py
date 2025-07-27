@@ -123,32 +123,6 @@ class EditListingForm(FlaskForm):
 class EditUserForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
-    role = SelectField('Role', choices=[...], validators=[DataRequired()])
-    region = SelectField('Region', choices=[...], validators=[Optional()])
-
-    def __init__(self, original_username, original_email, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.original_username = original_username
-        self.original_email = original_email
-
-    def validate_username(self, field):
-        if field.data != self.original_username and User.query.filter_by(username=field.data).first():
-            raise ValidationError('Username is already taken.')
-
-    def validate_email(self, field):
-        if field.data != self.original_email and User.query.filter_by(email=field.data).first():
-            raise ValidationError('Email is already registered.')
-
-class EditRulesForm(FlaskForm):
-    content_markdown = TextAreaField('Rules Content (Markdown Format)',
-                                     validators=[DataRequired(), Length(min=20)],
-                                     render_kw={'rows': 25, 'class': 'form-control'})
-    submit = SubmitField('Save Rules')
-
-
-class EditUserForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired()])
-    email = StringField('Email', validators=[DataRequired(), Email()])
     role = SelectField('Role', choices=[(role.name, role.value) for role in UserRole], validators=[DataRequired()])
     discord_user_id = StringField('Discord User ID', validators=[Optional(), Length(max=100)])
     region = SelectField('Region', choices=[(region.name, region.value) for region in VehicleRegion], validators=[DataRequired()])
@@ -171,6 +145,11 @@ class EditUserForm(FlaskForm):
             if user:
                 raise ValidationError('This email is already in use.')
 
+class EditRulesForm(FlaskForm):
+    content_markdown = TextAreaField('Rules Content (Markdown Format)',
+                                     validators=[DataRequired(), Length(min=20)],
+                                     render_kw={'rows': 25, 'class': 'form-control'})
+    submit = SubmitField('Save Rules')
 
 class EditTaxBracketForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired(), Length(max=100)])
