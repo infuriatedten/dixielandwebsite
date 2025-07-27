@@ -274,8 +274,14 @@ class PlaceBidForm(FlaskForm):
             raise ValidationError('Bid amount is required.')
         if field.data < min_next_bid:
             raise ValidationError(f'Your bid must be at least {min_next_bid:.2f} (current highest/starting + increment).')
+from flask_wtf import FlaskForm
+from wtforms import DecimalField, StringField
+from wtforms.validators import DataRequired, NumberRange
 
-
+class OverrideBalanceForm(FlaskForm):
+    new_balance = DecimalField("New Balance", validators=[DataRequired(), NumberRange(min=0)])
+    description = StringField("Reason / Description", validators=[DataRequired()])
+    
 class ProductForm(FlaskForm):
     price = DecimalField('Price', validators=[must_be_positive])
     quantity = IntegerField('Quantity', validators=[must_be_positive])

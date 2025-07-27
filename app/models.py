@@ -30,20 +30,39 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return f'<User {self.username} ({self.role.value})>'
 
+from datetime import datetime
+from sqlalchemy import Numeric
+
 class Account(db.Model):
     __tablename__ = 'accounts'
+
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    balance = db.Column(db.Numeric(10, 2), default=0.00, nullable=False)
+
+    account_number = db.Column(db.String(50), unique=True, nullable=True)  # optional unique account number
+    
+    # Linked to either a user or a farmer
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    farmer_id = db.Column(db.Integer, db.ForeignKey('farmers.id'), nullable=True)
+    
+    balance = db.Column(Numeric(10, 2), default=0.00, nullable=False)
     currency = db.Column(db.String(10), default="GDC", nullable=False)
+    
     name = db.Column(db.String(100), nullable=True)
     is_company = db.Column(db.Boolean, default=False, nullable=False)
+    
     last_updated_on = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
     user = db.relationship('User', backref=db.backref('accounts', lazy='dynamic'))
+    farmer = db.relationship('Farmer', back_populates='account')
     transactions = db.relationship('Transaction', backref='account', lazy='dynamic', cascade="all, delete-orphan")
 
     def __repr__(self):
-        return f'<Account {self.id} for User {self.user_id} - {self.balance} {self.currency}>'
+        owner = f"User {self.user_id}" if self.user_id else (f"Farmer {self.farmer_id}" if self.farmer_id else "No owner")
+        acct_num = f" account_number={self.account_number}" if self.account_number else ""
+        return f"<Account id={self.id}{acct_num} for {owner} - balance={self.balance} {self.currency}>"
+
+
 
 class TransactionType(enum.Enum):
     INITIAL_SETUP = "initial_setup"
@@ -368,14 +387,17 @@ class Company(db.Model):
         return f'<Company {self.name}>'
 
 class Farmer(db.Model):
-    __tablename__ = 'farmers'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    user = db.relationship('User', backref=db.backref('farmer', uselist=False))
-    parcels = db.relationship('Parcel', backref='farmer', lazy='dynamic')
+    __tablename__ = 'farmers'  # ✅ This must match the ForeignKey('farmers.id')
 
-    def __repr__(self):
-        return f'<Farmer {self.user.username}>'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    account = db.relationship('Account', back_populates='farmer', uselist=False)
+class TransactionLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    farmer_id = db.Column(db.Integer, db.ForeignKey('farmers.id'), nullable=False)
+    amount = db.Column(db.Float)
+    description = db.Column(db.String(255))
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Parcel(db.Model):
     __tablename__ = 'parcels'
@@ -397,11 +419,13 @@ class InsuranceClaimStatus(enum.Enum):
 
 class InsuranceClaim(db.Model):
     __tablename__ = 'insurance_claims'
+
     id = db.Column(db.Integer, primary_key=True)
     farmer_id = db.Column(db.Integer, db.ForeignKey('farmers.id'), nullable=False)
     claim_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     reason = db.Column(db.Text, nullable=False)
     status = db.Column(db.Enum(InsuranceClaimStatus), default=InsuranceClaimStatus.PENDING, nullable=False)
+
     farmer = db.relationship('Farmer', backref=db.backref('insurance_claims', lazy='dynamic'))
 
     def __repr__(self):
