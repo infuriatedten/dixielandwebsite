@@ -51,11 +51,20 @@ def index():
 def manage_accounts():
     page = request.args.get('page', 1, type=int)
     per_page = 20
-    accounts = Account.query.options(
-        joinedload(Account.user),
-        joinedload(Account.farmer)
+    query = Account.query
+    
+    # Search functionality
+    search_query = request.args.get('search')
+    if search_query:
+        query = query.join(User).filter(User.username.ilike(f'%{search_query}%'))
+
+    accounts = query.options(
+        db.joinedload(Account.user),
+        db.joinedload(Account.farmer)
     ).order_by(Account.id.desc()).paginate(page=page, per_page=per_page)
-    return render_template('admin/manage_accounts.html', accounts=accounts)
+    
+    return render_template('admin/manage_accounts.html', accounts=accounts, title="Manage Accounts")
+
 
 @admin_bp.route('/manage/contracts', methods=['GET'])
 @login_required
