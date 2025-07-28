@@ -44,7 +44,8 @@ class Account(db.Model):
     last_updated_on = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     user = db.relationship('User', backref=db.backref('accounts', lazy='dynamic'))
     transactions = db.relationship('Transaction', backref='account', lazy='dynamic', cascade="all, delete-orphan")
-    farmer = db.relationship('Farmer', secondary='users', primaryjoin='Account.user_id == User.id', secondaryjoin='User.id == Farmer.user_id', backref=db.backref('accounts', uselist=False), uselist=False, viewonly=True)
+    farmer = db.relationship('Farmer', primaryjoin='Account.user_id == Farmer.user_id', backref='account', uselist=False)
+
 
     def __repr__(self):
         return f'<Account {self.id} for User {self.user_id} - {self.balance} {self.currency}>'
