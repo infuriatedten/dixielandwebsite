@@ -35,32 +35,20 @@ from sqlalchemy import Numeric
 
 class Account(db.Model):
     __tablename__ = 'accounts'
-
     id = db.Column(db.Integer, primary_key=True)
-
-    account_number = db.Column(db.String(50), unique=True, nullable=True)  # optional unique account number
-    
-    # Linked to either a user or a farmer
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-    farmer_id = db.Column(db.Integer, db.ForeignKey('farmers.id'), nullable=True)
-    
-    balance = db.Column(Numeric(10, 2), default=0.00, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    balance = db.Column(db.Numeric(10, 2), default=0.00, nullable=False)
     currency = db.Column(db.String(10), default="GDC", nullable=False)
-    
     name = db.Column(db.String(100), nullable=True)
     is_company = db.Column(db.Boolean, default=False, nullable=False)
-    
     last_updated_on = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    # Relationships
     user = db.relationship('User', backref=db.backref('accounts', lazy='dynamic'))
-    farmer = db.relationship('Farmer', back_populates='account')
     transactions = db.relationship('Transaction', backref='account', lazy='dynamic', cascade="all, delete-orphan")
+    farmer = db.relationship('Farmer', secondary='users', primaryjoin='Account.user_id == User.id', secondaryjoin='User.id == Farmer.user_id', backref=db.backref('accounts', uselist=False), uselist=False, viewonly=True)
 
     def __repr__(self):
-        owner = f"User {self.user_id}" if self.user_id else (f"Farmer {self.farmer_id}" if self.farmer_id else "No owner")
-        acct_num = f" account_number={self.account_number}" if self.account_number else ""
-        return f"<Account id={self.id}{acct_num} for {owner} - balance={self.balance} {self.currency}>"
+        return f'<Account {self.id} for User {self.user_id} - {self.balance} {self.currency}>'
+
 
 
 
