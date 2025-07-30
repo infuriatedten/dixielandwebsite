@@ -45,6 +45,11 @@ class Account(db.Model):
     user = db.relationship('User', backref=db.backref('accounts', lazy='dynamic'))
     transactions = db.relationship('Transaction', backref='account', lazy='dynamic', cascade="all, delete-orphan")
 
+    
+    farmer = db.relationship('Farmer', primaryjoin='Account.user_id == Farmer.user_id', backref='account', uselist=False)
+
+
+
     def __repr__(self):
         return f'<Account {self.id} for User {self.user_id} - {self.balance} {self.currency}>'
 
