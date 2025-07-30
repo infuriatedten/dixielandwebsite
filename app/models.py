@@ -44,7 +44,10 @@ class Account(db.Model):
     last_updated_on = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     user = db.relationship('User', backref=db.backref('accounts', lazy='dynamic'))
     transactions = db.relationship('Transaction', backref='account', lazy='dynamic', cascade="all, delete-orphan")
+
+    
     farmer = db.relationship('Farmer', primaryjoin='Account.user_id == Farmer.user_id', backref='account', uselist=False)
+
 
 
     def __repr__(self):
@@ -376,11 +379,13 @@ class Company(db.Model):
         return f'<Company {self.name}>'
 
 class Farmer(db.Model):
-    __tablename__ = 'farmers'  # ✅ This must match the ForeignKey('farmers.id')
+    __tablename__ = 'farmers'
 
     id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
     name = db.Column(db.String(100), nullable=False)
-    account = db.relationship('Account', back_populates='farmer', uselist=False)
+
+    user = db.relationship('User', backref=db.backref('farmer', uselist=False))
 class TransactionLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     farmer_id = db.Column(db.Integer, db.ForeignKey('farmers.id'), nullable=False)
