@@ -9,7 +9,7 @@ Werkzeug==3.0.1
 python-dotenv
 requests==2.31.0
 gunicorn==21.2.0
-SQLAlchemy==2.0.29
+SQLAlchemy==1.4.46
 Flask-WTF==1.2.1
 python-dateutil==2.8.2
 whitenoise[brotli]==6.6.0
