@@ -98,6 +98,6 @@ if __name__ == '__main__':
                 logger.exception(e)
         else:
             logger.info("Admin user already exists.")
-
+    db.create_all(app=app)
     # Start Flask dev server
     app.run(host='0.0.0.0', port=port, debug=True)
