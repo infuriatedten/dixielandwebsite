@@ -15,4 +15,4 @@ python-dateutil==2.8.2
 whitenoise[brotli]==6.6.0
 paramiko==3.4.0
 email_validator
-mistune
+mistune==2.0.5
