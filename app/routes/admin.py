@@ -228,11 +228,11 @@ def delete_user(user_id):
 @admin_required
 def edit_user(user_id):
     user = User.query.get_or_404(user_id)
-    form = EditUserForm(obj=user)
+    form = EditUserForm(original_username=user.username, original_email=user.email, obj=user)
     if form.validate_on_submit():
         user.username = form.username.data
         user.email = form.email.data
-        user.role_id = form.role_id.data
+        user.role = form.role.data
         db.session.commit()
         flash('User updated successfully.', 'success')
         return redirect(url_for('admin.manage_users'))
