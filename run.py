@@ -76,7 +76,9 @@ if __name__ == '__main__':
             logger.error("Failed to initialize database.")
             logger.exception(e)
 
+        logger.info("Seeding insurance rates...")
         seed_insurance_rates()
+        logger.info("Insurance rates seeded.")
 
         # Create default admin if it doesn't exist
         admin_username = 'admin'
@@ -98,6 +100,12 @@ if __name__ == '__main__':
                 logger.exception(e)
         else:
             logger.info("Admin user already exists.")
-    db.create_all(app=app)
+
+    with app.app_context():
+        logger.info("Creating all tables...")
+        db.create_all()
+        logger.info("All tables created.")
+
     # Start Flask dev server
+    logger.info("Starting Flask dev server...")
     app.run(host='0.0.0.0', port=port, debug=True)
