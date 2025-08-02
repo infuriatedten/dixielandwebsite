@@ -11,93 +11,117 @@
     {% import "macros/nav_macros.html" as nav %}
 
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="{{ url_for('main.index') }}">Game Portal</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('main.index') }}">Dixieland RolePlay</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('main.index') }}">Home</a>
-                </li>
-
-                {% if current_user.is_authenticated %}
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.profile') }}">Profile</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('banking.dashboard') }}">Banking</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('taxes.tax_info') }}">Tax Info</a></li>
-
-                    <!-- DOT links as separate nav items -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('dot.my_tickets') }}">My DOT Tickets</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('dot.my_permit_applications') }}">My Permit Applications</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('dot.list_my_conducted_inspections') }}">My DOT Inspections</a>
+                        <a class="nav-link" href="{{ url_for('main.index') }}">Home</a>
                     </li>
 
-                    {% if current_user.role is defined and current_user.role.value is defined and current_user.role.value == UserRole.ADMIN.value %}
-                        <!-- Admin links as separate nav items (no dropdown) -->
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.index') }}">Admin Dashboard</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.manage_users') }}">Manage Users</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.manage_accounts') }}">Manage Accounts</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.manage_tickets') }}">Manage Tickets</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.manage_permits') }}">Manage Permits</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.manage_inspections') }}">Manage Inspections</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.manage_tax_brackets') }}">Manage Tax Brackets</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.manage_contracts') }}">Manage Contracts</a></li>
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.profile') }}">Profile</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('banking.dashboard') }}">Banking</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('taxes.tax_info') }}">Tax Info</a>
+                        </li>
 
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('auction.list_pending_auctions') }}">Pending Auction Approvals</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('auction.manage_all_auctions') }}">Manage All Auctions</a></li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('dot.dashboard') }}">DOT Dashboard</a>
+                        </li>
 
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.edit_rules') }}">Edit Rules</a></li>
+                        {% if current_user.role == UserRole.ADMIN %}
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Admin
+                                </a>
+                                <ul class="dropdown-menu" aria-labelledby="adminDropdown">
+                                    <li><a class="dropdown-item" href="{{ url_for('admin.index') }}">Admin Dashboard</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('admin.manage_users') }}">Manage Users</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('admin.manage_accounts') }}">Manage Accounts</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('admin.manage_tickets') }}">Manage Tickets</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('admin.manage_permits') }}">Manage Permits</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('admin.manage_inspections') }}">Manage Inspections</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('admin.manage_tax_brackets') }}">Manage Tax Brackets</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('admin.manage_contracts') }}">Manage Contracts</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('auction.list_pending_auctions') }}">Pending Auction Approvals</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('auction.manage_all_auctions') }}">Manage All Auctions</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('admin.edit_rules') }}">Edit Rules</a></li>
+                                </ul>
+                            </li>
+                        {% endif %}
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('marketplace.index') }}">Marketplace</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auction.index') }}">Auctions</a>
+                        </li>
+
+                        <!-- Farmers links as separate nav items -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.farmers') }}">Farmers Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.contracts') }}">Available Contracts</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.company') }}">Manage Company</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('livemap.server_status') }}">Server Status</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.view_rules') }}">Rules</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('messaging.list_my_conversations') }}">
+                                Messages
+                                {% if unread_message_count and unread_message_count > 0 %}
+                                    <span class="badge bg-danger rounded-pill">{{ unread_message_count }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('notifications.list_notifications') }}">
+                                Notifications
+                                {% if unread_notification_count and unread_notification_count > 0 %}
+                                    <span class="badge bg-warning text-dark rounded-pill">{{ unread_notification_count }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
                     {% endif %}
+                </ul>
 
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('marketplace.index') }}">Marketplace</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('auction.index') }}">Auctions</a></li>
-                    <li class.nav-item"><a class="nav-link" href="{{ url_for('vehicle.my_vehicles') }}">My Vehicles</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('livemap.server_status') }}">Server Status</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.view_rules') }}">Rules</a></li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('messaging.list_my_conversations') }}">
-                            Messages
-                            {% if unread_message_count > 0 %}
-                                <span class="badge bg-danger" aria-label="{{ unread_message_count }} unread messages">
-                                    {{ unread_message_count }}
-                                </span>
-                            {% endif %}
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('notifications.list_notifications') }}">
-                            Notifications
-                            {% if unread_notification_count > 0 %}
-                                <span class="badge bg-warning text-dark" aria-label="{{ unread_notification_count }} unread notifications">
-                                    {{ unread_notification_count }}
-                                </span>
-                            {% endif %}
-                        </a>
-                    </li>
-                {% endif %}
-            </ul>
-
-            <ul class="navbar-nav ms-auto">
-                {% if current_user.is_authenticated %}
-                    <li class="nav-item nav-link text-dark">
-                        Welcome, {{ current_user.username }} ({{ current_user.role.name.capitalize() }})
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link btn btn-outline-secondary btn-sm" href="{{ url_for('auth.logout') }}">Logout</a>
-                    </li>
-                {% else %}
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.login') }}">Login</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.register') }}">Register</a></li>
-                {% endif %}
-            </ul>
+                <ul class="navbar-nav ms-auto">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item nav-link text-dark">
+                            Welcome, {{ current_user.username }} ({{ current_user.role.name.capitalize() }})
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-outline-secondary btn-sm" href="{{ url_for('auth.logout') }}">Logout</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.register') }}">Register</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
         </div>
     </nav>
 
