@@ -17,6 +17,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), index=True, unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     role = db.Column(db.Enum(UserRole), default=UserRole.USER, nullable=False)
+    email_confirmed = db.Column(db.Boolean, default=False, nullable=False)
     discord_user_id = db.Column(db.String(100), nullable=True, unique=True, index=True)
     discord_username = db.Column(db.String(100), nullable=True)
     region = db.Column(db.Enum('US', 'EU', 'OTHER_DEFAULT', name='region_enum'), nullable=True, default='OTHER_DEFAULT')
@@ -378,7 +379,6 @@ class Farmer(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
-    name = db.Column(db.String(100), nullable=False)
 
     user = db.relationship('User', backref=db.backref('farmer', uselist=False))
 class TransactionLog(db.Model):
