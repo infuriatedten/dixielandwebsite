@@ -10,7 +10,7 @@ from app.models import (
     Conversation, Message
 )
 from app.forms import (
-    EditRulesForm, EditUserForm, EditAccountForm, EditTicketForm, EditPermitForm,
+    EditRulesForm, EditUserForm, AccountForm, EditAccountForm, EditTicketForm, EditPermitForm,
     EditInspectionForm, EditTaxBracketForm, EditBalanceForm, EditInsuranceClaimForm,
     EditBankForm, DeleteUserForm
 )
@@ -63,6 +63,41 @@ def manage_accounts():
     ).order_by(Account.id.desc()).paginate(page=page, per_page=per_page)
     
     return render_template('admin/manage_accounts.html', accounts=accounts, title="Manage Accounts")
+
+
+@admin_bp.route('/manage/accounts/create', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def create_account():
+    form = AccountForm()
+    if form.validate_on_submit():
+        account = Account(
+            user_id=form.user_id.data,
+            name=form.name.data,
+            balance=form.balance.data,
+            is_company=form.is_company.data,
+            currency=form.currency.data
+        )
+        db.session.add(account)
+        db.session.commit()
+        flash('Account created successfully.', 'success')
+        return redirect(url_for('admin.manage_accounts'))
+    return render_template('admin/edit_account.html', form=form, title="Create Account")
+
+
+@admin_bp.route('/manage/accounts/edit/<int:account_id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_account(account_id):
+    account = Account.query.get_or_404(account_id)
+    form = EditAccountForm(obj=account)
+    if form.validate_on_submit():
+        account.balance = form.balance.data
+        account.is_company = form.is_company.data
+        db.session.commit()
+        flash('Account updated successfully.', 'success')
+        return redirect(url_for('admin.manage_accounts'))
+    return render_template('admin/edit_account.html', form=form, title="Edit Account", account=account)
 
 
 @admin_bp.route('/manage/contracts', methods=['GET'])
