@@ -378,7 +378,6 @@ class Farmer(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
-    name = db.Column(db.String(100), nullable=False)
 
     user = db.relationship('User', backref=db.backref('farmer', uselist=False))
 class TransactionLog(db.Model):
