@@ -59,8 +59,7 @@ def manage_accounts():
         query = query.join(User).filter(User.username.ilike(f'%{search_query}%'))
 
     accounts = query.options(
-        db.joinedload(Account.user),
-        db.joinedload(Account.farmer)
+        db.joinedload(Account.user)
     ).order_by(Account.id.desc()).paginate(page=page, per_page=per_page)
     
     return render_template('admin/manage_accounts.html', accounts=accounts, title="Manage Accounts")
