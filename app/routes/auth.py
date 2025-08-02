@@ -34,11 +34,24 @@ def register():
         elif form.account_type.data == 'company':
             company = Company(user_id=user.id, name=f"{user.username}'s Company")
             db.session.add(company)
+        else:
+            flash('Invalid account type selected.', 'danger')
+            return redirect(url_for('auth.register'))
 
         db.session.commit()
 
-        flash('Congratulations, you are now a registered user!', 'success')
-        login_user(user) # Log in the user after registration
+        from app.email import send_email
+        from itsdangerous import URLSafeTimedSerializer
+        from flask import current_app
+
+        s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        token = s.dumps(user.email, salt='email-confirm')
+
+        confirm_url = url_for('auth.confirm_email', token=token, _external=True)
+        html = render_template('auth/confirm_email.html', confirm_url=confirm_url)
+        send_email(user.email, 'Confirm Your Email Address', html)
+
+        flash('A confirmation email has been sent to your email address. Please check your inbox to complete the registration.', 'info')
         return redirect(url_for('main.index'))
     return render_template('auth/register.html', title='Register', form=form)
 
@@ -51,6 +64,9 @@ def login():
         user = User.query.filter_by(username=form.username.data).first()
         if user is None or not user.check_password(form.password.data):
             flash('Invalid username or password', 'danger')
+            return redirect(url_for('auth.login'))
+        if not user.email_confirmed:
+            flash('Please confirm your email address before logging in.', 'warning')
             return redirect(url_for('auth.login'))
         login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
@@ -67,43 +83,25 @@ def logout():
     flash('You have been logged out.', 'info')
     return redirect(url_for('main.index'))
 
-# Example of a protected route
-from flask import render_template, redirect, url_for, flash, request
-from flask_login import login_required, current_user
-from app import db
-from app.routes.auth import bp
-from app.forms import EditProfileForm
-from app.models import Company, Farmer, Parcel
 
-@bp.route('/profile', methods=['GET', 'POST'])
-@login_required
-def profile():
-    form = EditProfileForm(
-        original_username=current_user.username,
-        original_email=current_user.email,
-        obj=current_user
-    )
+@bp.route('/confirm/<token>')
+def confirm_email(token):
+    from itsdangerous import URLSafeTimedSerializer
+    from flask import current_app
 
-    if form.validate_on_submit():
-        current_user.username = form.username.data
-        current_user.email = form.email.data
-        current_user.about_me = form.about_me.data
+    s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+    try:
+        email = s.loads(token, salt='email-confirm', max_age=3600)
+    except:
+        flash('The confirmation link is invalid or has expired.', 'danger')
+        return redirect(url_for('main.index'))
 
-        # Handle optional fields
-        if hasattr(form, 'region') and form.region.data:
-            current_user.region = form.region.data
-
+    user = User.query.filter_by(email=email).first_or_404()
+    if user.email_confirmed:
+        flash('Account already confirmed. Please login.', 'success')
+    else:
+        user.email_confirmed = True
+        db.session.add(user)
         db.session.commit()
-        flash('Your profile has been updated.', 'success')
-        return redirect(url_for('auth.profile'))
-
-    # Pre-fill optional fields only on GET
-    if request.method == 'GET' and hasattr(form, 'region'):
-        form.region.data = current_user.region or 'OTHER_DEFAULT'
-
-    return render_template(
-        'auth/profile.html',
-        title='My Profile',
-        form=form,
-        user=current_user
-    )
+        flash('You have confirmed your account. Thanks!', 'success')
+    return redirect(url_for('auth.login'))

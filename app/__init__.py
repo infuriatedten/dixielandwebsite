@@ -8,6 +8,7 @@ from flask_migrate import Migrate
 from flask_wtf import CSRFProtect
 from whitenoise import WhiteNoise
 from jinja2 import pass_context
+from flask_mail import Mail
 from markupsafe import Markup, escape
 from config import Config
 
@@ -17,6 +18,7 @@ login_manager = LoginManager()
 scheduler = APScheduler()
 migrate = Migrate()
 csrf = CSRFProtect()
+mail = Mail()
 
 # Helper: Convert newlines to HTML paragraphs and line breaks
 _paragraph_re = re.compile(r'(?:\r\n|\r|\n){2,}')
@@ -56,6 +58,7 @@ def create_app(config_class=Config):
     scheduler.init_app(app)
     migrate.init_app(app, db)
     csrf.init_app(app)
+    mail.init_app(app)
 
     # Models must be imported before first use
     from app.models import (
@@ -91,6 +94,7 @@ def create_app(config_class=Config):
     from app.routes.messaging import messaging_bp
     from app.routes.notifications import notifications_bp
     from app.routes.vehicle import bp as vehicle_bp
+    from app.routes.user import bp as user_bp
 
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(main_bp)
@@ -104,5 +108,6 @@ def create_app(config_class=Config):
     app.register_blueprint(auction_bp, url_prefix='/auctions')
     app.register_blueprint(messaging_bp, url_prefix='/messages')
     app.register_blueprint(notifications_bp, url_prefix='/notifications')
+    app.register_blueprint(user_bp, url_prefix='/user')
 
     return app

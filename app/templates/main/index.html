@@ -22,7 +22,7 @@
         <h1 class="display-4 fw-bold">Welcome to the Game Portal!</h1>
         <p class="lead mb-4">Your central hub for all in-game activities.</p>
         {% if current_user.is_authenticated %}
-            <a class="btn btn-primary btn-lg me-2" href="{{ url_for('auth.profile') }}" role="button">View Profile</a>
+            <a class="btn btn-primary btn-lg me-2" href="{{ url_for('user.profile') }}" role="button">View Profile</a>
         {% else %}
             <a class="btn btn-primary btn-lg me-2" href="{{ url_for('auth.login') }}" role="button">Login</a>
             <a class="btn btn-outline-light btn-lg" href="{{ url_for('auth.register') }}" role="button">Register</a>

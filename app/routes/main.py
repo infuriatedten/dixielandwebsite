@@ -22,6 +22,12 @@ main_bp = Blueprint('main', __name__)
 
 @main_bp.route('/', endpoint='index')
 def main_index():
+    if current_user.is_authenticated:
+        if current_user.farmer:
+            return redirect(url_for('main.farmer_dashboard'))
+        elif current_user.company:
+            return redirect(url_for('main.company_dashboard'))
+
     recent_listings = MarketplaceListing.query \
         .filter_by(status=MarketplaceListingStatus.AVAILABLE) \
         .order_by(MarketplaceListing.creation_date.desc()) \
@@ -84,6 +90,16 @@ def view_rules():
 
 
 # ------------------------ ADMIN ------------------------
+
+@main_bp.route('/farmer-dashboard')
+@login_required
+def farmer_dashboard():
+    return render_template('main/farmer_dashboard.html', title='Farmer Dashboard')
+
+@main_bp.route('/company-dashboard')
+@login_required
+def company_dashboard():
+    return render_template('main/company_dashboard.html', title='Company Dashboard')
 
 @main_bp.route('/admin-dashboard')
 @admin_required
