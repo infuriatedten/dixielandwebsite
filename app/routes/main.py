@@ -22,12 +22,6 @@ main_bp = Blueprint('main', __name__)
 
 @main_bp.route('/', endpoint='index')
 def main_index():
-    if current_user.is_authenticated:
-        if current_user.farmer:
-            return redirect(url_for('main.farmer_dashboard'))
-        elif current_user.company:
-            return redirect(url_for('main.company_dashboard'))
-
     recent_listings = MarketplaceListing.query \
         .filter_by(status=MarketplaceListingStatus.AVAILABLE) \
         .order_by(MarketplaceListing.creation_date.desc()) \
@@ -90,54 +84,6 @@ def view_rules():
 
 
 # ------------------------ ADMIN ------------------------
-
-@main_bp.route('/farmer-dashboard', methods=['GET', 'POST'])
-@login_required
-def farmer_dashboard():
-    bank_accounts = Account.query.filter_by(user_id=current_user.id).all()
-    farmer = Farmer.query.filter_by(user_id=current_user.id).first()
-    parcels = Parcel.query.filter_by(farmer_id=farmer.id).all() if farmer else []
-    form = ParcelForm()
-    if form.validate_on_submit():
-        if farmer:
-            new_parcel = Parcel(
-                location=form.location.data,
-                size=form.size.data,
-                farmer_id=farmer.id
-            )
-            db.session.add(new_parcel)
-            db.session.commit()
-            flash('Parcel added successfully!', 'success')
-        else:
-            flash('You must be a registered farmer to add a parcel.', 'danger')
-        return redirect(url_for('main.farmer_dashboard'))
-    return render_template('main/farmer_dashboard.html', title='Farmer Dashboard', bank_accounts=bank_accounts, parcels=parcels, form=form)
-
-@main_bp.route('/company-dashboard')
-@login_required
-def company_dashboard():
-    return render_template('main/company_dashboard.html', title='Company Dashboard')
-
-
-@main_bp.route('/insurance-claim', methods=['GET', 'POST'])
-@login_required
-def insurance_claim():
-    form = InsuranceClaimForm()
-    if form.validate_on_submit():
-        farmer = Farmer.query.filter_by(user_id=current_user.id).first()
-        if farmer:
-            claim = InsuranceClaim(
-                reason=form.reason.data,
-                farmer_id=farmer.id
-            )
-            db.session.add(claim)
-            db.session.commit()
-            flash('Insurance claim submitted successfully!', 'success')
-            return redirect(url_for('main.farmer_dashboard'))
-        else:
-            flash('You must be a registered farmer to submit a claim.', 'danger')
-            return redirect(url_for('main.farmer_dashboard'))
-    return render_template('main/insurance_claim.html', title='Insurance Claim', form=form)
 
 @main_bp.route('/admin-dashboard')
 @admin_required

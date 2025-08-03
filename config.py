@@ -19,11 +19,6 @@ class Config:
     # CSRF Protection
     WTF_CSRF_ENABLED = True
 
-    # "Remember Me" Cookie Settings
-    REMEMBER_COOKIE_SAMESITE = 'Lax'
-    REMEMBER_COOKIE_HTTPONLY = True
-    REMEMBER_COOKIE_SECURE = True
-
     # Discord Integration
     DISCORD_WEBHOOK_URL = os.environ.get('DISCORD_WEBHOOK_URL')
     DISCORD_MARKETPLACE_CHANNEL_ID = os.environ.get('DISCORD_MARKETPLACE_CHANNEL_ID')

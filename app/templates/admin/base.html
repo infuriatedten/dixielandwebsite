@@ -26,7 +26,7 @@
 
                     {% if current_user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('user.profile') }}">Profile</a>
+                            <a class="nav-link" href="{{ url_for('auth.profile') }}">Profile</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('banking.dashboard') }}">Banking</a>

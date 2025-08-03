@@ -194,32 +194,6 @@ class EditUserRoleForm(FlaskForm):
     submit = SubmitField('Update Role')
 
 
-class AdminEditUserForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired()])
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    role = SelectField('Role', choices=[(role.name, role.value) for role in UserRole], validators=[DataRequired()])
-    discord_user_id = StringField('Discord User ID', validators=[Optional(), Length(max=100)])
-    region = SelectField('Region', choices=[(region.name, region.value) for region in VehicleRegion], validators=[DataRequired()])
-    submit = SubmitField('Update User')
-
-    def __init__(self, original_username, original_email, *args, **kwargs):
-        super(AdminEditUserForm, self).__init__(*args, **kwargs)
-        self.original_username = original_username
-        self.original_email = original_email
-
-    def validate_username(self, username):
-        if username.data != self.original_username:
-            user = User.query.filter_by(username=username.data).first()
-            if user:
-                raise ValidationError('Please use a different username.')
-
-    def validate_email(self, email):
-        if email.data != self.original_email:
-            user = User.query.filter_by(email=email.data).first()
-            if user:
-                raise ValidationError('This email is already in use.')
-
-
 class FarmerForm(FlaskForm):
     submit = SubmitField('Register as Farmer')
 
