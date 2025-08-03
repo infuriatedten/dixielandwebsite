@@ -16,4 +16,3 @@ whitenoise[brotli]==6.6.0
 paramiko==3.4.0
 email_validator
 mistune==2.0.5
-Flask-Mail==0.9.1

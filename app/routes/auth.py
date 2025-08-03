@@ -41,18 +41,8 @@ def register():
 
         db.session.commit()
 
-        from app.email import send_email
-        from itsdangerous import URLSafeTimedSerializer
-        from flask import current_app
-
-        s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
-        token = s.dumps(user.email, salt='email-confirm')
-
-        confirm_url = url_for('auth.confirm_email', token=token, _external=True)
-        html = render_template('auth/confirm_email.html', confirm_url=confirm_url)
-        send_email(user.email, 'Confirm Your Email Address', html)
-
-        flash('A confirmation email has been sent to your email address. Please check your inbox to complete the registration.', 'info')
+        flash('Congratulations, you are now a registered user!', 'success')
+        login_user(user) # Log in the user after registration
         return redirect(url_for('main.index'))
     return render_template('auth/register.html', title='Register', form=form)
 
@@ -65,9 +55,6 @@ def login():
         user = User.query.filter_by(username=form.username.data).first()
         if user is None or not user.check_password(form.password.data):
             flash('Invalid username or password', 'danger')
-            return redirect(url_for('auth.login'))
-        if not user.email_confirmed:
-            flash('Please confirm your email address before logging in.', 'warning')
             return redirect(url_for('auth.login'))
         login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
@@ -85,27 +72,6 @@ def logout():
     return redirect(url_for('main.index'))
 
 
-@bp.route('/confirm/<token>')
-def confirm_email(token):
-    from itsdangerous import URLSafeTimedSerializer
-    from flask import current_app
-
-    s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
-    try:
-        email = s.loads(token, salt='email-confirm', max_age=3600)
-    except:
-        flash('The confirmation link is invalid or has expired.', 'danger')
-        return redirect(url_for('main.index'))
-
-    user = User.query.filter_by(email=email).first_or_404()
-    if user.email_confirmed:
-        flash('Account already confirmed. Please login.', 'success')
-    else:
-        user.email_confirmed = True
-        db.session.add(user)
-        db.session.commit()
-        flash('You have confirmed your account. Thanks!', 'success')
-    return redirect(url_for('auth.login'))
 
 # Example of a protected route
 from flask import render_template, redirect, url_for, flash, request
