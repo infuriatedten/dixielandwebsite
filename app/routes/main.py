@@ -22,6 +22,14 @@ main_bp = Blueprint('main', __name__)
 
 @main_bp.route('/', endpoint='index')
 def main_index():
+    if current_user.is_authenticated:
+        if hasattr(current_user, 'farmer') and current_user.farmer:
+            return redirect(url_for('main.farmer_dashboard'))
+        elif hasattr(current_user, 'company') and current_user.company:
+            return redirect(url_for('main.company_dashboard'))
+        else:
+            return redirect(url_for('main.civilian_dashboard'))
+
     recent_listings = MarketplaceListing.query \
         .filter_by(status=MarketplaceListingStatus.AVAILABLE) \
         .order_by(MarketplaceListing.creation_date.desc()) \
@@ -85,6 +93,12 @@ def view_rules():
 
 # ------------------------ ADMIN ------------------------
 
+@main_bp.route('/civilian-dashboard')
+@login_required
+def civilian_dashboard():
+    tickets = Ticket.query.filter_by(issued_to_user_id=current_user.id).all()
+    return render_template('main/civilian_dashboard.html', title='Civilian Dashboard', tickets=tickets)
+
 @main_bp.route('/admin-dashboard')
 @admin_required
 def admin_dashboard():
@@ -105,12 +119,17 @@ def officer_area():
     return render_template('officer/area.html', title='Officer Area')
 # ------------------------ FARMERS ------------------------
 
-@main_bp.route('/farmers', methods=['GET', 'POST'])
+@main_bp.route('/farmer-dashboard', methods=['GET', 'POST'])
 @login_required
-def farmers():
+def farmer_dashboard():
+    bank_accounts = Account.query.filter_by(user_id=current_user.id).all()
+    farmer = Farmer.query.filter_by(user_id=current_user.id).first()
+    parcels = Parcel.query.filter_by(farmer_id=farmer.id).all() if farmer else []
+    vehicles = UserVehicle.query.filter_by(user_id=current_user.id).all()
+    tickets = Ticket.query.filter_by(issued_to_user_id=current_user.id).all()
+    insurance_claims = InsuranceClaim.query.filter_by(farmer_id=farmer.id).all() if farmer else []
     parcel_form = ParcelForm()
     insurance_form = InsuranceClaimForm()
-    farmer = db.session.query(Farmer.id, Farmer.user_id).filter_by(user_id=current_user.id).first()
 
     if parcel_form.validate_on_submit() and parcel_form.submit.data:
         if farmer:
@@ -124,7 +143,7 @@ def farmers():
             flash('Parcel added successfully!', 'success')
         else:
             flash('You must be a registered farmer to add a parcel.', 'danger')
-        return redirect(url_for('main.farmers'))
+        return redirect(url_for('main.farmer_dashboard'))
 
     if insurance_form.validate_on_submit() and insurance_form.submit.data:
         if farmer:
@@ -142,21 +161,15 @@ def farmers():
             flash('Insurance claim submitted successfully!', 'success')
         else:
             flash('You must be a registered farmer to submit a claim.', 'danger')
-        return redirect(url_for('main.farmers'))
-
-    parcels = Parcel.query.filter_by(farmer_id=farmer.id).all() if farmer else []
-    total_acres = sum(parcel.size for parcel in parcels)
-    vehicles = UserVehicle.query.filter_by(user_id=current_user.id).all()
-    bank_accounts = Account.query.filter_by(user_id=current_user.id).all()
-    insurance_claims = InsuranceClaim.query.filter_by(farmer_id=farmer.id).all() if farmer else []
+        return redirect(url_for('main.farmer_dashboard'))
 
     return render_template(
-        'main/farmers.html',
-        title='Farmers',
-        parcels=parcels,
-        total_acres=total_acres,
-        vehicles=vehicles,
+        'main/farmer_dashboard.html',
+        title='Farmer Dashboard',
         bank_accounts=bank_accounts,
+        parcels=parcels,
+        vehicles=vehicles,
+        tickets=tickets,
         insurance_claims=insurance_claims,
         parcel_form=parcel_form,
         insurance_form=insurance_form
