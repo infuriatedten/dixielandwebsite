@@ -12,7 +12,7 @@ from app.models import (
 from app.forms import (
     EditRulesForm, EditUserForm, AccountForm, EditAccountForm, EditTicketForm, EditPermitForm,
     EditInspectionForm, EditTaxBracketForm, EditBalanceForm, EditInsuranceClaimForm,
-    EditBankForm, DeleteUserForm, EditUserRoleForm
+    EditBankForm, DeleteUserForm
 )
 import logging
 
@@ -245,16 +245,3 @@ def manage_users():
     users = User.query.order_by(User.username).paginate(page=page, per_page=10)
     delete_forms = {user.id: DeleteUserForm(prefix=str(user.id)) for user in users.items}
     return render_template('admin/manage_users.html', title='Manage Users', users=users, delete_forms=delete_forms)
-
-
-@admin_bp.route('/user/<int:user_id>/edit_role', methods=['GET', 'POST'])
-@admin_required
-def edit_user_role(user_id):
-    user = User.query.get_or_404(user_id)
-    form = EditUserRoleForm(obj=user)
-    if form.validate_on_submit():
-        user.role = form.role.data
-        db.session.commit()
-        flash('User role updated successfully.', 'success')
-        return redirect(url_for('admin.manage_users'))
-    return render_template('admin/edit_user_role.html', title='Edit User Role', form=form, user=user)
