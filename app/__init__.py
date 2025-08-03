@@ -8,7 +8,6 @@ from flask_migrate import Migrate
 from flask_wtf import CSRFProtect
 from whitenoise import WhiteNoise
 from jinja2 import pass_context
-from flask_mail import Mail
 from markupsafe import Markup, escape
 from config import Config
 
@@ -18,7 +17,6 @@ login_manager = LoginManager()
 scheduler = APScheduler()
 migrate = Migrate()
 csrf = CSRFProtect()
-mail = Mail()
 
 # Helper: Convert newlines to HTML paragraphs and line breaks
 _paragraph_re = re.compile(r'(?:\r\n|\r|\n){2,}')
@@ -58,7 +56,6 @@ def create_app(config_class=Config):
     scheduler.init_app(app)
     migrate.init_app(app, db)
     csrf.init_app(app)
-    mail.init_app(app)
 
     # Models must be imported before first use
     from app.models import (
