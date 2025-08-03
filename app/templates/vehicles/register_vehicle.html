@@ -1,27 +1,35 @@
-<form method="POST" action="{{ url_for('vehicle.register_vehicle_route') }}" novalidate>
-    {{ form.hidden_tag() }}
+{% extends "base.html" %}
+{% import "bootstrap_wtf.html" as wtf %}
 
-    <div class="mb-3">
-        {{ wtf.render_field(form.vehicle_make, placeholder="e.g., Ford, Scania, John Deere") }}
-    </div>
-    <div class="mb-3">
-        {{ wtf.render_field(form.vehicle_model, placeholder="e.g., F-150, R730, 9RX") }}
-    </div>
-    <div class="mb-3">
-        {{ wtf.render_field(form.vehicle_type, placeholder="e.g., Sedan, Truck, Tractor") }}
-    </div>
-    <div class="mb-3">
-        {{ wtf.render_field(form.vehicle_description, placeholder="e.g., My primary logging truck, Red sports car with custom rims") }}
-    </div>
-    <div class="mb-3">
-        {{ wtf.render_field(form.region_format) }}
-    </div>
+{% block content %}
+<div class="container mt-4">
+    <h1>Register New Vehicle</h1>
+    <form method="POST" action="{{ url_for('vehicle.register_vehicle_route') }}" novalidate>
+        {{ form.hidden_tag() }}
 
-    <p class="small text-muted mt-3">
-        Registering your vehicle can help pre-fill information for DOT services like permits and may be used in future features.
-    </p>
+        <div class="mb-3">
+            {{ wtf.render_field(form.vehicle_make, placeholder="e.g., Ford, Scania, John Deere") }}
+        </div>
+        <div class="mb-3">
+            {{ wtf.render_field(form.vehicle_model, placeholder="e.g., F-150, R730, 9RX") }}
+        </div>
+        <div class="mb-3">
+            {{ wtf.render_field(form.vehicle_type, placeholder="e.g., Sedan, Truck, Tractor") }}
+        </div>
+        <div class="mb-3">
+            {{ wtf.render_field(form.vehicle_description, placeholder="e.g., My primary logging truck, Red sports car with custom rims") }}
+        </div>
+        <div class="mb-3">
+            {{ wtf.render_field(form.region_format) }}
+        </div>
 
-    <div class="d-grid mt-3">
-        {{ wtf.render_field(form.submit, button_map={'submit': 'btn-primary'}) }}
-    </div>
-</form>
+        <p class="small text-muted mt-3">
+            Registering your vehicle can help pre-fill information for DOT services like permits and may be used in future features.
+        </p>
+
+        <div class="d-grid mt-3">
+            {{ wtf.render_field(form.submit, button_map={'submit': 'btn-primary'}) }}
+        </div>
+    </form>
+</div>
+{% endblock %}
