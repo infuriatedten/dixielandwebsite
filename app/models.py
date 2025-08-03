@@ -380,6 +380,7 @@ class Farmer(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
 
     user = db.relationship('User', backref=db.backref('farmer', uselist=False, cascade="all, delete-orphan"))
+    parcels = db.relationship('Parcel', backref='farmer', lazy='dynamic', cascade="all, delete-orphan")
 class TransactionLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     farmer_id = db.Column(db.Integer, db.ForeignKey('farmers.id'), nullable=False)
