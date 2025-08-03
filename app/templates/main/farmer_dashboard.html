@@ -1,9 +1,88 @@
 {% extends "base.html" %}
+{% import "bootstrap_wtf.html" as wtf %}
 
 {% block content %}
 <div class="container mt-4">
     <h1>Farmer Dashboard</h1>
     <p>Welcome, {{ current_user.username }}!</p>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Bank Accounts</h5>
+        </div>
+        <div class="card-body">
+            {% if bank_accounts %}
+                <ul class="list-group list-group-flush">
+                    {% for account in bank_accounts %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Account ID: {{ account.id }}</strong>
+                                <br>
+                                <small class="text-muted">{{ account.name or 'Personal Account' }}</small>
+                            </div>
+                            <span class="badge bg-primary rounded-pill">{{ "%.2f"|format(account.balance) }} {{ account.currency }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No bank accounts found.</p>
+            {% endif %}
+        </div>
+    </div>
+
     <p>This is your farmer dashboard. You can manage your farm, view your parcels, and more.</p>
+
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">My Land Parcels</h5>
+        </div>
+        <div class="card-body">
+            {% if parcels %}
+                <ul class="list-group list-group-flush">
+                    {% for parcel in parcels %}
+                        <li class="list-group-item">
+                            <strong>Location:</strong> {{ parcel.location }}<br>
+                            <strong>Size:</strong> {{ parcel.size }} acres
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>You have no land parcels.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">Add New Parcel</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('main.farmer_dashboard') }}">
+                {{ form.hidden_tag() }}
+                {{ wtf.render_field(form.location) }}
+                {{ wtf.render_field(form.size) }}
+                {{ wtf.render_field(form.submit, button_map={'submit': 'btn-primary'}) }}
+            </form>
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">Vehicle Management</h5>
+        </div>
+        <div class="card-body">
+            <a href="{{ url_for('vehicle.register_vehicle_route') }}" class="btn btn-success">Register New Vehicle</a>
+            <a href="{{ url_for('vehicle.my_vehicles') }}" class="btn btn-info">View My Vehicles</a>
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">Insurance</h5>
+        </div>
+        <div class="card-body">
+            <a href="{{ url_for('main.insurance_claim') }}" class="btn btn-warning">Submit Insurance Claim</a>
+        </div>
+    </div>
 </div>
 {% endblock %}
