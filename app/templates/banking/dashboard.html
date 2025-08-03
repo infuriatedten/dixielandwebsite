@@ -16,7 +16,7 @@
             </div>
             <div class="card-body">
                 <h4 class="card-title">Current Balance: {{ "%.2f"|format(detail.account.balance) }} {{ detail.account.currency }}</h4>
-                <p class="card-text">Owned by: {{ detail.account.owner_user.username }}</p>
+                <p class="card-text">Owned by: {{ detail.account.user.username }}</p>
                 <p class="card-text"><small class="text-muted">Last Updated: {{ detail.account.last_updated_on.strftime('%Y-%m-%d %H:%M:%S') if detail.account.last_updated_on else 'N/A' }}</small></p>
 
                 <h5 class="mt-4">Recent Transactions (Last 10)</h5>
