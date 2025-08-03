@@ -4,8 +4,8 @@
 {% block title %}Edit Account{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Edit Account</h1>
-<form method="POST" action="{{ url_for('admin.edit_account', account_id=account.id) }}">
+<h1 class="mb-4">{{ title }}</h1>
+<form method="POST" action="{{ url_for('admin.create_account') if not account.id else url_for('admin.edit_account', account_id=account.id) }}">
     {{ form.hidden_tag() }}
 
     {{ wtf.render_field(form.balance) }}
