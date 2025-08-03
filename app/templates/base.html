@@ -72,7 +72,7 @@
                         <!-- Farmers links as separate nav items -->
                         {% if current_user.farmer %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('main.farmers') }}">Farmers Dashboard</a>
+                            <a class="nav-link" href="{{ url_for('main.farmer_dashboard') }}">Farmers Dashboard</a>
                         </li>
                         {% endif %}
                         <li class="nav-item">
