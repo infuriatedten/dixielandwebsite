@@ -164,7 +164,7 @@ def officer_area():
 def farmers():
     parcel_form = ParcelForm()
     insurance_form = InsuranceClaimForm()
-    farmer = Farmer.query.filter_by(user_id=current_user.id).first()
+    farmer = db.session.query(Farmer.id, Farmer.user_id).filter_by(user_id=current_user.id).first()
 
     if parcel_form.validate_on_submit() and parcel_form.submit.data:
         if farmer:

@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, current_user, login_required
 from app import db
-from app.models import User, UserRole, Farmer, Company
+from app.models import User, UserRole, Farmer, Company, Account
 from app.forms import LoginForm, RegistrationForm
 from urllib.parse import urlparse, urljoin
 
@@ -27,6 +27,10 @@ def register():
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
+
+        # Create a bank account with a balance of 1,000,000
+        account = Account(user_id=user.id, balance=1000000)
+        db.session.add(account)
 
         if form.account_type.data == 'farmer':
             farmer = Farmer(user_id=user.id)
