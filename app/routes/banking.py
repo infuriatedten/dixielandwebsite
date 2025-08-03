@@ -10,23 +10,20 @@ bp = Blueprint('banking', __name__)
 @bp.route('/dashboard')
 @login_required
 def dashboard():
-    user_accounts = Account.query.filter_by(user_id=current_user.id).all()
-    # Assuming a user might have multiple accounts in different currencies, though current setup is one.
-    # If strictly one account per user is enforced elsewhere, this can be simplified.
+    if hasattr(current_user, 'farmer') and current_user.farmer:
+        accounts = Account.query.filter_by(user_id=current_user.id, is_company=False).all()
+    elif hasattr(current_user, 'company') and current_user.company:
+        accounts = Account.query.filter_by(user_id=current_user.id, is_company=True).all()
+    else:
+        accounts = Account.query.filter_by(user_id=current_user.id).all()
 
-    if not user_accounts:
+    if not accounts:
         flash('You do not have any bank accounts set up yet. Please contact an administrator.', 'warning')
-        # Or, if users can create their own (not current plan):
-        # return redirect(url_for('banking.create_account'))
         return render_template('banking/dashboard_no_account.html', title='Banking Dashboard')
 
-    # For simplicity, let's assume one primary account or just list all.
-    # If there's a concept of a "primary" account, filter for that.
-    # Here, we'll just take the first one found or prepare to list multiple.
-
     account_details = []
-    for account in user_accounts:
-        transactions = Transaction.query.filter_by(account_id=account.id).order_by(Transaction.timestamp.desc()).limit(10).all() # Recent 10
+    for account in accounts:
+        transactions = Transaction.query.filter_by(account_id=account.id).order_by(Transaction.timestamp.desc()).limit(10).all()
         account_details.append({
             'account': account,
             'recent_transactions': transactions
