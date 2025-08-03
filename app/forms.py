@@ -31,6 +31,8 @@ class AccountForm(FlaskForm):
 
 class ApplyPermitForm(FlaskForm):
     vehicle_type = StringField('Vehicle Type/Description', validators=[DataRequired(), Length(min=5, max=150)])
+    license_plate = StringField('License Plate', validators=[DataRequired(), Length(min=2, max=20)])
+    operator_name = StringField('Operator Name', validators=[DataRequired(), Length(min=2, max=100)])
     route_details = TextAreaField('Proposed Route Details (From, Via, To)', validators=[DataRequired(), Length(min=10, max=1000)])
     travel_start_date = DateField('Travel Start Date', format='%Y-%m-%d', validators=[DataRequired()])
     travel_end_date = DateField('Travel End Date', format='%Y-%m-%d', validators=[DataRequired()])
