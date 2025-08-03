@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% import "bootstrap_wtf.html" as wtf %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Submit an Insurance Claim</h1>
+    <p>Please provide a detailed reason for your claim. This will be reviewed by an administrator.</p>
+    <form method="POST" action="{{ url_for('main.insurance_claim') }}">
+        {{ form.hidden_tag() }}
+        {{ wtf.render_field(form.reason, rows=10) }}
+        {{ wtf.render_field(form.submit, button_map={'submit': 'btn-primary'}) }}
+    </form>
+</div>
+{% endblock %}
