@@ -211,9 +211,13 @@ def tickets():
     # TODO: Fetch and display tickets from the database
     return render_template('admin/tickets.html')
 
-@admin_bp.route('/user/<int:user_id>/delete', methods=['POST'])
+@admin_bp.route('/user/<int:user_id>/delete', methods=['GET', 'POST'])
 @admin_required
 def delete_user(user_id):
+    if request.method == 'GET':
+        flash("To delete a user, please use the delete button on the Manage Users page.", "info")
+        return redirect(url_for('admin.manage_users'))
+
     form = DeleteUserForm(prefix=str(user_id))
     if form.validate_on_submit():
         user_to_delete = User.query.get_or_404(user_id)
