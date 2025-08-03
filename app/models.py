@@ -368,7 +368,7 @@ class Company(db.Model):
     name = db.Column(db.String(128), nullable=False)
     details = db.Column(db.Text, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    user = db.relationship('User', backref=db.backref('company', uselist=False))
+    user = db.relationship('User', backref=db.backref('company', uselist=False, cascade="all, delete-orphan"))
 
     def __repr__(self):
         return f'<Company {self.name}>'
