@@ -50,9 +50,11 @@
                             <a class="nav-link" href="{{ url_for('taxes.tax_info') }}">Tax Info</a>
                         </li>
 
+                        {% if not current_user.farmer %}
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('dot.dashboard') }}">DOT Dashboard</a>
                         </li>
+                        {% endif %}
 
                         {% if current_user.role == UserRole.ADMIN %}
                             <li class="nav-item">
@@ -68,15 +70,19 @@
                         </li>
 
                         <!-- Farmers links as separate nav items -->
+                        {% if current_user.farmer %}
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('main.farmers') }}">Farmers Dashboard</a>
                         </li>
+                        {% endif %}
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('main.contracts') }}">Available Contracts</a>
                         </li>
+                        {% if not current_user.farmer %}
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('main.company') }}">Manage Company</a>
                         </li>
+                        {% endif %}
 
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('livemap.server_status') }}">Server Status</a>
