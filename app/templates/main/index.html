@@ -80,6 +80,7 @@
     </div>
 
     <!-- Insurance Rates Section -->
+    {% if current_user.is_authenticated %}
     <div class="mb-5">
         <h2 class="mb-4">Insurance Rates</h2>
         {% for type in insurance_rates|map(attribute='rate_type')|unique %}
@@ -101,6 +102,7 @@
         </div>
         {% endfor %}
     </div>
+    {% endif %}
 
     <!-- Game Statistics -->
     <div class="row text-center g-4">

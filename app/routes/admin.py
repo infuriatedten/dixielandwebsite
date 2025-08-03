@@ -82,7 +82,7 @@ def create_account():
         db.session.commit()
         flash('Account created successfully.', 'success')
         return redirect(url_for('admin.manage_accounts'))
-    return render_template('admin/edit_account.html', form=form, title="Create Account")
+    return render_template('admin/edit_account.html', form=form, title="Create Account", account=Account())
 
 
 @admin_bp.route('/manage/accounts/edit/<int:account_id>', methods=['GET', 'POST'])
