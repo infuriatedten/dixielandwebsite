@@ -78,6 +78,26 @@
 
     <div class="card mt-4">
         <div class="card-header">
+            <h5 class="mb-0">My Vehicles</h5>
+        </div>
+        <div class="card-body">
+            {% if vehicles %}
+                <ul class="list-group list-group-flush">
+                    {% for vehicle in vehicles %}
+                        <li class="list-group-item">
+                            <strong>{{ vehicle.vehicle_make }} {{ vehicle.vehicle_model }}</strong><br>
+                            <small class="text-muted">License Plate: {{ vehicle.license_plate }}</small>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>You have no registered vehicles.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header">
             <h5 class="mb-0">My Tickets</h5>
         </div>
         <div class="card-body">
