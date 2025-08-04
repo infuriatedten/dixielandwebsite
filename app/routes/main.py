@@ -178,6 +178,23 @@ def farmer_dashboard():
 
 
 # ------------------------ COMPANY ------------------------
+@main_bp.route('/company-dashboard')
+@login_required
+def company_dashboard():
+    company = Company.query.filter_by(user_id=current_user.id).first()
+    if not company:
+        flash('You do not have a company.', 'danger')
+        return redirect(url_for('main.index'))
+    bank_accounts = Account.query.filter_by(user_id=current_user.id).all()
+    vehicles = UserVehicle.query.filter_by(user_id=current_user.id).all()
+    return render_template(
+        'main/company_dashboard.html',
+        title='Company Dashboard',
+        company=company,
+        bank_accounts=bank_accounts,
+        vehicles=vehicles
+    )
+
 @main_bp.route('/company', methods=['GET', 'POST'])
 @login_required
 def company():
