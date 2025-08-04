@@ -118,14 +118,15 @@ def manage_inspections():
 @login_required
 @admin_required
 def manage_permits():
-    permits = PermitApplication.query.all()
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    permits = PermitApplication.query.order_by(PermitApplication.application_date.desc()).paginate(page=page, per_page=per_page)
     form = EditPermitForm()
 
     if form.validate_on_submit():
         permit = PermitApplication.query.get(form.id.data)
         if permit:
             permit.status = form.status.data
-            permit.expiry_date = form.expiry_date.data
             # Add more fields here as needed
             db.session.commit()
             flash('Permit updated.', 'success')
