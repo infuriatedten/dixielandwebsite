@@ -20,7 +20,7 @@ class User(UserMixin, db.Model):
     discord_user_id = db.Column(db.String(100), nullable=True, unique=True, index=True)
     discord_username = db.Column(db.String(100), nullable=True)
     region = db.Column(db.Enum('US', 'EU', 'OTHER_DEFAULT', name='region_enum'), nullable=True, default='OTHER_DEFAULT')
-    accounts = db.relationship('Account', backref='user', lazy='dynamic', cascade="all, delete-orphan")
+    accounts = db.relationship('Account', back_populates='user', lazy='dynamic', cascade="all, delete-orphan")
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -43,7 +43,7 @@ class Account(db.Model):
     name = db.Column(db.String(100), nullable=True)
     is_company = db.Column(db.Boolean, default=False, nullable=False)
     last_updated_on = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    user = db.relationship('User', backref=db.backref('accounts', lazy='dynamic'))
+    user = db.relationship('User', back_populates='accounts')
     transactions = db.relationship('Transaction', backref='account', lazy='dynamic', cascade="all, delete-orphan")
 
     def __repr__(self):
