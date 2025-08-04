@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<modDesc descVersion="79">
+    <author>Jules</author>
+    <version>1.0.0.0</version>
+    <title>
+        <en>Web Portal Integration</en>
+    </title>
+    <description>
+        <en><![CDATA[This mod syncs your farm's data with the web portal and provides in-game notifications.]]></en>
+    </description>
+    <iconFilename>icon.png</iconFilename>
+    <multiplayer supported="true"/>
+
+    <extraSourceFiles>
+        <sourceFile filename="scripts/main.lua" />
+    </extraSourceFiles>
+</modDesc>

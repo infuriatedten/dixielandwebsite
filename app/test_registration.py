@@ -26,8 +26,8 @@ class RegistrationTestCase(unittest.TestCase):
         user_data = {
             'username': 'testfarmer',
             'email': 'farmer@example.com',
-            'password': 'password',
-            'password2': 'password',
+            'password': 'Password123!',
+            'password2': 'Password123!',
             'account_type': 'farmer'
         }
 
@@ -44,8 +44,8 @@ class RegistrationTestCase(unittest.TestCase):
         user_data = {
             'username': 'testcompany',
             'email': 'company@example.com',
-            'password': 'password',
-            'password2': 'password',
+            'password': 'Password123!',
+            'password2': 'Password123!',
             'account_type': 'company'
         }
 

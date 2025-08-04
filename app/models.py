@@ -67,6 +67,7 @@ class TransactionType(enum.Enum):
     PERMIT_FEE_PAYMENT = "permit_fee_payment"
     AUCTION_WIN_DEBIT = "auction_win_debit"
     AUCTION_SALE_CREDIT = "auction_sale_credit"
+    FS25_SYNC = "fs25_sync"
     OTHER = "other"
 
 class Transaction(db.Model):
@@ -404,6 +405,17 @@ class Farmer(db.Model):
 
     user = db.relationship('User', back_populates='farmer')
     parcels = db.relationship('Parcel', backref='farmer', lazy='dynamic', cascade="all, delete-orphan")
+
+class FarmerStats(db.Model):
+    __tablename__ = 'farmer_stats'
+    id = db.Column(db.Integer, primary_key=True)
+    farmer_id = db.Column(db.Integer, db.ForeignKey('farmers.id'), nullable=False, unique=True)
+    fields_owned = db.Column(db.Integer, default=0)
+    total_yield = db.Column(db.Float, default=0)
+    equipment_owned = db.Column(db.Integer, default=0)
+    last_synced = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    farmer = db.relationship('Farmer', backref=db.backref('stats', uselist=False))
 class TransactionLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     farmer_id = db.Column(db.Integer, db.ForeignKey('farmers.id'), nullable=False)
