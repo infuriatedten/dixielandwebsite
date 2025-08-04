@@ -127,7 +127,6 @@ def manage_permits():
         permit = PermitApplication.query.get(form.id.data)
         if permit:
             permit.status = form.status.data
-            permit.expiry_date = form.expiry_date.data
             # Add more fields here as needed
             db.session.commit()
             flash('Permit updated.', 'success')
