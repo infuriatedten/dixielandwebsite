@@ -11,6 +11,8 @@
             <div class="mb-3">{{ wtf.render_field(form.email, placeholder="Enter your email address") }}</div>
             <div class="mb-3">{{ wtf.render_field(form.password, placeholder="Create a password") }}</div>
             <div class="mb-3">{{ wtf.render_field(form.password2, placeholder="Confirm your password") }}</div>
+            <div class="mb-3">{{ wtf.render_field(form.discord_username, placeholder="Enter your Discord username") }}</div>
+            <div class="mb-3">{{ wtf.render_field(form.discord_user_id, placeholder="Enter your Discord user ID") }}</div>
             <div class="mb-3">{{ wtf.render_field(form.account_type) }}</div>
             {# wtf.render_field(form.role) #} {# Only if admin use #}
             {{ wtf.render_field(form.submit, button_map={'submit': 'btn-primary w-100'}) }}

@@ -22,6 +22,12 @@ main_bp = Blueprint('main', __name__)
 
 @main_bp.route('/', endpoint='index')
 def main_index():
+    if current_user.is_authenticated:
+        if hasattr(current_user, 'farmer') and current_user.farmer:
+            return redirect(url_for('main.farmer_dashboard'))
+        elif hasattr(current_user, 'company') and current_user.company:
+            return redirect(url_for('main.company_dashboard'))
+
     recent_listings = MarketplaceListing.query \
         .filter_by(status=MarketplaceListingStatus.AVAILABLE) \
         .order_by(MarketplaceListing.creation_date.desc()) \

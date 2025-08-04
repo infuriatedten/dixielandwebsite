@@ -59,6 +59,7 @@
                     {% endif %}
                     {% if ticket.status != TicketStatus.PAID and ticket.status != TicketStatus.CANCELLED and ticket.status != TicketStatus.RESOLVED_DISMISSED %}
                         <form method="POST" action="{{ url_for('admin.cancel_ticket_by_admin', ticket_id=ticket.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to CANCEL this ticket? This action cannot be easily undone.');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             <input type="submit" value="Cancel" class="btn btn-sm btn-danger">
                         </form>
                     {% endif %}
