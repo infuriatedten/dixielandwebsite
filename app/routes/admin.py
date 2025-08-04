@@ -211,8 +211,10 @@ def edit_rules():
 @login_required
 @admin_required
 def tickets():
-    # TODO: Fetch and display tickets from the database
-    return render_template('admin/tickets.html')
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    tickets = Ticket.query.order_by(Ticket.issue_date.desc()).paginate(page=page, per_page=per_page)
+    return render_template('admin/tickets.html', title='Manage Tickets', tickets_pagination=tickets, TicketStatus=TicketStatus)
 
 @admin_bp.route('/user/<int:user_id>/delete', methods=['GET', 'POST'])
 @admin_required
