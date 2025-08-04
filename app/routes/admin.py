@@ -228,6 +228,20 @@ def manage_tickets():
 
     return render_template('admin/manage_tickets.html', tickets=tickets, form=form)
 
+@admin_bp.route('/manage/tickets/edit/<int:ticket_id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_ticket(ticket_id):
+    ticket = Ticket.query.get_or_404(ticket_id)
+    form = EditTicketForm(obj=ticket)
+    if form.validate_on_submit():
+        ticket.fine_amount = form.fine_amount.data
+        ticket.status = form.status.data
+        db.session.commit()
+        flash('Ticket updated successfully.', 'success')
+        return redirect(url_for('admin.manage_tickets'))
+    return render_template('admin/edit_ticket.html', form=form, ticket=ticket)
+
 @admin_bp.route('/manage/vehicle_regions')
 @login_required
 @admin_required
