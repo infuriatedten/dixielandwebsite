@@ -22,6 +22,8 @@ def register():
         user = User(
             username=form.username.data,
             email=form.email.data,
+            discord_username=form.discord_username.data,
+            discord_user_id=form.discord_user_id.data,
             role=UserRole.USER # Default role for self-registration
         )
         user.set_password(form.password.data)

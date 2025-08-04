@@ -341,6 +341,8 @@ class RegistrationForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired(), Length(min=8), password_complexity])
     password2 = PasswordField(
         'Repeat Password', validators=[DataRequired(), EqualTo('password')])
+    discord_username = StringField('Discord Username', validators=[Optional(), Length(max=100)])
+    discord_user_id = StringField('Discord User ID', validators=[Optional(), Length(max=100)])
     account_type = RadioField('I want to register as a', choices=[('farmer', 'Farmer'), ('company', 'Company')], validators=[DataRequired()])
     submit = SubmitField('Register')
 
