@@ -91,10 +91,12 @@ def create_app(config_class=Config):
     from app.routes.messaging import messaging_bp
     from app.routes.notifications import notifications_bp
     from app.routes.vehicle import bp as vehicle_bp
+    from app.api_fs25 import api_fs25_bp
 
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(main_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(api_fs25_bp)
     app.register_blueprint(vehicle_bp, url_prefix='/vehicle')
     app.register_blueprint(banking_bp, url_prefix='/banking')
     app.register_blueprint(taxes_bp, url_prefix='/taxes')
