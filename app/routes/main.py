@@ -6,13 +6,13 @@ import mistune
 from app import db
 from app.decorators import admin_required, officer_required
 from app.models import (
-    User, UserRole, RulesContent, Farmer, Parcel, UserVehicle,
-    Account, InsuranceClaim, Contract, ContractStatus, Company,
+    User, UserRole, RulesContent, Farmer, Parcel, UserVehicle, CompanyVehicle,
+    Account, InsuranceClaim, Contract, ContractStatus, Company, CompanyContract, CompanyInsuranceClaim,
     MarketplaceListing, MarketplaceListingStatus, Ticket, PermitApplication,
     Transaction, TransactionType, InsuranceRate
 )
 from app.forms import (
-    ParcelForm, InsuranceClaimForm, ContractForm, CompanyNameForm
+    ParcelForm, InsuranceClaimForm, ContractForm, CompanyNameForm, CompanyVehicleForm, CompanyContractForm, CompanyInsuranceClaimForm
 )
 
 main_bp = Blueprint('main', __name__)
