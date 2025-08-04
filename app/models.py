@@ -22,6 +22,7 @@ class User(UserMixin, db.Model):
     region = db.Column(db.Enum('US', 'EU', 'OTHER_DEFAULT', name='region_enum'), nullable=True, default='OTHER_DEFAULT')
     accounts = db.relationship('Account', back_populates='user', lazy='dynamic', cascade="all, delete-orphan")
     company = db.relationship('Company', uselist=False, back_populates='user', cascade="all, delete-orphan")
+    farmer = db.relationship('Farmer', uselist=False, back_populates='user', cascade="all, delete-orphan")
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -381,7 +382,7 @@ class Farmer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
 
-    user = db.relationship('User', backref=db.backref('farmer', uselist=False), cascade="all, delete-orphan")
+    user = db.relationship('User', back_populates='farmer')
     parcels = db.relationship('Parcel', backref='farmer', lazy='dynamic', cascade="all, delete-orphan")
 class TransactionLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
