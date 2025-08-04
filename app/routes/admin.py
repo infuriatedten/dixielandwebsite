@@ -138,7 +138,7 @@ def manage_permits():
 @login_required
 @admin_required
 def manage_tax_brackets():
-    tax_brackets = TaxBracket.query.order_by(TaxBracket.income_min.asc()).all()
+    tax_brackets = TaxBracket.query.order_by(TaxBracket.min_balance.asc()).all()
     return render_template('admin/manage_tax_brackets.html', tax_brackets=tax_brackets)
 
 @admin_bp.route('/manage/transactions')
