@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <h1 class="mb-4">{{ title }}</h1>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    Company Details
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ company.name }}</h5>
+                    <p class="card-text">{{ company.details }}</p>
+                    <a href="{{ url_for('main.company') }}" class="btn btn-primary">Edit Company Details</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    Bank Accounts
+                </div>
+                <div class="card-body">
+                    {% if bank_accounts %}
+                        <ul class="list-group">
+                            {% for account in bank_accounts %}
+                                <li class="list-group-item">
+                                    <strong>{{ account.name }}:</strong> {{ account.balance }} {{ account.currency }}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p>No bank accounts found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    Vehicles
+                </div>
+                <div class="card-body">
+                    {% if vehicles %}
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Make</th>
+                                    <th>Model</th>
+                                    <th>Type</th>
+                                    <th>License Plate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for vehicle in vehicles %}
+                                    <tr>
+                                        <td>{{ vehicle.vehicle_make }}</td>
+                                        <td>{{ vehicle.vehicle_model }}</td>
+                                        <td>{{ vehicle.vehicle_type }}</td>
+                                        <td>{{ vehicle.license_plate }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p>No vehicles found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
