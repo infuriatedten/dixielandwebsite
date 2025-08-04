@@ -164,24 +164,6 @@ def edit_transaction(id):
         return redirect(url_for('admin.manage_transactions'))
     return render_template('admin/edit_transaction.html', form=form, transaction=transaction)
 
-@admin_bp.route('/manage/tickets', methods=['GET', 'POST'])
-@login_required
-@admin_required
-def manage_tickets():
-    tickets = Ticket.query.all()
-    form = EditTicketForm()
-
-    if form.validate_on_submit():
-        ticket = Ticket.query.get(form.id.data)
-        if ticket:
-            ticket.status = form.status.data
-            ticket.fine_amount = form.fine_amount.data
-            # Other fields as needed
-            db.session.commit()
-            flash('Ticket updated.', 'success')
-        return redirect(url_for('admin.manage_tickets'))
-
-    return render_template('admin/manage_tickets.html', tickets=tickets, form=form)
 
 @admin_bp.route('/manage/tickets/edit/<int:ticket_id>', methods=['GET', 'POST'])
 @login_required
