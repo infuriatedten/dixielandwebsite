@@ -92,6 +92,10 @@
                         </li>
 
                         <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.fines') }}">Fines</a>
+                        </li>
+
+                        <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('messaging.list_my_conversations') }}">
                                 Messages
                                 {% if unread_message_count and unread_message_count > 0 %}
