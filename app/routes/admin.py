@@ -221,6 +221,15 @@ def delete_user(user_id):
         flash("CSRF validation failed or invalid form submission.", "danger")
     return redirect(url_for('admin.manage_users'))
 
+@admin_bp.route('/manage/tickets', methods=['GET'])
+@login_required
+@admin_required
+def manage_tickets():
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    tickets = Ticket.query.order_by(Ticket.issue_date.desc()).paginate(page=page, per_page=per_page)
+    return render_template('admin/tickets.html', title='Manage Tickets', tickets_pagination=tickets, TicketStatus=TicketStatus)
+
 @admin_bp.route('/user/<int:user_id>/edit', methods=['GET', 'POST'])
 @admin_required
 def edit_user(user_id):
