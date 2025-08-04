@@ -7,12 +7,12 @@ from app.models import (
     User, Account, Ticket, PermitApplication, Inspection, TaxBracket, Transaction,
     TransactionType, VehicleRegion, RulesContent, UserRole, InsuranceClaim,
     InsuranceClaimStatus, PermitApplicationStatus, TicketStatus, Contract,
-    Conversation, Message
+    Conversation, Message, Fine
 )
 from app.forms import (
     EditRulesForm, EditUserForm, AccountForm, EditAccountForm, EditTicketForm, EditPermitForm,
     EditInspectionForm, EditTaxBracketForm, EditBalanceForm, EditInsuranceClaimForm,
-    EditBankForm, DeleteUserForm
+    EditBankForm, DeleteUserForm, FineForm
 )
 import logging
 
@@ -106,6 +106,51 @@ def edit_account(account_id):
 def manage_contracts():
     contracts = Contract.query.order_by(Contract.created_at.desc()).all()
     return render_template('admin/manage_contracts.html', contracts=contracts)
+
+
+@admin_bp.route('/manage/fines', methods=['GET'])
+@login_required
+@admin_required
+def manage_fines():
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    fines = Fine.query.order_by(Fine.name.asc()).paginate(page=page, per_page=per_page)
+    return render_template('admin/manage_fines.html', fines=fines, title="Manage Fines")
+
+
+@admin_bp.route('/manage/fines/add', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def add_fine():
+    form = FineForm()
+    if form.validate_on_submit():
+        new_fine = Fine(
+            name=form.name.data,
+            description=form.description.data,
+            amount=form.amount.data
+        )
+        db.session.add(new_fine)
+        db.session.commit()
+        flash('Fine added successfully.', 'success')
+        return redirect(url_for('admin.manage_fines'))
+    return render_template('admin/edit_fine.html', form=form, title="Add Fine")
+
+
+@admin_bp.route('/manage/fines/edit/<int:fine_id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_fine(fine_id):
+    fine = Fine.query.get_or_404(fine_id)
+    form = FineForm(obj=fine)
+    if form.validate_on_submit():
+        fine.name = form.name.data
+        fine.description = form.description.data
+        fine.amount = form.amount.data
+        db.session.commit()
+        flash('Fine updated successfully.', 'success')
+        return redirect(url_for('admin.manage_fines'))
+    return render_template('admin/edit_fine.html', form=form, title="Edit Fine", fine=fine)
+
 
 @admin_bp.route('/manage/inspections', methods=['GET'])
 @login_required

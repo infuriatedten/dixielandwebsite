@@ -206,6 +206,13 @@ class EditUserRoleForm(FlaskForm):
     submit = SubmitField('Update Role')
 
 
+class FineForm(FlaskForm):
+    name = StringField('Fine Name', validators=[DataRequired(), Length(max=100)])
+    description = TextAreaField('Description', validators=[Optional(), Length(max=1000)])
+    amount = DecimalField('Amount', places=2, validators=[DataRequired()])
+    submit = SubmitField('Save Fine')
+
+
 class FarmerForm(FlaskForm):
     submit = SubmitField('Register as Farmer')
 
