@@ -141,6 +141,17 @@ def admin_start_conversation(target_user_id=None):
                            form=form,
                            target_username=target_user.username if target_user else None)
 
+@messaging_bp.route('/admin/conversations')
+@login_required
+@admin_required
+def admin_list_all_conversations():
+    page = request.args.get('page', 1, type=int)
+    conversations_pagination = messaging_service.get_all_conversations(page=page)
+    return render_template('admin/messaging/all_conversations.html',
+                           title="All User Conversations",
+                           conversations_pagination=conversations_pagination,
+                           ConversationStatus=ConversationStatus)
+
 @messaging_bp.app_context_processor
 def inject_message_unread_count():
     if current_user.is_authenticated:

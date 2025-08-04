@@ -1,0 +1,78 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <h1 class="mb-4">{{ title }}</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <a href="{{ url_for('messaging.admin_start_conversation') }}" class="btn btn-primary mb-3">Start New Conversation</a>
+
+            {% if conversations_pagination.items %}
+                <table class="table table-hover table-sm">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Subject</th>
+                            <th>User</th>
+                            <th>Admin</th>
+                            <th>Status</th>
+                            <th>Last Updated</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for conv in conversations_pagination.items %}
+                            <tr class="{{ 'font-weight-bold' if conv.is_unread_for_admin(current_user.id) else '' }}">
+                                <td>{{ conv.id }}</td>
+                                <td>{{ conv.subject }}</td>
+                                <td>{{ conv.user.username }}</td>
+                                <td>{{ conv.admin.username }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if conv.status == ConversationStatus.OPEN else 'secondary' }}">
+                                        {{ conv.status.value }}
+                                    </span>
+                                </td>
+                                <td>{{ conv.last_updated.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>
+                                    <a href="{{ url_for('messaging.view_conversation', conversation_id=conv.id) }}" class="btn btn-sm btn-info">View</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <nav aria-label="Conversation navigation">
+                    <ul class="pagination justify-content-center">
+                        {% if conversations_pagination.has_prev %}
+                            <li class="page-item"><a class="page-link" href="{{ url_for('messaging.admin_list_all_conversations', page=conversations_pagination.prev_num) }}">Previous</a></li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                        {% endif %}
+
+                        {% for page_num in conversations_pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                            {% if page_num %}
+                                {% if conversations_pagination.page == page_num %}
+                                    <li class="page-item active" aria-current="page"><span class="page-link">{{ page_num }}</span></li>
+                                {% else %}
+                                    <li class="page-item"><a class="page-link" href="{{ url_for('messaging.admin_list_all_conversations', page=page_num) }}">{{ page_num }}</a></li>
+                                {% endif %}
+                            {% else %}
+                                <li class="page-item disabled"><span class="page-link">...</span></li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if conversations_pagination.has_next %}
+                            <li class="page-item"><a class="page-link" href="{{ url_for('messaging.admin_list_all_conversations', page=conversations_pagination.next_num) }}">Next</a></li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">Next</span></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% else %}
+                <p>No conversations found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
