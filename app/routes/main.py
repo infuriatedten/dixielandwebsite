@@ -9,7 +9,7 @@ from app.models import (
     User, UserRole, RulesContent, Farmer, Parcel, UserVehicle, CompanyVehicle,
     Account, InsuranceClaim, Contract, ContractStatus, Company, CompanyContract, CompanyInsuranceClaim,
     MarketplaceListing, MarketplaceListingStatus, Ticket, PermitApplication,
-    Transaction, TransactionType, InsuranceRate
+    Transaction, TransactionType, InsuranceRate, Fine
 )
 from app.forms import (
     ParcelForm, InsuranceClaimForm, ContractForm, CompanyNameForm, CompanyVehicleForm, CompanyContractForm, CompanyInsuranceClaimForm
@@ -81,6 +81,12 @@ def view_rules():
     return render_template('main/rules.html', title='Rules',
                            rules_content_html=rules_content_html,
                            current_user=current_user, UserRole=UserRole)
+
+
+@main_bp.route('/fines', endpoint='fines')
+def fines():
+    fines = Fine.query.order_by(Fine.name.asc()).all()
+    return render_template('main/fines.html', title='Fines', fines=fines)
 
 
 # ------------------------ ADMIN ------------------------
