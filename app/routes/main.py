@@ -22,14 +22,6 @@ main_bp = Blueprint('main', __name__)
 
 @main_bp.route('/', endpoint='index')
 def main_index():
-    if current_user.is_authenticated:
-        if hasattr(current_user, 'farmer') and current_user.farmer:
-            return redirect(url_for('main.farmer_dashboard'))
-        elif hasattr(current_user, 'company') and current_user.company:
-            return redirect(url_for('main.company_dashboard'))
-        else:
-            return redirect(url_for('main.civilian_dashboard'))
-
     recent_listings = MarketplaceListing.query \
         .filter_by(status=MarketplaceListingStatus.AVAILABLE) \
         .order_by(MarketplaceListing.creation_date.desc()) \
@@ -93,11 +85,6 @@ def view_rules():
 
 # ------------------------ ADMIN ------------------------
 
-@main_bp.route('/civilian-dashboard')
-@login_required
-def civilian_dashboard():
-    tickets = Ticket.query.filter_by(issued_to_user_id=current_user.id).all()
-    return render_template('main/civilian_dashboard.html', title='Civilian Dashboard', tickets=tickets)
 
 @main_bp.route('/admin-dashboard')
 @admin_required
