@@ -42,7 +42,7 @@ class Account(db.Model):
     name = db.Column(db.String(100), nullable=True)
     is_company = db.Column(db.Boolean, default=False, nullable=False)
     last_updated_on = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    user = db.relationship('User', backref=db.backref('accounts', lazy='dynamic', cascade="all, delete-orphan"))
+    user = db.relationship('User', backref=db.backref('accounts', lazy='dynamic'), cascade="all, delete-orphan")
     transactions = db.relationship('Transaction', backref='account', lazy='dynamic', cascade="all, delete-orphan")
 
     def __repr__(self):
@@ -131,9 +131,9 @@ class Ticket(db.Model):
     resolution_notes = db.Column(db.Text, nullable=True)
     resolved_by_admin_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     banking_transaction_id = db.Column(db.Integer, db.ForeignKey('transactions.id'), unique=True, nullable=True)
-    issued_to = db.relationship('User', foreign_keys=[issued_to_user_id], backref=db.backref('tickets_received', lazy='dynamic'))
-    issued_by = db.relationship('User', foreign_keys=[issued_by_officer_id], backref=db.backref('tickets_issued', lazy='dynamic'))
-    resolved_by_admin = db.relationship('User', foreign_keys=[resolved_by_admin_id], backref=db.backref('tickets_resolved', lazy='dynamic'))
+    issued_to = db.relationship('User', foreign_keys=[issued_to_user_id], backref=db.backref('tickets_received', lazy='dynamic', cascade="all, delete-orphan"))
+    issued_by = db.relationship('User', foreign_keys=[issued_by_officer_id], backref=db.backref('tickets_issued', lazy='dynamic', cascade="all, delete-orphan"))
+    resolved_by_admin = db.relationship('User', foreign_keys=[resolved_by_admin_id], backref=db.backref('tickets_resolved', lazy='dynamic', cascade="all, delete-orphan"))
     payment_transaction = db.relationship('Transaction', backref=db.backref('ticket_payment_entry', uselist=False))
 
     def __repr__(self):
@@ -167,9 +167,9 @@ class PermitApplication(db.Model):
     issued_permit_id_str = db.Column(db.String(100), nullable=True, unique=True)
     issued_on_date = db.Column(db.DateTime, nullable=True)
     issued_by_officer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-    applicant = db.relationship('User', foreign_keys=[user_id], backref=db.backref('permit_applications', lazy='dynamic'))
-    reviewer_officer = db.relationship('User', foreign_keys=[reviewed_by_officer_id], backref=db.backref('permits_reviewed', lazy='dynamic'))
-    issuer_officer = db.relationship('User', foreign_keys=[issued_by_officer_id], backref=db.backref('permits_issued', lazy='dynamic'))
+    applicant = db.relationship('User', foreign_keys=[user_id], backref=db.backref('permit_applications', lazy='dynamic', cascade="all, delete-orphan"))
+    reviewer_officer = db.relationship('User', foreign_keys=[reviewed_by_officer_id], backref=db.backref('permits_reviewed', lazy='dynamic', cascade="all, delete-orphan"))
+    issuer_officer = db.relationship('User', foreign_keys=[issued_by_officer_id], backref=db.backref('permits_issued', lazy='dynamic', cascade="all, delete-orphan"))
     payment_transaction = db.relationship('Transaction', backref=db.backref('permit_fee_payment_entry', uselist=False))
 
     def __repr__(self):
@@ -194,7 +194,7 @@ class MarketplaceListing(db.Model):
     creation_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
     last_update_date = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     discord_message_id = db.Column(db.String(100), nullable=True)
-    seller = db.relationship('User', backref=db.backref('marketplace_listings', lazy='dynamic'))
+    seller = db.relationship('User', backref=db.backref('marketplace_listings', lazy='dynamic', cascade="all, delete-orphan"))
 
     def __repr__(self):
         return f'<MarketplaceListing {self.id}: {self.quantity} {self.unit} of {self.item_name} by User {self.seller_user_id} for {self.price}>'
@@ -208,8 +208,8 @@ class Inspection(db.Model):
     timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
     pass_status = db.Column(db.Boolean, nullable=False)
     notes = db.Column(db.Text, nullable=True)
-    officer = db.relationship('User', foreign_keys=[officer_user_id], backref=db.backref('inspections_conducted', lazy='dynamic'))
-    inspected_user = db.relationship('User', foreign_keys=[inspected_user_id], backref=db.backref('inspections_received', lazy='dynamic'))
+    officer = db.relationship('User', foreign_keys=[officer_user_id], backref=db.backref('inspections_conducted', lazy='dynamic', cascade="all, delete-orphan"))
+    inspected_user = db.relationship('User', foreign_keys=[inspected_user_id], backref=db.backref('inspections_received', lazy='dynamic', cascade="all, delete-orphan"))
 
     def __repr__(self):
         status_str = "Pass" if self.pass_status else "Fail"
@@ -231,7 +231,7 @@ class UserVehicle(db.Model):
     region_format = db.Column(db.Enum(VehicleRegion), nullable=False)
     registration_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
-    owner = db.relationship('User', backref=db.backref('vehicles', lazy='dynamic'))
+    owner = db.relationship('User', backref=db.backref('vehicles', lazy='dynamic', cascade="all, delete-orphan"))
 
     def __repr__(self):
         return (
@@ -257,8 +257,8 @@ class Conversation(db.Model):
     user_has_unread = db.Column(db.Boolean, default=False)
     admin_has_unread = db.Column(db.Boolean, default=False)
     status = db.Column(db.Enum(ConversationStatus), default=ConversationStatus.OPEN, nullable=False)
-    user = db.relationship('User', foreign_keys=[user_id], backref=db.backref('conversations_as_user_participant', lazy='dynamic'))
-    admin = db.relationship('User', foreign_keys=[admin_id], backref=db.backref('conversations_as_admin_participant', lazy='dynamic'))
+    user = db.relationship('User', foreign_keys=[user_id], backref=db.backref('conversations_as_user_participant', lazy='dynamic', cascade="all, delete-orphan"))
+    admin = db.relationship('User', foreign_keys=[admin_id], backref=db.backref('conversations_as_admin_participant', lazy='dynamic', cascade="all, delete-orphan"))
     messages = db.relationship('Message', backref='conversation', lazy='dynamic', cascade="all, delete-orphan", order_by="Message.timestamp")
 
     def __repr__(self):
@@ -272,7 +272,7 @@ class Message(db.Model):
     body = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
     is_read_by_recipient = db.Column(db.Boolean, default=False)
-    sender = db.relationship('User', foreign_keys=[sender_id], backref=db.backref('sent_messages', lazy='dynamic'))
+    sender = db.relationship('User', foreign_keys=[sender_id], backref=db.backref('sent_messages', lazy='dynamic', cascade="all, delete-orphan"))
 
     def __repr__(self):
         return f'<Message {self.id} in Conv {self.conversation_id} by User {self.sender_id}>'
@@ -293,7 +293,7 @@ class Notification(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True, nullable=False)
     is_read = db.Column(db.Boolean, default=False, nullable=False, index=True)
     notification_type = db.Column(db.Enum(NotificationType), default=NotificationType.GENERAL_INFO, nullable=False)
-    user = db.relationship('User', backref=db.backref('notifications', lazy='dynamic', order_by="desc(Notification.created_at)"))
+    user = db.relationship('User', backref=db.backref('notifications', lazy='dynamic', order_by="desc(Notification.created_at)", cascade="all, delete-orphan"))
 
     def __repr__(self):
         return f'<Notification {self.id} for User {self.user_id} - Read: {self.is_read}>'
@@ -327,11 +327,11 @@ class AuctionItem(db.Model):
     winner_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
     winner_payment_transaction_id = db.Column(db.Integer, db.ForeignKey('transactions.id'), nullable=True)
     seller_payout_transaction_id = db.Column(db.Integer, db.ForeignKey('transactions.id'), nullable=True)
-    submitter = db.relationship('User', foreign_keys=[submitter_user_id], backref=db.backref('submitted_auction_items', lazy='dynamic'))
-    admin_approver = db.relationship('User', foreign_keys=[admin_approver_id], backref=db.backref('approved_auction_items', lazy='dynamic'))
+    submitter = db.relationship('User', foreign_keys=[submitter_user_id], backref=db.backref('submitted_auction_items', lazy='dynamic', cascade="all, delete-orphan"))
+    admin_approver = db.relationship('User', foreign_keys=[admin_approver_id], backref=db.backref('approved_auction_items', lazy='dynamic', cascade="all, delete-orphan"))
     bids = db.relationship('AuctionBid', back_populates='auction_item', lazy='dynamic', cascade="all, delete-orphan", order_by="desc(AuctionBid.bid_amount)", foreign_keys='AuctionBid.auction_item_id')
     winning_bid_ref = db.relationship('AuctionBid', foreign_keys=[winning_bid_id], post_update=True, uselist=False)
-    winner_user_ref = db.relationship('User', foreign_keys=[winner_user_id], backref=db.backref('auctions_won', lazy='dynamic'))
+    winner_user_ref = db.relationship('User', foreign_keys=[winner_user_id], backref=db.backref('auctions_won', lazy='dynamic', cascade="all, delete-orphan"))
     winner_payment_tx = db.relationship('Transaction', foreign_keys=[winner_payment_transaction_id], backref=db.backref('auction_winner_payment_tx', uselist=False))
     seller_payout_tx = db.relationship('Transaction', foreign_keys=[seller_payout_transaction_id], backref=db.backref('auction_seller_payout_tx', uselist=False))
 
@@ -346,7 +346,7 @@ class AuctionBid(db.Model):
     bid_amount = db.Column(db.Numeric(10, 2), nullable=False)
     bid_time = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
     auction_item = db.relationship('AuctionItem', back_populates='bids', foreign_keys=[auction_item_id])
-    bidder = db.relationship('User', foreign_keys=[bidder_user_id], backref=db.backref('auction_bids_placed', lazy='dynamic'))
+    bidder = db.relationship('User', foreign_keys=[bidder_user_id], backref=db.backref('auction_bids_placed', lazy='dynamic', cascade="all, delete-orphan"))
 
     def __repr__(self):
         return f'<AuctionBid {self.id} for Item {self.auction_item_id} by User {self.bidder_user_id} for {self.bid_amount}>'
@@ -357,7 +357,7 @@ class RulesContent(db.Model):
     content_markdown = db.Column(db.Text, nullable=False, default="Rules have not been set yet.")
     last_edited_on = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     last_edited_by_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-    last_edited_by = db.relationship('User', foreign_keys=[last_edited_by_id])
+    last_edited_by = db.relationship('User', foreign_keys=[last_edited_by_id], backref=db.backref('rules_edited', lazy='dynamic', cascade="all, delete-orphan"))
 
     def __repr__(self):
         return f'<RulesContent last updated on {self.last_edited_on} by User ID {self.last_edited_by_id}>'
@@ -368,7 +368,7 @@ class Company(db.Model):
     name = db.Column(db.String(128), nullable=False)
     details = db.Column(db.Text, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    user = db.relationship('User', backref=db.backref('company', uselist=False, cascade="all, delete-orphan"))
+    user = db.relationship('User', backref=db.backref('company', uselist=False), cascade="all, delete-orphan")
 
     def __repr__(self):
         return f'<Company {self.name}>'
@@ -379,7 +379,7 @@ class Farmer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
 
-    user = db.relationship('User', backref=db.backref('farmer', uselist=False, cascade="all, delete-orphan"))
+    user = db.relationship('User', backref=db.backref('farmer', uselist=False), cascade="all, delete-orphan")
     parcels = db.relationship('Parcel', backref='farmer', lazy='dynamic', cascade="all, delete-orphan")
 class TransactionLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -456,8 +456,8 @@ class Contract(db.Model):
     status = db.Column(db.Enum(ContractStatus), default=ContractStatus.AVAILABLE, nullable=False)
     creator_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     claimant_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-    creator = db.relationship('User', foreign_keys=[creator_id], backref=db.backref('created_contracts', lazy='dynamic'))
-    claimant = db.relationship('User', foreign_keys=[claimant_id], backref=db.backref('claimed_contracts', lazy='dynamic'))
+    creator = db.relationship('User', foreign_keys=[creator_id], backref=db.backref('created_contracts', lazy='dynamic', cascade="all, delete-orphan"))
+    claimant = db.relationship('User', foreign_keys=[claimant_id], backref=db.backref('claimed_contracts', lazy='dynamic', cascade="all, delete-orphan"))
     creation_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     claimed_date = db.Column(db.DateTime, nullable=True)
 
