@@ -138,7 +138,9 @@ def manage_permits():
 @login_required
 @admin_required
 def manage_tax_brackets():
-    tax_brackets = TaxBracket.query.order_by(TaxBracket.min_balance.asc()).all()
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    tax_brackets = TaxBracket.query.order_by(TaxBracket.min_balance.asc()).paginate(page=page, per_page=per_page)
     return render_template('admin/manage_tax_brackets.html', tax_brackets=tax_brackets)
 
 @admin_bp.route('/manage/transactions')
