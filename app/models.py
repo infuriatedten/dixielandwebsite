@@ -372,9 +372,29 @@ class Company(db.Model):
     details = db.Column(db.Text, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     user = db.relationship('User', back_populates='company')
+    vehicles = db.relationship('CompanyVehicle', backref='company', lazy='dynamic', cascade="all, delete-orphan")
 
     def __repr__(self):
         return f'<Company {self.name}>'
+
+class CompanyVehicle(db.Model):
+    __tablename__ = 'company_vehicles'
+    id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False, index=True)
+    vehicle_make = db.Column(db.String(100), nullable=True)
+    vehicle_model = db.Column(db.String(100), nullable=True)
+    vehicle_type = db.Column(db.String(100), nullable=True)
+    vehicle_description = db.Column(db.String(255), nullable=True)
+    license_plate = db.Column(db.String(20), unique=True, nullable=False, index=True)
+    region_format = db.Column(db.Enum(VehicleRegion), nullable=False)
+    registration_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+
+    def __repr__(self):
+        return (
+            f'<CompanyVehicle {self.id}: {self.license_plate} '
+            f'({self.vehicle_make} {self.vehicle_model}) for Company {self.company_id}>'
+        )
 
 class Farmer(db.Model):
     __tablename__ = 'farmers'
@@ -466,3 +486,32 @@ class Contract(db.Model):
 
     def __repr__(self):
         return f'<Contract {self.id}: {self.title}>'
+
+class CompanyContract(db.Model):
+    __tablename__ = 'company_contracts'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(128), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    reward = db.Column(db.Numeric(10, 2), nullable=False)
+    status = db.Column(db.Enum(ContractStatus), default=ContractStatus.AVAILABLE, nullable=False)
+    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)
+    claimant_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    company = db.relationship('Company', foreign_keys=[company_id], backref=db.backref('contracts', lazy='dynamic', cascade="all, delete-orphan"))
+    claimant = db.relationship('User', foreign_keys=[claimant_id], backref=db.backref('claimed_company_contracts', lazy='dynamic', cascade="all, delete-orphan"))
+    creation_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    claimed_date = db.Column(db.DateTime, nullable=True)
+
+    def __repr__(self):
+        return f'<CompanyContract {self.id}: {self.title}>'
+
+class CompanyInsuranceClaim(db.Model):
+    __tablename__ = 'company_insurance_claims'
+    id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)
+    claim_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    reason = db.Column(db.Text, nullable=False)
+    status = db.Column(db.Enum(InsuranceClaimStatus), default=InsuranceClaimStatus.PENDING, nullable=False)
+    company = db.relationship('Company', backref=db.backref('insurance_claims', lazy='dynamic', cascade="all, delete-orphan"))
+
+    def __repr__(self):
+        return f'<CompanyInsuranceClaim {self.id}>'

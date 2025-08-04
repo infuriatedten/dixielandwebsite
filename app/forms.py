@@ -84,6 +84,16 @@ class CompanyNameForm(FlaskForm):
     name = StringField('Company Name', validators=[DataRequired(), Length(min=3, max=128)])
     submit = SubmitField('Set Company Name')
 
+class CompanyVehicleForm(FlaskForm):
+    vehicle_make = StringField('Vehicle Make (e.g., Ford, Volvo)', validators=[DataRequired(), Length(max=100)])
+    vehicle_model = StringField('Vehicle Model (e.g., F-150, FH16)', validators=[DataRequired(), Length(max=100)])
+    vehicle_type = StringField('Vehicle Type (e.g., Sedan, Truck, Tractor)', validators=[DataRequired(), Length(min=3, max=100)])
+    vehicle_description = TextAreaField('Vehicle Description/Details (Optional)', validators=[Optional(), Length(max=255)])
+    region_format = SelectField('License Plate Region',
+                                choices=[(region.name, region.value) for region in VehicleRegion],
+                                validators=[DataRequired()])
+    submit = SubmitField('Register Vehicle')
+
 
 class ContestTicketForm(FlaskForm):
     user_contest_reason = TextAreaField('Reason for Contesting (Please be specific)', validators=[DataRequired(), Length(min=20, max=2000)])
@@ -255,6 +265,16 @@ class ContractForm(FlaskForm):
     description = TextAreaField('Description', validators=[DataRequired(), Length(min=10)])
     reward = DecimalField('Reward', places=2, validators=[DataRequired()])
     submit = SubmitField('Create Contract')
+
+class CompanyContractForm(FlaskForm):
+    title = StringField('Title', validators=[DataRequired(), Length(min=5, max=128)])
+    description = TextAreaField('Description', validators=[DataRequired(), Length(min=10)])
+    reward = DecimalField('Reward', places=2, validators=[DataRequired()])
+    submit = SubmitField('Create Contract')
+
+class CompanyInsuranceClaimForm(FlaskForm):
+    reason = TextAreaField('Reason for Claim', validators=[DataRequired(), Length(min=10, max=1000)])
+    submit = SubmitField('Submit Claim')
 
 
 class PlaceBidForm(FlaskForm):

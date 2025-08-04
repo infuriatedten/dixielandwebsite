@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "bootstrap_wtf.html" as wtf %}
 
 {% block content %}
 <div class="container-fluid mt-4">
@@ -70,6 +71,133 @@
                     {% else %}
                         <p>No vehicles found.</p>
                     {% endif %}
+                    <hr>
+                    <h5>Register a New Vehicle</h5>
+                    <form method="POST" action="{{ url_for('main.company_dashboard') }}">
+                        {{ vehicle_form.hidden_tag() }}
+                        {{ wtf.render_field(vehicle_form.vehicle_make) }}
+                        {{ wtf.render_field(vehicle_form.vehicle_model) }}
+                        {{ wtf.render_field(vehicle_form.vehicle_type) }}
+                        {{ wtf.render_field(vehicle_form.vehicle_description) }}
+                        {{ wtf.render_field(vehicle_form.region_format) }}
+                        {{ wtf.render_field(vehicle_form.submit) }}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    Tickets
+                </div>
+                <div class="card-body">
+                    {% if tickets %}
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Violation</th>
+                                    <th>Fine Amount</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ticket in tickets %}
+                                    <tr>
+                                        <td>{{ ticket.violation_details }}</td>
+                                        <td>{{ ticket.fine_amount }}</td>
+                                        <td>{{ ticket.status.value }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p>No tickets found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    Contracts
+                </div>
+                <div class="card-body">
+                    {% if contracts %}
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Reward</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for contract in contracts %}
+                                    <tr>
+                                        <td>{{ contract.title }}</td>
+                                        <td>{{ contract.reward }}</td>
+                                        <td>{{ contract.status.value }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p>No contracts found.</p>
+                    {% endif %}
+                    <hr>
+                    <h5>Create a New Contract</h5>
+                    <form method="POST" action="{{ url_for('main.company_dashboard') }}">
+                        {{ contract_form.hidden_tag() }}
+                        {{ wtf.render_field(contract_form.title) }}
+                        {{ wtf.render_field(contract_form.description) }}
+                        {{ wtf.render_field(contract_form.reward) }}
+                        {{ wtf.render_field(contract_form.submit) }}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    Insurance Claims
+                </div>
+                <div class="card-body">
+                    {% if insurance_claims %}
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Reason</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for claim in insurance_claims %}
+                                    <tr>
+                                        <td>{{ claim.reason }}</td>
+                                        <td>{{ claim.status.value }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p>No insurance claims found.</p>
+                    {% endif %}
+                    <hr>
+                    <h5>Submit a New Insurance Claim</h5>
+                    <form method="POST" action="{{ url_for('main.company_dashboard') }}">
+                        {{ insurance_form.hidden_tag() }}
+                        {{ wtf.render_field(insurance_form.reason) }}
+                        {{ wtf.render_field(insurance_form.submit) }}
+                    </form>
                 </div>
             </div>
         </div>

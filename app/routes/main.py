@@ -178,21 +178,73 @@ def farmer_dashboard():
 
 
 # ------------------------ COMPANY ------------------------
-@main_bp.route('/company-dashboard')
+@main_bp.route('/company-dashboard', methods=['GET', 'POST'])
 @login_required
 def company_dashboard():
     company = Company.query.filter_by(user_id=current_user.id).first()
     if not company:
         flash('You do not have a company.', 'danger')
         return redirect(url_for('main.index'))
+
     bank_accounts = Account.query.filter_by(user_id=current_user.id).all()
-    vehicles = UserVehicle.query.filter_by(user_id=current_user.id).all()
+    vehicles = CompanyVehicle.query.filter_by(company_id=company.id).all()
+    tickets = Ticket.query.filter_by(issued_to_user_id=current_user.id).all()
+    contracts = CompanyContract.query.filter_by(company_id=company.id).all()
+    insurance_claims = CompanyInsuranceClaim.query.filter_by(company_id=company.id).all()
+
+    vehicle_form = CompanyVehicleForm()
+    contract_form = CompanyContractForm()
+    insurance_form = CompanyInsuranceClaimForm()
+
+    if vehicle_form.validate_on_submit() and vehicle_form.submit.data:
+        new_vehicle = CompanyVehicle(
+            company_id=company.id,
+            vehicle_make=vehicle_form.vehicle_make.data,
+            vehicle_model=vehicle_form.vehicle_model.data,
+            vehicle_type=vehicle_form.vehicle_type.data,
+            vehicle_description=vehicle_form.vehicle_description.data,
+            license_plate=f"{vehicle_form.region_format.data}-{company.name.upper()}-{len(vehicles) + 1}",
+            region_format=vehicle_form.region_format.data
+        )
+        db.session.add(new_vehicle)
+        db.session.commit()
+        flash('Vehicle registered successfully!', 'success')
+        return redirect(url_for('main.company_dashboard'))
+
+    if contract_form.validate_on_submit() and contract_form.submit.data:
+        new_contract = CompanyContract(
+            title=contract_form.title.data,
+            description=contract_form.description.data,
+            reward=contract_form.reward.data,
+            company_id=company.id
+        )
+        db.session.add(new_contract)
+        db.session.commit()
+        flash('Contract created successfully!', 'success')
+        return redirect(url_for('main.company_dashboard'))
+
+    if insurance_form.validate_on_submit() and insurance_form.submit.data:
+        claim = CompanyInsuranceClaim(
+            reason=insurance_form.reason.data,
+            company_id=company.id
+        )
+        db.session.add(claim)
+        db.session.commit()
+        flash('Insurance claim submitted successfully!', 'success')
+        return redirect(url_for('main.company_dashboard'))
+
     return render_template(
         'main/company_dashboard.html',
         title='Company Dashboard',
         company=company,
         bank_accounts=bank_accounts,
-        vehicles=vehicles
+        vehicles=vehicles,
+        tickets=tickets,
+        contracts=contracts,
+        insurance_claims=insurance_claims,
+        vehicle_form=vehicle_form,
+        contract_form=contract_form,
+        insurance_form=insurance_form
     )
 
 @main_bp.route('/company', methods=['GET', 'POST'])
