@@ -17,7 +17,7 @@ from app.models import (
     AutomatedTaxDeductionLog, Ticket, TicketStatus,
     PermitApplication, PermitApplicationStatus,
     MarketplaceListing, MarketplaceListingStatus,
-    Inspection
+    Inspection, Fine
 )
 
 # Flask shell context
@@ -38,8 +38,40 @@ def make_shell_context():
         'PermitApplicationStatus': PermitApplicationStatus,
         'MarketplaceListing': MarketplaceListing,
         'MarketplaceListingStatus': MarketplaceListingStatus,
-        'Inspection': Inspection
+        'Inspection': Inspection,
+        'Fine': Fine
     }
+
+def seed_fines():
+    from app.models import Fine
+    from decimal import Decimal
+
+    fines_to_seed = [
+        {'name': 'Speeding (1-15 mph over)', 'description': 'Exceeding the speed limit by 1-15 mph.', 'amount': Decimal('75.00')},
+        {'name': 'Speeding (16-30 mph over)', 'description': 'Exceeding the speed limit by 16-30 mph.', 'amount': Decimal('150.00')},
+        {'name': 'Speeding (31+ mph over)', 'description': 'Exceeding the speed limit by 31 or more mph.', 'amount': Decimal('300.00')},
+        {'name': 'Illegal Parking', 'description': 'Parking in a restricted area.', 'amount': Decimal('50.00')},
+        {'name': 'Running a Red Light', 'description': 'Failing to stop at a red light.', 'amount': Decimal('100.00')},
+        {'name': 'Reckless Driving', 'description': 'Driving with willful or wanton disregard for the safety of persons or property.', 'amount': Decimal('500.00')},
+        {'name': 'Expired Vehicle Registration', 'description': 'Operating a vehicle with an expired registration.', 'amount': Decimal('60.00')},
+        {'name': 'No Proof of Insurance', 'description': 'Operating a vehicle without proof of insurance.', 'amount': Decimal('200.00')},
+    ]
+
+    existing_fines = {fine.name for fine in Fine.query.all()}
+    new_fines_added = 0
+
+    for fine_data in fines_to_seed:
+        if fine_data['name'] not in existing_fines:
+            new_fine = Fine(
+                name=fine_data['name'],
+                description=fine_data['description'],
+                amount=fine_data['amount']
+            )
+            db.session.add(new_fine)
+            new_fines_added += 1
+
+    if new_fines_added > 0:
+        db.session.commit()
 
 def seed_insurance_rates():
     from app.models import InsuranceRate, InsuranceRateType
@@ -79,6 +111,10 @@ if __name__ == '__main__':
         logger.info("Seeding insurance rates...")
         seed_insurance_rates()
         logger.info("Insurance rates seeded.")
+
+        logger.info("Seeding fines...")
+        seed_fines()
+        logger.info("Fines seeded.")
 
         # Create default admin if it doesn't exist
         admin_username = 'admin'
