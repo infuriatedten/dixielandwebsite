@@ -221,10 +221,10 @@ def edit_rules():
         return redirect(url_for('main.view_rules'))
     return render_template('admin/edit_rules.html', title='Edit Rules', form=form)
 
-@admin_bp.route('/tickets', methods=['GET'])
+@admin_bp.route('/manage/tickets', methods=['GET'])
 @login_required
 @admin_required
-def tickets():
+def manage_tickets():
     page = request.args.get('page', 1, type=int)
     per_page = 20
     tickets = Ticket.query.order_by(Ticket.issue_date.desc()).paginate(page=page, per_page=per_page)
