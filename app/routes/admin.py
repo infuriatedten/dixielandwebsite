@@ -105,7 +105,11 @@ def edit_account(account_id):
 @login_required
 @admin_required
 def manage_contracts():
-    contracts = Contract.query.order_by(Contract.id.desc()).all()
+    page = request.args.get('page', 1, type=int)
+    per_page = 20 # A common value in this app
+    contracts = Contract.query.order_by(Contract.id.desc()).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
     return render_template('admin/manage_contracts.html', contracts=contracts)
 
 
