@@ -54,7 +54,7 @@
                 <div class="card-body">
                     <h5 class="card-title">Admin Panel</h5>
                     <p class="card-text">Access administrative functions.</p>
-                    <a href="#" class="btn btn-danger">Go to Admin Dashboard</a> {# Placeholder #}
+                    <a href="{{ url_for('main.admin_dashboard') }}" class="btn btn-danger">Go to Admin Dashboard</a>
                 </div>
             </div>
             {% elif current_user.role.name == 'OFFICER' %}
@@ -62,7 +62,7 @@
                 <div class="card-body">
                     <h5 class="card-title">Officer Tools</h5>
                     <p class="card-text">Access DOT officer functionalities.</p>
-                    <a href="#" class="btn btn-info">Go to Officer Dashboard</a> {# Placeholder #}
+                    <a href="{{ url_for('main.officer_area') }}" class="btn btn-info">Go to Officer Dashboard</a>
                 </div>
             </div>
             {% endif %}
