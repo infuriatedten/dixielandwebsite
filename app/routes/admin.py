@@ -246,7 +246,7 @@ def resolve_ticket(ticket_id):
         flash('Ticket has been successfully resolved.', 'success')
         return redirect(url_for('admin.manage_tickets'))
 
-    return render_template('admin/resolve_ticket.html', title='Resolve Ticket', form=form, ticket=ticket)
+    return render_template('admin/resolve_ticket.html', title='Resolve Ticket', form=form, ticket=ticket, TicketStatus=TicketStatus)
 
 
 @admin_bp.route('/ticket/<int:ticket_id>/cancel', methods=['POST'])
