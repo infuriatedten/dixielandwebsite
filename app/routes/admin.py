@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, flash, redirect, url_for, request
-from flask_login import login_required
+from flask_login import login_required, current_user
 from sqlalchemy.orm import joinedload
 from app import db
 from app.decorators import admin_required
@@ -12,7 +12,7 @@ from app.models import (
 from app.forms import (
     EditRulesForm, EditUserForm, AccountForm, EditAccountForm, EditTicketForm, EditPermitForm,
     EditInspectionForm, EditTaxBracketForm, EditBalanceForm, EditInsuranceClaimForm,
-    EditBankForm, DeleteUserForm, FineForm
+    EditBankForm, DeleteUserForm, FineForm, ResolveTicketForm
 )
 import logging
 
@@ -223,6 +223,29 @@ def edit_ticket(ticket_id):
         flash('Ticket updated successfully.', 'success')
         return redirect(url_for('admin.manage_tickets'))
     return render_template('admin/edit_ticket.html', form=form, ticket=ticket)
+
+
+@admin_bp.route('/ticket/<int:ticket_id>/resolve', methods=['GET', 'POST'])
+@admin_required
+def resolve_ticket(ticket_id):
+    ticket = Ticket.query.get_or_404(ticket_id)
+    form = ResolveTicketForm()
+    if form.validate_on_submit():
+        new_status_val = form.new_status.data
+        try:
+            new_status_enum = TicketStatus(new_status_val)
+        except ValueError:
+            flash(f"Invalid ticket status: {new_status_val}", "danger")
+            return redirect(url_for('admin.manage_tickets'))
+
+        ticket.status = new_status_enum
+        ticket.resolution_notes = form.resolution_notes.data
+        ticket.resolved_by_admin_id = current_user.id
+        db.session.commit()
+        flash('Ticket has been successfully resolved.', 'success')
+        return redirect(url_for('admin.manage_tickets'))
+
+    return render_template('admin/resolve_ticket.html', title='Resolve Ticket', form=form, ticket=ticket)
 
 @admin_bp.route('/manage/vehicle_regions')
 @login_required
