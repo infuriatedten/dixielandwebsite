@@ -223,6 +223,24 @@ def manage_tax_brackets():
     tax_brackets = TaxBracket.query.order_by(TaxBracket.min_balance.asc()).paginate(page=page, per_page=per_page)
     return render_template('admin/manage_tax_brackets.html', tax_brackets=tax_brackets)
 
+
+@admin_bp.route('/manage/tax_brackets/edit/<int:tax_bracket_id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_tax_bracket(tax_bracket_id):
+    tax_bracket = TaxBracket.query.get_or_404(tax_bracket_id)
+    form = EditTaxBracketForm(obj=tax_bracket)
+    if form.validate_on_submit():
+        tax_bracket.name = form.name.data
+        tax_bracket.min_balance = form.min_balance.data
+        tax_bracket.max_balance = form.max_balance.data
+        tax_bracket.tax_rate = form.tax_rate.data
+        tax_bracket.is_active = form.is_active.data
+        db.session.commit()
+        flash('Tax bracket updated successfully.', 'success')
+        return redirect(url_for('admin.manage_tax_brackets'))
+    return render_template('admin/edit_tax_bracket.html', form=form, title="Edit Tax Bracket", tax_bracket=tax_bracket)
+
 @admin_bp.route('/manage/transactions')
 @login_required
 @admin_required
