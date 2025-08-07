@@ -24,6 +24,7 @@ admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 @admin_bp.route('/')
 @admin_required
 def index():
+    # --- Stats ---
     revenue_query = db.session.query(db.func.sum(Transaction.amount)).filter(
         Transaction.type.in_([
             TransactionType.TICKET_PAYMENT,
@@ -31,7 +32,6 @@ def index():
             TransactionType.PERMIT_FEE
         ])
     ).scalar()
-
     stats = {
         'total_users': User.query.count(),
         'pending_permits': PermitApplication.query.filter_by(
@@ -42,7 +42,45 @@ def index():
         ).count(),
         'revenue': revenue_query or 0.0
     }
-    return render_template('admin/dashboard.html', title='Admin Dashboard', stats=stats)
+
+    # --- Recent Activity Feed ---
+    recent_users = User.query.order_by(User.creation_date.desc()).limit(5).all()
+    recent_permits = PermitApplication.query.order_by(PermitApplication.application_date.desc()).limit(5).all()
+    recent_tickets = Ticket.query.order_by(Ticket.issue_date.desc()).limit(5).all()
+
+    activity_stream = []
+    for user in recent_users:
+        activity_stream.append({
+            'type': 'New User',
+            'description': f"User '{user.username}' registered.",
+            'date': user.creation_date,
+            'link': url_for('admin.edit_user', user_id=user.id)
+        })
+    for permit in recent_permits:
+        activity_stream.append({
+            'type': 'Permit',
+            'description': f"App from {permit.applicant.username} for '{permit.vehicle_type}'.",
+            'date': permit.application_date,
+            'link': url_for('dot.review_permit_application', application_id=permit.id)
+        })
+    for ticket in recent_tickets:
+        activity_stream.append({
+            'type': 'Ticket',
+            'description': f"Ticket #{ticket.id} issued to {ticket.issued_to.username}.",
+            'date': ticket.issue_date,
+            'link': url_for('dot.view_ticket_detail', ticket_id=ticket.id)
+        })
+
+    # Sort the combined list by date
+    activity_stream.sort(key=lambda x: x['date'], reverse=True)
+
+    # Limit to the most recent 10 items
+    recent_activity = activity_stream[:10]
+
+    return render_template('admin/dashboard.html',
+                           title='Admin Dashboard',
+                           stats=stats,
+                           recent_activity=recent_activity)
 
 # ---------------- Routes in Alphabetical Order ---------------- #
 

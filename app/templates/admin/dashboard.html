@@ -87,38 +87,26 @@
 
 <h3 class="mb-3">Recent Activity</h3>
 <div class="card">
-  <div class="card-body">
-    <p class="text-muted">Show recent permits, tickets, or user activity here — customize as needed.</p>
-    <!-- Example placeholder table -->
-    <table class="table table-sm table-hover">
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-          <th>User</th>
-          <th>Date</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Permit</td>
-          <td>Vehicle movement permit submitted</td>
-          <td>JohnDoe</td>
-          <td>2025-07-20</td>
-          <td>Pending</td>
-        </tr>
-        <tr>
-          <td>Ticket</td>
-          <td>Speeding violation issued</td>
-          <td>JaneSmith</td>
-          <td>2025-07-19</td>
-          <td>Open</td>
-        </tr>
-        <!-- Add dynamic rows here -->
-      </tbody>
-    </table>
-  </div>
+    <div class="card-header">
+        Latest Server Events
+    </div>
+    {% if recent_activity %}
+    <ul class="list-group list-group-flush">
+        {% for item in recent_activity %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+                <span class="badge bg-info me-2">{{ item.type }}</span>
+                <a href="{{ item.link }}" class="text-decoration-none">{{ item.description }}</a>
+            </div>
+            <small class="text-muted">{{ item.date.strftime('%Y-%m-%d %H:%M') }}</small>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <div class="card-body">
+        <p class="text-muted">No recent activity found.</p>
+    </div>
+    {% endif %}
 </div>
 
 {% endblock %}
