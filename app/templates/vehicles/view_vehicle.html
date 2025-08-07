@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('vehicle.my_vehicles') }}">My Vehicles</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ vehicle.license_plate }}</li>
+        </ol>
+    </nav>
+
+    <h1 class="mb-4">{{ title }}</h1>
+
+    <div class="card">
+        <div class="card-header">
+            Vehicle Details
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Make:</strong> {{ vehicle.vehicle_make }}</p>
+                    <p><strong>Model:</strong> {{ vehicle.vehicle_model }}</p>
+                    <p><strong>Type:</strong> {{ vehicle.vehicle_type }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>License Plate:</strong> {{ vehicle.license_plate }}</p>
+                    <p><strong>Region:</strong> {{ vehicle.region_format.value }}</p>
+                    <p><strong>Registered On:</strong> {{ vehicle.registration_date.strftime('%Y-%m-%d %H:%M') }}</p>
+                </div>
+            </div>
+            {% if vehicle.vehicle_description %}
+            <hr>
+            <p><strong>Description:</strong></p>
+            <p>{{ vehicle.vehicle_description }}</p>
+            {% endif %}
+        </div>
+        <div class="card-footer text-end">
+            <a href="{{ url_for('vehicle.my_vehicles') }}" class="btn btn-secondary">Back to My Vehicles</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
