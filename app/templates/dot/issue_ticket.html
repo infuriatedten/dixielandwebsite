@@ -35,7 +35,7 @@
             <div class="d-flex gap-2 mt-3">
                 <a href="{{ url_for('dot.list_issued_tickets') }}" class="btn btn-secondary flex-grow-1">Back to My Issued Tickets</a>
                 {% if current_user.role == UserRole.ADMIN %}
-                <a href="{{ url_for('admin.tickets') }}" class="btn btn-info flex-grow-1">Admin Ticket Management</a>
+                <a href="{{ url_for('admin.manage_tickets') }}" class="btn btn-info flex-grow-1">Admin Ticket Management</a>
                 {% endif %}
             </div>
         </div>
