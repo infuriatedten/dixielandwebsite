@@ -5,9 +5,9 @@
     <h1 class="mb-4">My Registered Vehicles</h1>
     <hr>
 
-    {% if vehicles %}
+    {% if vehicles_pagination and vehicles_pagination.items %}
         <div class="row g-4">
-            {% for vehicle in vehicles %}
+            {% for vehicle in vehicles_pagination.items %}
                 <div class="col-md-6 col-lg-4">
                     <div class="card h-100 shadow-sm border-0">
                         <div class="card-body d-flex flex-column">
@@ -16,7 +16,7 @@
                                 <strong>License Plate:</strong> {{ vehicle.license_plate }}
                             </p>
                             <p class="card-text mb-2">
-                                <strong>Region:</strong> {{ vehicle.region.name }}
+                                <strong>Region:</strong> {{ vehicle.region_format.value }}
                             </p>
                             <small class="text-muted mt-auto">
                                 Registered on: {{ vehicle.registration_date.strftime('%Y-%m-%d') if vehicle.registration_date else 'N/A' }}
@@ -26,11 +26,46 @@
                             <a href="{{ url_for('vehicle.view_vehicle', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-primary">
                                 View Details
                             </a>
+                            <form method="POST" action="{{ url_for('vehicle.deactivate_vehicle_route', vehicle_id=vehicle.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to deactivate this vehicle? This is a soft delete.');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-danger">Deactivate</button>
+                            </form>
                         </div>
                     </div>
                 </div>
             {% endfor %}
         </div>
+
+        <!-- Pagination Controls -->
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if vehicles_pagination.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('vehicle.my_vehicles', page=vehicles_pagination.prev_num) }}">Previous</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                {% endif %}
+
+                {% for page_num in vehicles_pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                    {% if page_num %}
+                        <li class="page-item {% if page_num == vehicles_pagination.page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('vehicle.my_vehicles', page=page_num) }}">{{ page_num }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if vehicles_pagination.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('vehicle.my_vehicles', page=vehicles_pagination.next_num) }}">Next</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">Next</span></li>
+                {% endif %}
+            </ul>
+        </nav>
     {% else %}
         <div class="alert alert-info" role="alert">
             You have no registered vehicles. <a href="{{ url_for('vehicle.register_vehicle_route') }}" class="alert-link">Register one now</a>.
