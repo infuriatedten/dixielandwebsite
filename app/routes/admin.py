@@ -44,18 +44,10 @@ def index():
     }
 
     # --- Recent Activity Feed ---
-    recent_users = User.query.order_by(User.creation_date.desc()).limit(5).all()
     recent_permits = PermitApplication.query.order_by(PermitApplication.application_date.desc()).limit(5).all()
     recent_tickets = Ticket.query.order_by(Ticket.issue_date.desc()).limit(5).all()
 
     activity_stream = []
-    for user in recent_users:
-        activity_stream.append({
-            'type': 'New User',
-            'description': f"User '{user.username}' registered.",
-            'date': user.creation_date,
-            'link': url_for('admin.edit_user', user_id=user.id)
-        })
     for permit in recent_permits:
         activity_stream.append({
             'type': 'Permit',
