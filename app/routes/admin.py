@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, flash, redirect, url_for, request
+from datetime import datetime
 from flask_login import login_required, current_user
 from sqlalchemy.orm import joinedload
 from app import db
@@ -246,6 +247,18 @@ def resolve_ticket(ticket_id):
         return redirect(url_for('admin.manage_tickets'))
 
     return render_template('admin/resolve_ticket.html', title='Resolve Ticket', form=form, ticket=ticket)
+
+
+@admin_bp.route('/ticket/<int:ticket_id>/cancel', methods=['POST'])
+@admin_required
+def cancel_ticket_by_admin(ticket_id):
+    ticket = Ticket.query.get_or_404(ticket_id)
+    ticket.status = TicketStatus.CANCELLED
+    ticket.resolution_notes = f"Ticket cancelled by admin {current_user.username} on {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC."
+    ticket.resolved_by_admin_id = current_user.id
+    db.session.commit()
+    flash('Ticket has been cancelled.', 'success')
+    return redirect(url_for('admin.manage_tickets'))
 
 @admin_bp.route('/manage/vehicle_regions')
 @login_required
