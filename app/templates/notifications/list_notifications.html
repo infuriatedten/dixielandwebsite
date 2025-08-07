@@ -7,6 +7,7 @@
         {% set unread_count = notifications_pagination.items | selectattr('is_read', 'equalto', false) | list | length %}
         {% if unread_count > 0 %}
         <form method="POST" action="{{ url_for('notifications.mark_all_notifications_read_route') }}" class="m-0">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="btn btn-sm btn-outline-primary">Mark All as Read</button>
         </form>
         {% endif %}
