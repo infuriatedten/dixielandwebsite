@@ -10,26 +10,34 @@ bp = Blueprint('banking', __name__)
 @bp.route('/dashboard')
 @login_required
 def dashboard():
+    # The logic to fetch accounts based on user type seems correct.
     if hasattr(current_user, 'farmer') and current_user.farmer:
-        accounts = Account.query.filter_by(user_id=current_user.id, is_company=False).all()
+        accounts_query = Account.query.filter_by(user_id=current_user.id, is_company=False)
     elif hasattr(current_user, 'company') and current_user.company:
-        accounts = Account.query.filter_by(user_id=current_user.id, is_company=True).all()
+        accounts_query = Account.query.filter_by(user_id=current_user.id, is_company=True)
     else:
-        accounts = Account.query.filter_by(user_id=current_user.id).all()
+        accounts_query = Account.query.filter_by(user_id=current_user.id)
+
+    accounts = accounts_query.all()
 
     if not accounts:
         flash('You do not have any bank accounts set up yet. Please contact an administrator.', 'warning')
         return render_template('banking/dashboard_no_account.html', title='Banking Dashboard')
 
-    account_details = []
-    for account in accounts:
-        transactions = Transaction.query.filter_by(account_id=account.id).order_by(Transaction.timestamp.desc()).limit(10).all()
-        account_details.append({
-            'account': account,
-            'recent_transactions': transactions
-        })
+    # Calculate total balance
+    total_balance = sum(acc.balance for acc in accounts)
 
-    return render_template('banking/dashboard.html', title='Banking Dashboard', account_details=account_details)
+    # Consolidate transactions from all accounts
+    account_ids = [acc.id for acc in accounts]
+    consolidated_transactions = Transaction.query.filter(Transaction.account_id.in_(account_ids))\
+                                                 .order_by(Transaction.timestamp.desc())\
+                                                 .limit(15).all()
+
+    return render_template('banking/dashboard.html',
+                           title='Banking Dashboard',
+                           accounts=accounts,
+                           total_balance=total_balance,
+                           recent_transactions=consolidated_transactions)
 
 @bp.route('/account/<int:account_id>')
 @login_required

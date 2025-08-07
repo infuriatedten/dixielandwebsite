@@ -4,46 +4,64 @@
 <div class="container mt-4">
     <h1 class="mb-4">{{ title }}</h1>
 
-    {% if not account_details %}
+    {% if not accounts %}
         <div class="alert alert-warning" role="alert">
             You do not have any bank accounts set up yet. Please contact an administrator.
         </div>
     {% else %}
-        {% for detail in account_details %}
-        <div class="card mb-4">
+        <!-- Consolidated Summary Card -->
+        <div class="card text-white bg-primary mb-4">
             <div class="card-header">
-                <h5 class="mb-0">Account ID: {{ detail.account.id }} ({{ detail.account.currency }})</h5>
+                <h5 class="mb-0">Financial Overview</h5>
             </div>
             <div class="card-body">
-                <h4 class="card-title">Current Balance: {{ "%.2f"|format(detail.account.balance) }} {{ detail.account.currency }}</h4>
-                <p class="card-text">Owned by: {{ detail.account.user.username }}</p>
-                <p class="card-text"><small class="text-muted">Last Updated: {{ detail.account.last_updated_on.strftime('%Y-%m-%d %H:%M:%S') if detail.account.last_updated_on else 'N/A' }}</small></p>
+                <h3 class="card-title">Total Balance: {{ "%.2f"|format(total_balance) }} GDC</h3>
+                <p class="card-text">Across {{ accounts|length }} account(s).</p>
+            </div>
+        </div>
 
-                <h5 class="mt-4">Recent Transactions (Last 10)</h5>
-                {% if detail.recent_transactions %}
+        <h3 class="mb-3">Your Accounts</h3>
+        <div class="row mb-4">
+        {% for account in accounts %}
+            <div class="col-md-6">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Account ID: {{ account.id }}</h5>
+                        <p class="card-text"><strong>Balance:</strong> {{ "%.2f"|format(account.balance) }} {{ account.currency }}</p>
+                        <a href="{{ url_for('banking.view_account', account_id=account.id) }}" class="btn btn-sm btn-outline-primary">View Full Statement</a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+        </div>
+
+        <h3 class="mb-3">Recent Transactions (All Accounts)</h3>
+        <div class="card">
+            <div class="card-body">
+                {% if recent_transactions %}
                 <ul class="list-group list-group-flush">
-                    {% for transaction in detail.recent_transactions %}
+                    {% for transaction in recent_transactions %}
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                         <div>
-                            <strong>{{ transaction.type.name.replace("_", " ").title() }}:</strong> {{ transaction.description or 'N/A' }}
-                            <br><small class="text-muted">{{ transaction.timestamp.strftime('%Y-%m-%d %H:%M') if transaction.timestamp else 'N/A' }}</small>
+                            <strong>{{ transaction.type.value.replace("_", " ").title() }}</strong>
+                            <br>
+                            <small class="text-muted">
+                                Account: {{ transaction.account_id }} | {{ transaction.timestamp.strftime('%Y-%m-%d %H:%M') if transaction.timestamp else 'N/A' }}
+                            </small>
+                            <br>
+                            <small>{{ transaction.description or 'No description' }}</small>
                         </div>
-                        <span class="badge {{ 'badge-success' if transaction.amount > 0 else 'badge-danger' if transaction.amount < 0 else 'badge-secondary' }} badge-pill p-2">
-                            {{ "%.2f"|format(transaction.amount) }} {{ detail.account.currency }}
+                        <span class="badge rounded-pill {{ 'bg-success' if transaction.amount > 0 else 'bg-danger' }}">
+                            {{ "+ " if transaction.amount > 0 else "" }}{{ "%.2f"|format(transaction.amount) }}
                         </span>
                     </li>
                     {% endfor %}
                 </ul>
                 {% else %}
-                <p>No recent transactions found for this account.</p>
+                <p>No recent transactions found across all accounts.</p>
                 {% endif %}
-                <a href="{{ url_for('banking.view_account', account_id=detail.account.id) }}" class="btn btn-primary mt-3">View Full Statement</a>
             </div>
         </div>
-        {% endfor %}
     {% endif %}
-
-    <!-- Placeholder for other banking actions if any -->
-    <!-- e.g., Fund Transfer (if implemented), Scheduled Payments, etc. -->
 </div>
 {% endblock %}
