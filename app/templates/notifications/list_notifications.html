@@ -29,6 +29,7 @@
             {% if notification.link_url %}
                 {% if not notification.is_read %}
                 <form method="POST" action="{{ url_for('notifications.mark_notification_read_route', notification_id=notification.id) }}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-link btn-sm p-0 align-baseline">View Details &amp; Mark Read</button>
                 </form>
                 {% else %}
@@ -36,6 +37,7 @@
                 {% endif %}
             {% elif not notification.is_read %}
                 <form method="POST" action="{{ url_for('notifications.mark_notification_read_route', notification_id=notification.id) }}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-sm btn-outline-secondary">Mark as Read</button>
                 </form>
             {% endif %}
