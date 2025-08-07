@@ -7,9 +7,9 @@
     <p class="text-muted">
         Conversation with:
         {% if current_user.id == conversation.user_id %}
-            Admin {{ conversation.admin_participant.username }}
+            Admin {{ conversation.admin.username }}
         {% else %}
-            User {{ conversation.user_participant.username }}
+            User {{ conversation.user.username }}
         {% endif %}
         | Status: <span class="fw-bold">{{ conversation.status.value }}</span>
     </p>
