@@ -127,7 +127,7 @@
         <div class="card-body">
             <form method="POST" action="{{ url_for('main.farmer_dashboard') }}">
                 {{ insurance_form.hidden_tag() }}
-                {{ wtf.render_field(insurance_form.reason, rows=10) }}
+                {{ wtf.render_field(insurance_form.insurance_rate_id) }}
                 {{ wtf.render_field(insurance_form.submit, button_map={'submit': 'btn-warning'}) }}
             </form>
         </div>
