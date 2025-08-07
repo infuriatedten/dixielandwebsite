@@ -105,7 +105,7 @@ def edit_account(account_id):
 @login_required
 @admin_required
 def manage_contracts():
-    contracts = Contract.query.order_by(Contract.created_at.desc()).all()
+    contracts = Contract.query.order_by(Contract.id.desc()).all()
     return render_template('admin/manage_contracts.html', contracts=contracts)
 
 
