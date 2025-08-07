@@ -68,6 +68,48 @@ def main_index():
                            insurance_rates=dynamic_rates)
 
 
+@main_bp.route('/site-home', endpoint='site_home')
+def site_home():
+    recent_listings = MarketplaceListing.query \
+        .filter_by(status=MarketplaceListingStatus.AVAILABLE) \
+        .order_by(MarketplaceListing.creation_date.desc()) \
+        .limit(4).all()
+
+    announcements = [
+        {
+            'title': 'Welcome to the new and improved Game Portal!',
+            'content': 'We have redesigned the home page to be more informative and user-friendly.'
+        },
+        {
+            'title': 'New Marketplace Items Available',
+            'content': 'Check out the new items available in the marketplace. There are some great deals to be had!'
+        },
+    ]
+
+    stats = {
+        'active_players': User.query.count(),
+        'open_tickets': Ticket.query.filter_by(status='OUTSTANDING').count(),
+        'pending_permits': PermitApplication.query.filter_by(status='PENDING_REVIEW').count(),
+    }
+
+    insurance_rates = InsuranceRate.query.order_by(InsuranceRate.rate_type).all()
+    dynamic_rates = []
+    for rate in insurance_rates:
+        new_rate = float(rate.rate) * (1 + (rate.payout_requests / 10))
+        dynamic_rates.append({
+            'rate_type': rate.rate_type,
+            'name': rate.name,
+            'description': rate.description,
+            'rate': new_rate
+        })
+
+    return render_template('main/index.html', title='Home',
+                           recent_listings=recent_listings,
+                           announcements=announcements,
+                           stats=stats,
+                           insurance_rates=dynamic_rates)
+
+
 # Create markdown parser once (reuse)
 markdown_parser = mistune.create_markdown(escape=False)
 
@@ -124,7 +166,7 @@ def farmer_dashboard():
     bank_accounts = Account.query.filter_by(user_id=current_user.id).all()
     farmer = Farmer.query.filter_by(user_id=current_user.id).first()
     parcels = Parcel.query.filter_by(farmer_id=farmer.id).all() if farmer else []
-    vehicles = UserVehicle.query.filter_by(user_id=current_user.id, is_active=True).all()
+    vehicles = UserVehicle.query.filter_by(user_id=current_user.id).all()
     tickets = Ticket.query.filter_by(issued_to_user_id=current_user.id).all()
     insurance_claims = InsuranceClaim.query.filter_by(farmer_id=farmer.id).all() if farmer else []
     parcel_form = ParcelForm()
@@ -146,18 +188,18 @@ def farmer_dashboard():
 
     if insurance_form.validate_on_submit() and insurance_form.submit.data:
         if farmer:
-            rate = InsuranceRate.query.get(insurance_form.insurance_rate_id.data)
-            if rate:
-                claim = InsuranceClaim(
-                    reason=rate.name,
-                    farmer_id=farmer.id
-                )
-                db.session.add(claim)
-                rate.payout_requests += 1
-                db.session.commit()
-                flash('Insurance claim submitted successfully!', 'success')
-            else:
-                flash('Invalid insurance rate selected.', 'danger')
+            claim = InsuranceClaim(
+                reason=insurance_form.reason.data,
+                farmer_id=farmer.id
+            )
+            db.session.add(claim)
+
+            rate_to_update = InsuranceRate.query.filter_by(name=insurance_form.reason.data).first()
+            if rate_to_update:
+                rate_to_update.payout_requests += 1
+
+            db.session.commit()
+            flash('Insurance claim submitted successfully!', 'success')
         else:
             flash('You must be a registered farmer to submit a claim.', 'danger')
         return redirect(url_for('main.farmer_dashboard'))
