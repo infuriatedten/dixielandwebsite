@@ -251,8 +251,12 @@ class ParcelForm(FlaskForm):
 
 
 class InsuranceClaimForm(FlaskForm):
-    reason = TextAreaField('Reason for Claim', validators=[DataRequired(), Length(min=10, max=1000)])
+    insurance_rate_id = SelectField('Reason for Claim', coerce=int, validators=[DataRequired()])
     submit = SubmitField('Submit Claim')
+
+    def __init__(self, *args, **kwargs):
+        super(InsuranceClaimForm, self).__init__(*args, **kwargs)
+        self.insurance_rate_id.choices = [(rate.id, rate.name) for rate in InsuranceRate.query.order_by(InsuranceRate.name).all()]
 
 
 class EditInsuranceClaimForm(FlaskForm):

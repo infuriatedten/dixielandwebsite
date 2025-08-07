@@ -146,18 +146,18 @@ def farmer_dashboard():
 
     if insurance_form.validate_on_submit() and insurance_form.submit.data:
         if farmer:
-            claim = InsuranceClaim(
-                reason=insurance_form.reason.data,
-                farmer_id=farmer.id
-            )
-            db.session.add(claim)
-
-            rate_to_update = InsuranceRate.query.filter_by(name=insurance_form.reason.data).first()
-            if rate_to_update:
-                rate_to_update.payout_requests += 1
-
-            db.session.commit()
-            flash('Insurance claim submitted successfully!', 'success')
+            rate = InsuranceRate.query.get(insurance_form.insurance_rate_id.data)
+            if rate:
+                claim = InsuranceClaim(
+                    reason=rate.name,
+                    farmer_id=farmer.id
+                )
+                db.session.add(claim)
+                rate.payout_requests += 1
+                db.session.commit()
+                flash('Insurance claim submitted successfully!', 'success')
+            else:
+                flash('Invalid insurance rate selected.', 'danger')
         else:
             flash('You must be a registered farmer to submit a claim.', 'danger')
         return redirect(url_for('main.farmer_dashboard'))
