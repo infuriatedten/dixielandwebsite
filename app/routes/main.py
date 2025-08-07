@@ -124,7 +124,7 @@ def farmer_dashboard():
     bank_accounts = Account.query.filter_by(user_id=current_user.id).all()
     farmer = Farmer.query.filter_by(user_id=current_user.id).first()
     parcels = Parcel.query.filter_by(farmer_id=farmer.id).all() if farmer else []
-    vehicles = UserVehicle.query.filter_by(user_id=current_user.id).all()
+    vehicles = UserVehicle.query.filter_by(user_id=current_user.id, is_active=True).all()
     tickets = Ticket.query.filter_by(issued_to_user_id=current_user.id).all()
     insurance_claims = InsuranceClaim.query.filter_by(farmer_id=farmer.id).all() if farmer else []
     parcel_form = ParcelForm()
