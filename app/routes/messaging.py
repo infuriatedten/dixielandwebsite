@@ -147,7 +147,7 @@ def admin_start_conversation(target_user_id=None):
 @admin_required
 def admin_list_all_conversations():
     page = request.args.get('page', 1, type=int)
-    conversations_pagination = messaging_service.get_all_conversations(page=page)
+    conversations_pagination = messaging_service.get_admin_conversations_list(admin_user_id=None, page=page)
     return render_template('admin/messaging/all_conversations.html',
                            title="All User Conversations",
                            conversations_pagination=conversations_pagination,
