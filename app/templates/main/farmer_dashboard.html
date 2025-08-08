@@ -54,6 +54,45 @@
 
     <div class="card mt-4">
         <div class="card-header">
+            <h5 class="mb-0">Silo Contents</h5>
+        </div>
+        <div class="card-body">
+            {% if silo_contents %}
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col">Crop Type</th>
+                            <th scope="col">Quantity</th>
+                            <th scope="col">Capacity</th>
+                            <th scope="col">Fill Level</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in silo_contents %}
+                            <tr>
+                                <td>{{ item.crop_type }}</td>
+                                <td>{{ "%.2f"|format(item.quantity) }} L</td>
+                                <td>{{ "%.2f"|format(item.capacity) }} L</td>
+                                <td>
+                                    {% set fill_percentage = (item.quantity / item.capacity) * 100 %}
+                                    <div class="progress">
+                                        <div class="progress-bar" role="progressbar" style="width: {{ fill_percentage }}%;" aria-valuenow="{{ fill_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                                            {{ "%.1f"|format(fill_percentage) }}%
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No silo information available. Data is synced from the game.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header">
             <h5 class="mb-0">Add New Parcel</h5>
         </div>
         <div class="card-body">
