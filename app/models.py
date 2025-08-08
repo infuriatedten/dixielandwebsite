@@ -435,6 +435,21 @@ class Parcel(db.Model):
         return f'<Parcel {self.id}>'
 
 
+class SiloStorage(db.Model):
+    __tablename__ = 'silo_storage'
+    id = db.Column(db.Integer, primary_key=True)
+    farmer_id = db.Column(db.Integer, db.ForeignKey('farmers.id'), nullable=False, index=True)
+    crop_type = db.Column(db.String(100), nullable=False)
+    quantity = db.Column(db.Float, nullable=False, default=0)
+    capacity = db.Column(db.Float, nullable=False, default=200000) # Default capacity, can be updated via API
+    last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    farmer = db.relationship('Farmer', backref=db.backref('silo_contents', lazy='dynamic'))
+
+    def __repr__(self):
+        return f'<SiloStorage for Farmer {self.farmer_id}: {self.quantity}/{self.capacity} of {self.crop_type}>'
+
+
 class InsuranceClaimStatus(enum.Enum):
     PENDING = "Pending"
     APPROVED = "Approved"

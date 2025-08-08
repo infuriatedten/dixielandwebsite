@@ -9,7 +9,7 @@ from app.models import (
     User, UserRole, RulesContent, Farmer, Parcel, UserVehicle, CompanyVehicle,
     Account, InsuranceClaim, Contract, ContractStatus, Company, CompanyContract, CompanyInsuranceClaim,
     MarketplaceListing, MarketplaceListingStatus, Ticket, PermitApplication,
-    Transaction, TransactionType, InsuranceRate, Fine
+    Transaction, TransactionType, InsuranceRate, Fine, SiloStorage
 )
 from app.forms import (
     ParcelForm, InsuranceClaimForm, ContractForm, CompanyNameForm, CompanyVehicleForm, CompanyContractForm, CompanyInsuranceClaimForm
@@ -166,6 +166,7 @@ def farmer_dashboard():
     bank_accounts = Account.query.filter_by(user_id=current_user.id).all()
     farmer = Farmer.query.filter_by(user_id=current_user.id).first()
     parcels = Parcel.query.filter_by(farmer_id=farmer.id).all() if farmer else []
+    silo_contents = SiloStorage.query.filter_by(farmer_id=farmer.id).order_by(SiloStorage.crop_type).all() if farmer else []
     vehicles = UserVehicle.query.filter_by(user_id=current_user.id).all()
     tickets = Ticket.query.filter_by(issued_to_user_id=current_user.id).all()
     insurance_claims = InsuranceClaim.query.filter_by(farmer_id=farmer.id).all() if farmer else []
@@ -213,7 +214,8 @@ def farmer_dashboard():
         tickets=tickets,
         insurance_claims=insurance_claims,
         parcel_form=parcel_form,
-        insurance_form=insurance_form
+        insurance_form=insurance_form,
+        silo_contents=silo_contents
     )
 
 

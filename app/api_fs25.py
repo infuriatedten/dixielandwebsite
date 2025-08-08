@@ -1,6 +1,6 @@
 # api_fs25.py
-from flask import Blueprint, request, jsonify
-from app.models import db, Farmer, Account, Transaction, TransactionType, FarmerStats, Notification, Conversation
+from flask import Blueprint, request, jsonify, current_app
+from app.models import db, Farmer, Account, Transaction, TransactionType, FarmerStats, Notification, Conversation, SiloStorage
 from datetime import datetime
 
 api_fs25_bp = Blueprint('api_fs25', __name__)
@@ -93,3 +93,50 @@ def get_notifications():
         "unread_notifications": unread_notifications_count,
         "unread_messages": int(unread_messages_count)
     }), 200
+
+
+@api_fs25_bp.route('/api/fs25/update_silo', methods=['POST'])
+def update_silo():
+    data = request.json
+    farmer_id = data.get('farmer_id')
+    silo_contents = data.get('silo_contents') # Expecting a list of dicts
+
+    if farmer_id is None or silo_contents is None:
+        return jsonify({"error": "Missing farmer_id or silo_contents"}), 400
+
+    if not isinstance(silo_contents, list):
+        return jsonify({"error": "silo_contents should be a list"}), 400
+
+    farmer = Farmer.query.get(farmer_id)
+    if not farmer:
+        return jsonify({"error": "Farmer not found"}), 404
+
+    try:
+        for item in silo_contents:
+            crop_type = item.get('crop_type')
+            quantity = float(item.get('quantity', 0))
+            capacity = float(item.get('capacity', 200000)) # Default capacity
+
+            if not crop_type:
+                continue # Skip items without a crop type
+
+            # Find existing silo record or create a new one
+            silo_storage = SiloStorage.query.filter_by(farmer_id=farmer_id, crop_type=crop_type).first()
+            if not silo_storage:
+                silo_storage = SiloStorage(farmer_id=farmer_id, crop_type=crop_type)
+                db.session.add(silo_storage)
+
+            silo_storage.quantity = quantity
+            silo_storage.capacity = capacity
+            silo_storage.last_updated = datetime.utcnow()
+
+        db.session.commit()
+        return jsonify({"status": "success", "message": f"Silo contents updated for farmer {farmer_id}."}), 200
+
+    except (ValueError, TypeError) as e:
+        db.session.rollback()
+        return jsonify({"error": "Invalid data format for quantity or capacity.", "details": str(e)}), 400
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error updating silo for farmer {farmer_id}: {e}", exc_info=True)
+        return jsonify({"error": "An unexpected error occurred."}), 500
