@@ -58,7 +58,7 @@ def view_conversation(conversation_id):
         else:
             flash('There was an error sending your reply. The conversation might be closed or an issue occurred.', 'danger')
 
-    return render_template('messaging/conversation_thread.html',
+    return render_template('messaging/conversation_thread_fix.html',
                            title=f"Re: {conversation.subject}",
                            conversation=conversation,
                            messages=messages,
