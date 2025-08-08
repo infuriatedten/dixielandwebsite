@@ -29,7 +29,8 @@ def list_my_conversations():
     return render_template('messaging/inbox.html',
                            title=title,
                            conversations_pagination=conversations_pagination,
-                           ConversationStatus=ConversationStatus)
+                           ConversationStatus=ConversationStatus,
+                           Message=Message)
 
 
 @messaging_bp.route('/conversation/<int:conversation_id>', methods=['GET', 'POST'])
