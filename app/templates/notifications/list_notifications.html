@@ -17,30 +17,31 @@
     <div class="list-group">
         {% for notification in notifications_pagination.items %}
         <div class="list-group-item list-group-item-action {% if not notification.is_read %}list-group-item-warning fw-bold{% endif %}">
-            <div class="d-flex w-100 justify-content-between align-items-center">
-                <p class="mb-1">
-                    <small class="text-muted">[{{ notification.notification_type.value }}]</small>
-                    {{ notification.message_text }}
-                </p>
-                <small class="text-muted">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
-            </div>
-
-            <div class="mt-2">
-            {% if notification.link_url %}
-                {% if not notification.is_read %}
-                <form method="POST" action="{{ url_for('notifications.mark_notification_read_route', notification_id=notification.id) }}" class="d-inline">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="btn btn-link btn-sm p-0 align-baseline">View Details &amp; Mark Read</button>
-                </form>
-                {% else %}
-                <a href="{{ notification.link_url }}" class="small">View Details</a>
-                {% endif %}
-            {% elif not notification.is_read %}
-                <form method="POST" action="{{ url_for('notifications.mark_notification_read_route', notification_id=notification.id) }}" class="d-inline">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="btn btn-sm btn-outline-secondary">Mark as Read</button>
-                </form>
-            {% endif %}
+            <div class="d-flex w-100 justify-content-between align-items-start">
+                <div>
+                    <p class="mb-1">
+                        <small class="text-muted">[{{ notification.notification_type.value }}]</small>
+                        {{ notification.message_text }}
+                    </p>
+                    <div class="mt-1">
+                    {% if notification.link_url %}
+                        {% if not notification.is_read %}
+                        <form method="POST" action="{{ url_for('notifications.mark_notification_read_route', notification_id=notification.id) }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-link btn-sm p-0 align-baseline">View Details &amp; Mark Read</button>
+                        </form>
+                        {% else %}
+                        <a href="{{ notification.link_url }}" class="small">View Details</a>
+                        {% endif %}
+                    {% elif not notification.is_read %}
+                        <form method="POST" action="{{ url_for('notifications.mark_notification_read_route', notification_id=notification.id) }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">Mark as Read</button>
+                        </form>
+                    {% endif %}
+                    </div>
+                </div>
+                <small class="text-muted flex-shrink-0">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
             </div>
         </div>
         {% endfor %}
