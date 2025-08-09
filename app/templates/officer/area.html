@@ -1,0 +1,20 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Officer Area</h1>
+    <p>Welcome to the Officer Area. This section is under construction.</p>
+    <hr>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Quick Actions</h5>
+                    <p class="card-text">Links to common officer tasks.</p>
+                    <a href="{{ url_for('dot.dashboard') }}" class="btn btn-primary">Go to DOT Dashboard</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
