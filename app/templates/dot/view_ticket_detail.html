@@ -30,20 +30,20 @@
 
             <div class="mb-3">
                 <h5 class="mb-1">Violation Details:</h5>
-                <div class="bg-light p-3 rounded border">{{ ticket.violation_details|safe }}</div>
+                <div class="bg-light p-3 rounded border text-dark">{{ ticket.violation_details|safe }}</div>
             </div>
 
             {% if ticket.user_contest_reason %}
             <div class="mb-3">
                 <h5 class="mb-1">Your Reason for Contesting:</h5>
-                <div class="bg-light p-3 rounded border">{{ ticket.user_contest_reason|safe }}</div>
+                <div class="bg-light p-3 rounded border text-dark">{{ ticket.user_contest_reason|safe }}</div>
             </div>
             {% endif %}
 
             {% if ticket.resolution_notes %}
             <div class="mb-3">
                 <h5 class="mb-1">Admin Resolution Notes:</h5>
-                <div class="bg-light p-3 rounded border">
+                <div class="bg-light p-3 rounded border text-dark">
                     {{ ticket.resolution_notes|safe }}
                     <br><small class="text-muted">Resolved by: {{ ticket.resolved_by_admin.username if ticket.resolved_by_admin else 'Admin' }}</small>
                 </div>
