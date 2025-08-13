@@ -97,6 +97,11 @@ def get_user_vehicles_paginated(user_id, page=1, per_page=10):
                             .order_by(UserVehicle.registration_date.desc())\
                             .paginate(page=page, per_page=per_page, error_out=False)
 
+def get_user_owned_vehicles(user_id):
+    """Gets all active vehicles owned by a specific user."""
+    return UserVehicle.query.filter_by(user_id=user_id, is_active=True)\
+                            .order_by(UserVehicle.registration_date.desc()).all()
+
 def get_vehicle_by_plate(license_plate_str):
     """Finds an active vehicle by its license plate."""
     return UserVehicle.query.filter(UserVehicle.license_plate.ilike(license_plate_str), UserVehicle.is_active==True).first()
