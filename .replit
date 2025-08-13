@@ -1,0 +1,9 @@
+modules = ["web", "python-3.12", "lua-5.2", "nodejs-20"]
+run = "run.py"
+
+[nix]
+channel = "stable-25_05"
+packages = ["cargo", "libiconv", "rustc"]
+
+[deployment]
+run = ["sh", "-c", "run.py"]
