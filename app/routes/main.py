@@ -115,22 +115,15 @@ def site_home():
         'pending_permits': PermitApplication.query.filter_by(status='PENDING_REVIEW').count(),
     }
 
-    insurance_rates = InsuranceRate.query.order_by(InsuranceRate.rate_type).all()
+    # Only show farm-related insurance rates on home screen
+    insurance_rates = InsuranceRate.query.filter(InsuranceRate.rate_type == 'Farm').order_by(InsuranceRate.rate_type).all()
     dynamic_rates = []
     
     for rate in insurance_rates:
-        # Calculate actual claims count based on rate type
-        claims_count = 0
+        # Calculate actual claims count for farm insurance
+        claims_count = InsuranceClaim.query.count()
         
-        if rate.rate_type.value == 'Farm':
-            # Count farm insurance claims
-            claims_count = InsuranceClaim.query.count()
-        elif rate.rate_type.value == 'Vehicle':
-            # Count company vehicle insurance claims (if you have them)
-            claims_count = CompanyInsuranceClaim.query.count()
-        # Add other rate types as needed
-        
-        # Calculate dynamic rate: base rate + (claims_count / 5) * 10% increase
+        # Calculate dynamic rate: base rate + (claims_count / 20) * 10% increase
         base_rate = float(rate.rate)
         rate_multiplier = 1 + (claims_count / 20.0) * 0.1  # 10% increase per 20 claims
         new_rate = base_rate * rate_multiplier
