@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
     <settings
-        portalUrl="https://YOUR_REPL_NAME.replit.app"
+        portalUrl="https://fs25-farming-simulator-web.replit.app"
         farmerId="1"
     />
 </configuration>
