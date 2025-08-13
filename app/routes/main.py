@@ -22,50 +22,54 @@ main_bp = Blueprint('main', __name__)
 
 @main_bp.route('/', endpoint='index')
 def main_index():
-    if current_user.is_authenticated:
-        if hasattr(current_user, 'farmer') and current_user.farmer:
-            return redirect(url_for('main.farmer_dashboard'))
-        elif hasattr(current_user, 'company') and current_user.company:
-            return redirect(url_for('main.company_dashboard'))
+    try:
+        if current_user.is_authenticated:
+            if hasattr(current_user, 'farmer') and current_user.farmer:
+                return redirect(url_for('main.farmer_dashboard'))
+            elif hasattr(current_user, 'company') and current_user.company:
+                return redirect(url_for('main.company_dashboard'))
 
-    recent_listings = MarketplaceListing.query \
-        .filter_by(status=MarketplaceListingStatus.AVAILABLE) \
-        .order_by(MarketplaceListing.creation_date.desc()) \
-        .limit(4).all()
+        recent_listings = MarketplaceListing.query \
+            .filter_by(status=MarketplaceListingStatus.AVAILABLE) \
+            .order_by(MarketplaceListing.creation_date.desc()) \
+            .limit(4).all()
 
-    announcements = [
-        {
-            'title': 'Welcome to the new and improved Game Portal!',
-            'content': 'We have redesigned the home page to be more informative and user-friendly.'
-        },
-        {
-            'title': 'New Marketplace Items Available',
-            'content': 'Check out the new items available in the marketplace. There are some great deals to be had!'
-        },
-    ]
+        announcements = [
+            {
+                'title': 'Welcome to the new and improved Game Portal!',
+                'content': 'We have redesigned the home page to be more informative and user-friendly.'
+            },
+            {
+                'title': 'New Marketplace Items Available',
+                'content': 'Check out the new items available in the marketplace. There are some great deals to be had!'
+            },
+        ]
 
-    stats = {
-        'active_players': User.query.count(),
-        'open_tickets': Ticket.query.filter_by(status='OUTSTANDING').count(),
-        'pending_permits': PermitApplication.query.filter_by(status='PENDING_REVIEW').count(),
-    }
+        stats = {
+            'active_players': User.query.count(),
+            'open_tickets': Ticket.query.filter_by(status='OUTSTANDING').count(),
+            'pending_permits': PermitApplication.query.filter_by(status='PENDING_REVIEW').count(),
+        }
 
-    insurance_rates = InsuranceRate.query.order_by(InsuranceRate.rate_type).all()
-    dynamic_rates = []
-    for rate in insurance_rates:
-        new_rate = float(rate.rate) * (1 + (rate.payout_requests / 10))
-        dynamic_rates.append({
-            'rate_type': rate.rate_type,
-            'name': rate.name,
-            'description': rate.description,
-            'rate': new_rate
-        })
+        insurance_rates = InsuranceRate.query.order_by(InsuranceRate.rate_type).all()
+        dynamic_rates = []
+        for rate in insurance_rates:
+            new_rate = float(rate.rate) * (1 + (rate.payout_requests / 10))
+            dynamic_rates.append({
+                'rate_type': rate.rate_type,
+                'name': rate.name,
+                'description': rate.description,
+                'rate': new_rate
+            })
 
-    return render_template('main/index.html', title='Home',
-                           recent_listings=recent_listings,
-                           announcements=announcements,
-                           stats=stats,
-                           insurance_rates=dynamic_rates)
+        return render_template('main/index.html', title='Home',
+                               recent_listings=recent_listings,
+                               announcements=announcements,
+                               stats=stats,
+                               insurance_rates=dynamic_rates)
+    except Exception as e:
+        print(f"Error in main_index: {e}")
+        return f"Error loading page: {e}", 500
 
 
 @main_bp.route('/site-home', endpoint='site_home')

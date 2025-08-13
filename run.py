@@ -144,4 +144,5 @@ if __name__ == '__main__':
 
     # Start Flask dev server
     logger.info("Starting Flask dev server...")
-    app.run(host='0.0.0.0', port=port, debug=True)
+    logger.info(f"Server will be accessible at https://{os.environ.get('REPL_SLUG', 'your-repl')}.{os.environ.get('REPL_OWNER', 'username')}.repl.co")
+    app.run(host='0.0.0.0', port=port, debug=True, threaded=True)
