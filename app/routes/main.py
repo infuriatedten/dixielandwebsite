@@ -14,6 +14,7 @@ from app.models import (
 from app.forms import (
     ParcelForm, InsuranceClaimForm, ContractForm, CompanyNameForm, CompanyVehicleForm, CompanyContractForm, CompanyInsuranceClaimForm
 )
+from app.services import vehicle_service
 
 main_bp = Blueprint('main', __name__)
 
@@ -171,7 +172,7 @@ def farmer_dashboard():
     farmer = Farmer.query.filter_by(user_id=current_user.id).first()
     parcels = Parcel.query.filter_by(farmer_id=farmer.id).all() if farmer else []
     silo_contents = SiloStorage.query.filter_by(farmer_id=farmer.id).order_by(SiloStorage.crop_type).all() if farmer else []
-    vehicles = UserVehicle.query.filter_by(user_id=current_user.id).all()
+    vehicles = vehicle_service.get_user_owned_vehicles(current_user.id)[:5]
     tickets = Ticket.query.filter_by(issued_to_user_id=current_user.id).all()
     insurance_claims = InsuranceClaim.query.filter_by(farmer_id=farmer.id).all() if farmer else []
     parcel_form = ParcelForm()

@@ -101,22 +101,20 @@ def get_vehicle_by_plate(license_plate_str):
     """Finds an active vehicle by its license plate."""
     return UserVehicle.query.filter(UserVehicle.license_plate.ilike(license_plate_str), UserVehicle.is_active==True).first()
 
-def deactivate_vehicle(vehicle_id, user_id_requesting):
-    """Deactivates a vehicle if the requesting user is the owner."""
-    vehicle = UserVehicle.query.get(vehicle_id)
-    if vehicle and vehicle.user_id == user_id_requesting:
-        if not vehicle.is_active:
-            return True, "Vehicle already inactive." # Or some other status
+def deactivate_vehicle(vehicle_id, user_id):
+    """Deactivates a vehicle for a specific user."""
+    from app import db
+    from app.models import UserVehicle
+
+    vehicle = UserVehicle.query.filter_by(id=vehicle_id, user_id=user_id, is_active=True).first()
+
+    if not vehicle:
+        return False, "Vehicle not found or already deactivated."
+
+    try:
         vehicle.is_active = False
-        try:
-            db.session.commit()
-            current_app.logger.info(f"Vehicle {vehicle_id} deactivated for User {user_id_requesting}.")
-            return True, "Vehicle deactivated successfully."
-        except Exception as e:
-            db.session.rollback()
-            current_app.logger.error(f"Error deactivating vehicle {vehicle_id}: {e}", exc_info=True)
-            return False, "Error deactivating vehicle."
-    elif not vehicle:
-        return False, "Vehicle not found."
-    else: # vehicle.user_id != user_id_requesting
-        return False, "You are not authorized to deactivate this vehicle."
+        db.session.commit()
+        return True, f"Vehicle {vehicle.license_plate} has been deactivated successfully."
+    except Exception as e:
+        db.session.rollback()
+        return False, f"Error deactivating vehicle: {str(e)}"
