@@ -93,7 +93,26 @@
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title">{{ rate.name }}</h5>
                             <p class="card-text flex-grow-1">{{ rate.description }}</p>
-                            <p class="card-text"><small class="text-muted">Rate: ${{ rate.rate }}</small></p>
+                            <div class="mt-auto">
+                                <p class="card-text mb-1">
+                                    <strong>Current Rate: ${{ "%.2f"|format(rate.rate) }}</strong>
+                                    {% if rate.claims_count > 0 %}
+                                        <br><small class="text-muted">Base Rate: ${{ "%.2f"|format(rate.base_rate) }}</small>
+                                    {% endif %}
+                                </p>
+                                <p class="card-text">
+                                    <small class="text-info">
+                                        {% if rate.claims_count > 0 %}
+                                            {{ rate.claims_count }} claims filed
+                                            {% if rate.rate > rate.base_rate %}
+                                                (+{{ "%.1f"|format(((rate.rate / rate.base_rate - 1) * 100)) }}% increase)
+                                            {% endif %}
+                                        {% else %}
+                                            No claims filed - base rate
+                                        {% endif %}
+                                    </small>
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>

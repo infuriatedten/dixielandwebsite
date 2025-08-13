@@ -54,13 +54,31 @@ def main_index():
 
         insurance_rates = InsuranceRate.query.order_by(InsuranceRate.rate_type).all()
         dynamic_rates = []
+        
         for rate in insurance_rates:
-            new_rate = float(rate.rate) * (1 + (rate.payout_requests / 10))
+            # Calculate actual claims count based on rate type
+            claims_count = 0
+            
+            if rate.rate_type.value == 'Farm':
+                # Count farm insurance claims
+                claims_count = InsuranceClaim.query.count()
+            elif rate.rate_type.value == 'Vehicle':
+                # Count company vehicle insurance claims (if you have them)
+                claims_count = CompanyInsuranceClaim.query.count()
+            # Add other rate types as needed
+            
+            # Calculate dynamic rate: base rate + (claims_count / 5) * 10% increase
+            base_rate = float(rate.rate)
+            rate_multiplier = 1 + (claims_count / 20.0) * 0.1  # 10% increase per 20 claims
+            new_rate = base_rate * rate_multiplier
+            
             dynamic_rates.append({
                 'rate_type': rate.rate_type,
                 'name': rate.name,
                 'description': rate.description,
-                'rate': new_rate
+                'rate': round(new_rate, 2),
+                'claims_count': claims_count,
+                'base_rate': base_rate
             })
 
         return render_template('main/index.html', title='Home',
@@ -99,13 +117,31 @@ def site_home():
 
     insurance_rates = InsuranceRate.query.order_by(InsuranceRate.rate_type).all()
     dynamic_rates = []
+    
     for rate in insurance_rates:
-        new_rate = float(rate.rate) * (1 + (rate.payout_requests / 10))
+        # Calculate actual claims count based on rate type
+        claims_count = 0
+        
+        if rate.rate_type.value == 'Farm':
+            # Count farm insurance claims
+            claims_count = InsuranceClaim.query.count()
+        elif rate.rate_type.value == 'Vehicle':
+            # Count company vehicle insurance claims (if you have them)
+            claims_count = CompanyInsuranceClaim.query.count()
+        # Add other rate types as needed
+        
+        # Calculate dynamic rate: base rate + (claims_count / 5) * 10% increase
+        base_rate = float(rate.rate)
+        rate_multiplier = 1 + (claims_count / 20.0) * 0.1  # 10% increase per 20 claims
+        new_rate = base_rate * rate_multiplier
+        
         dynamic_rates.append({
             'rate_type': rate.rate_type,
             'name': rate.name,
             'description': rate.description,
-            'rate': new_rate
+            'rate': round(new_rate, 2),
+            'claims_count': claims_count,
+            'base_rate': base_rate
         })
 
     return render_template('main/index.html', title='Home',
