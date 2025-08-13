@@ -7,3 +7,15 @@ packages = ["cargo", "libiconv", "rustc"]
 
 [deployment]
 run = ["sh", "-c", "run.py"]
+
+[workflows]
+runButton = "Run Flask App"
+
+[[workflows.workflow]]
+name = "Run Flask App"
+author = 38638451
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python run.py"
