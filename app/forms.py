@@ -229,7 +229,7 @@ from wtforms import SubmitField
 
 class DeleteUserForm(FlaskForm):
     submit = SubmitField('Delete')
-    
+
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=4, max=64)])
     password = PasswordField('Password', validators=[DataRequired()])
@@ -251,12 +251,23 @@ class ParcelForm(FlaskForm):
 
 
 class InsuranceClaimForm(FlaskForm):
-    insurance_rate_id = SelectField('Reason for Claim', coerce=int, validators=[DataRequired()])
-    submit = SubmitField('Submit Claim')
-
-    def __init__(self, *args, **kwargs):
-        super(InsuranceClaimForm, self).__init__(*args, **kwargs)
-        self.insurance_rate_id.choices = [(rate.id, rate.name) for rate in InsuranceRate.query.order_by(InsuranceRate.name).all()]
+    reason = SelectField('Claim Type', choices=[
+        ('crop_damage_weather', 'Crop Damage - Weather Related'),
+        ('crop_damage_pest', 'Crop Damage - Pest/Disease'),
+        ('equipment_breakdown', 'Equipment Breakdown'),
+        ('livestock_injury', 'Livestock Injury/Death'),
+        ('fire_damage', 'Fire Damage to Property'),
+        ('theft_vandalism', 'Theft or Vandalism'),
+        ('vehicle_accident', 'Farm Vehicle Accident'),
+        ('building_damage', 'Building/Structure Damage'),
+        ('contamination', 'Crop/Feed Contamination'),
+        ('other_farm_related', 'Other Farm-Related Incident')
+    ], validators=[DataRequired()])
+    description = TextAreaField('Detailed Description', validators=[DataRequired(), Length(min=10, max=500)], 
+                               render_kw={"placeholder": "Please provide specific details about the incident, including date, location on farm, and estimated damages."})
+    estimated_loss = DecimalField('Estimated Loss Amount ($)', validators=[DataRequired(), NumberRange(min=0)], 
+                                 render_kw={"placeholder": "0.00"})
+    submit = SubmitField('Submit Insurance Claim')
 
 
 class EditInsuranceClaimForm(FlaskForm):
@@ -314,7 +325,7 @@ from wtforms.validators import DataRequired, NumberRange
 class OverrideBalanceForm(FlaskForm):
     new_balance = DecimalField("New Balance", validators=[DataRequired(), NumberRange(min=0)])
     description = StringField("Reason / Description", validators=[DataRequired()])
-    
+
 class ProductForm(FlaskForm):
     price = DecimalField('Price', validators=[must_be_positive])
     quantity = IntegerField('Quantity', validators=[must_be_positive])

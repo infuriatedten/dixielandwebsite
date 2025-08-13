@@ -196,16 +196,13 @@ def farmer_dashboard():
         if farmer:
             claim = InsuranceClaim(
                 reason=insurance_form.reason.data,
+                description=insurance_form.description.data,
+                estimated_loss=insurance_form.estimated_loss.data,
                 farmer_id=farmer.id
             )
             db.session.add(claim)
-
-            rate_to_update = InsuranceRate.query.filter_by(name=insurance_form.reason.data).first()
-            if rate_to_update:
-                rate_to_update.payout_requests += 1
-
             db.session.commit()
-            flash('Insurance claim submitted successfully!', 'success')
+            flash('Farm insurance claim submitted successfully! We will review your claim and contact you within 2-3 business days.', 'success')
         else:
             flash('You must be a registered farmer to submit a claim.', 'danger')
         return redirect(url_for('main.farmer_dashboard'))

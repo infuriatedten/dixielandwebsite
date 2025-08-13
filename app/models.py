@@ -462,13 +462,30 @@ class InsuranceClaim(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     farmer_id = db.Column(db.Integer, db.ForeignKey('farmers.id'), nullable=False)
     claim_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    reason = db.Column(db.Text, nullable=False)
+    reason = db.Column(db.String(100), nullable=False)  # Now uses predefined categories
+    description = db.Column(db.Text, nullable=False)  # Detailed description
+    estimated_loss = db.Column(db.Numeric(10, 2), nullable=False)  # Estimated loss amount
     status = db.Column(db.Enum(InsuranceClaimStatus), default=InsuranceClaimStatus.PENDING, nullable=False)
 
     farmer = db.relationship('Farmer', backref=db.backref('insurance_claims', lazy='dynamic'))
 
+    def get_readable_reason(self):
+        reason_map = {
+            'crop_damage_weather': 'Crop Damage - Weather Related',
+            'crop_damage_pest': 'Crop Damage - Pest/Disease',
+            'equipment_breakdown': 'Equipment Breakdown',
+            'livestock_injury': 'Livestock Injury/Death',
+            'fire_damage': 'Fire Damage to Property',
+            'theft_vandalism': 'Theft or Vandalism',
+            'vehicle_accident': 'Farm Vehicle Accident',
+            'building_damage': 'Building/Structure Damage',
+            'contamination': 'Crop/Feed Contamination',
+            'other_farm_related': 'Other Farm-Related Incident'
+        }
+        return reason_map.get(self.reason, self.reason)
+
     def __repr__(self):
-        return f'<InsuranceClaim {self.id}>'
+        return f'<InsuranceClaim {self.id}: {self.get_readable_reason()}>'
 
 
 import enum
