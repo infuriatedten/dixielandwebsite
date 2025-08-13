@@ -14,25 +14,39 @@ def migrate_insurance_claims():
     with app.app_context():
         try:
             # Add new columns to insurance_claims table
-            db.engine.execute(text("""
-                ALTER TABLE insurance_claims 
-                ADD COLUMN IF NOT EXISTS description TEXT,
-                ADD COLUMN IF NOT EXISTS estimated_loss NUMERIC(10, 2)
-            """))
-            
-            # Update existing claims with default values
-            db.engine.execute(text("""
-                UPDATE insurance_claims 
-                SET description = 'Legacy claim - no description available',
-                    estimated_loss = 0.00
-                WHERE description IS NULL OR estimated_loss IS NULL
-            """))
-            
-            # Alter reason column to be shorter since we're now using predefined categories
-            db.engine.execute(text("""
-                ALTER TABLE insurance_claims 
-                ALTER COLUMN reason TYPE VARCHAR(100)
-            """))
+            with db.engine.connect() as connection:
+                # Add description column if it doesn't exist
+                connection.execute(text("""
+                    ALTER TABLE insurance_claims 
+                    ADD COLUMN IF NOT EXISTS description TEXT
+                """))
+                
+                # Add estimated_loss column if it doesn't exist
+                connection.execute(text("""
+                    ALTER TABLE insurance_claims 
+                    ADD COLUMN IF NOT EXISTS estimated_loss NUMERIC(10, 2)
+                """))
+                
+                # Update existing claims with default values
+                connection.execute(text("""
+                    UPDATE insurance_claims 
+                    SET description = 'Legacy claim - no description available'
+                    WHERE description IS NULL
+                """))
+                
+                connection.execute(text("""
+                    UPDATE insurance_claims 
+                    SET estimated_loss = 0.00
+                    WHERE estimated_loss IS NULL
+                """))
+                
+                # Alter reason column to be shorter since we're now using predefined categories
+                connection.execute(text("""
+                    ALTER TABLE insurance_claims 
+                    ALTER COLUMN reason TYPE VARCHAR(100)
+                """))
+                
+                connection.commit()
             
             print("Insurance claims table migration completed successfully!")
             
