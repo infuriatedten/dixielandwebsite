@@ -78,6 +78,20 @@ def create_app(config_class=Config):
     def load_user(user_id):
         return User.query.get(int(user_id))
 
+    # Global error handlers
+    @app.errorhandler(404)
+    def not_found_error(error):
+        return render_template('errors/404.html'), 404
+
+    @app.errorhandler(500)
+    def internal_error(error):
+        db.session.rollback()
+        return render_template('errors/500.html'), 500
+
+    @app.errorhandler(403)
+    def forbidden_error(error):
+        return render_template('errors/403.html'), 403
+
     # Register blueprints with optional prefixes
     from app.routes.auth import bp as auth_bp
     from app.routes.main import main_bp
@@ -92,6 +106,8 @@ def create_app(config_class=Config):
     from app.routes.notifications import notifications_bp
     from app.routes.vehicle import bp as vehicle_bp
     from app.api_fs25 import api_fs25_bp
+    from app.routes.export import export_bp
+    from app.routes.health import health_bp
 
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(main_bp)
@@ -106,5 +122,7 @@ def create_app(config_class=Config):
     app.register_blueprint(auction_bp, url_prefix='/auctions')
     app.register_blueprint(messaging_bp, url_prefix='/messages')
     app.register_blueprint(notifications_bp, url_prefix='/notifications')
+    app.register_blueprint(export_bp, url_prefix='/export')
+    app.register_blueprint(health_bp, url_prefix='/api')
 
     return app

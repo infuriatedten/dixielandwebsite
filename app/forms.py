@@ -15,6 +15,7 @@ from app.models import (
     PermitApplicationStatus, MarketplaceListingStatus, VehicleRegion, InsuranceClaimStatus, InsuranceRate
 )
 from app.custom_validators import must_be_positive
+from flask_wtf.file import FileField, FileAllowed
 
 class AccountForm(FlaskForm):
     user_id = SelectField('User', coerce=int, validators=[DataRequired()])

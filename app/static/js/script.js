@@ -1,8 +1,12 @@
 // Enhanced JavaScript for modern interactions and animations
 $(document).ready(function(){
     // Initialize Bootstrap tooltips and popovers
-    $('[data-bs-toggle="tooltip"]').tooltip();
-    $('[data-bs-toggle="popover"]').popover();
+    if (typeof $.fn.tooltip !== 'undefined') {
+        $('[data-bs-toggle="tooltip"]').tooltip();
+    }
+    if (typeof $.fn.popover !== 'undefined') {
+        $('[data-bs-toggle="popover"]').popover();
+    }
 
     // Enhanced alert dismissal with better animations
     window.setTimeout(function() {
@@ -21,7 +25,7 @@ $(document).ready(function(){
         const originalText = submitBtn.text();
         submitBtn.prop('disabled', true)
                .html('<span class="spinner-border spinner-border-sm me-2" role="status"></span>Loading...');
-        
+
         // Reset after 10 seconds as fallback
         setTimeout(function() {
             submitBtn.prop('disabled', false).text(originalText);
@@ -57,16 +61,16 @@ $(document).ready(function(){
         const size = Math.max(rect.width, rect.height);
         const x = e.clientX - rect.left - size / 2;
         const y = e.clientY - rect.top - size / 2;
-        
+
         ripple.css({
             width: size,
             height: size,
             left: x,
             top: y
         });
-        
+
         btn.append(ripple);
-        
+
         setTimeout(() => {
             ripple.remove();
         }, 600);
@@ -77,7 +81,7 @@ $(document).ready(function(){
         if (!this.checkValidity()) {
             event.preventDefault();
             event.stopPropagation();
-            
+
             // Focus on first invalid field
             const firstInvalid = $(this).find(':invalid').first();
             if (firstInvalid.length) {
@@ -153,36 +157,36 @@ style.textContent = `
         animation: ripple-animation 0.6s linear;
         pointer-events: none;
     }
-    
+
     @keyframes ripple-animation {
         to {
             transform: scale(4);
             opacity: 0;
         }
     }
-    
+
     .btn {
         position: relative;
         overflow: hidden;
     }
-    
+
     .table-hover-effect {
         background-color: rgba(102, 126, 234, 0.1) !important;
     }
-    
+
     .card-hover {
         transform: translateY(-5px) !important;
         box-shadow: 0 12px 40px rgba(0,0,0,0.15) !important;
     }
-    
+
     .loading {
         cursor: wait;
     }
-    
+
     .loading * {
         pointer-events: none;
     }
-    
+
     .spinner-border-sm {
         width: 1rem;
         height: 1rem;
