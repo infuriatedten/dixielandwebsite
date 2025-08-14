@@ -1,51 +1,70 @@
-{% macro quick_form(form, action_url='', method='post', enctype=None, button_map={'submit': 'primary'}) -%}
-    <form
-        {% if action_url %} action="{{ action_url }}" {% endif %}
-        method="{{ method }}"
-        role="form"
-        {% if enctype %} enctype="{{ enctype }}" {% endif %}
-    >
-        {{ form.hidden_tag() }}
-        {% for field in form if not field.flags.hidden %}
-            {{ render_field(field, button_map=button_map) }}
-        {% endfor %}
-    </form>
-{%- endmacro %}
 
-{% macro render_field(field, label_visible=True, class_='form-control', id=None, placeholder=None, rows=None, button_map={}) %}
-    <div class="form-group mb-3">
-        {% if label_visible and field.type != 'SubmitField' %}
-            {{ field.label(class="form-label") }}
+{# Bootstrap WTF Macros for Form Rendering #}
+
+{# Render a form field with Bootstrap styling #}
+{% macro render_field(field, label_class="", field_class="", help_text="") %}
+    <div class="mb-3">
+        {% if field.type != 'HiddenField' %}
+            {{ field.label(class=label_class + " form-label") }}
         {% endif %}
-
+        
         {% if field.type == 'BooleanField' %}
             <div class="form-check">
-                {{ field(class="form-check-input") }}
+                {{ field(class="form-check-input " + field_class) }}
                 {{ field.label(class="form-check-label") }}
             </div>
-        {% elif field.type == 'RadioField' %}
-            {% for subfield in field %}
-                <div class="form-check">
-                    {{ subfield(class="form-check-input") }}
-                    {{ subfield.label(class="form-check-label") }}
-                </div>
-            {% endfor %}
+        {% elif field.type == 'SelectField' %}
+            {{ field(class="form-select " + field_class) }}
+        {% elif field.type == 'TextAreaField' %}
+            {{ field(class="form-control " + field_class, rows="3") }}
+        {% elif field.type == 'FileField' %}
+            {{ field(class="form-control " + field_class) }}
         {% elif field.type == 'SubmitField' %}
-            {{ field(class='btn btn-' + button_map.get(field.name, 'secondary')) }}
+            {{ field(class="btn btn-primary " + field_class) }}
+        {% elif field.type == 'HiddenField' %}
+            {{ field() }}
         {% else %}
-            {% set field_class = class_ %}
-            {% if field.errors %}
-                {% set field_class = field_class + ' is-invalid' %}
-            {% endif %}
-            {{ field(class=field_class, id=id or field.id, placeholder=placeholder or field.label.text, rows=rows) }}
+            {{ field(class="form-control " + field_class) }}
         {% endif %}
-
+        
+        {% if help_text %}
+            <div class="form-text">{{ help_text }}</div>
+        {% endif %}
+        
         {% if field.errors %}
             {% for error in field.errors %}
-                <div class="invalid-feedback d-block">
-                    {{ error }}
-                </div>
+                <div class="invalid-feedback d-block">{{ error }}</div>
             {% endfor %}
         {% endif %}
     </div>
+{% endmacro %}
+
+{# Render form errors #}
+{% macro render_form_errors(form) %}
+    {% if form.errors %}
+        <div class="alert alert-danger" role="alert">
+            <h6>Please correct the following errors:</h6>
+            <ul class="mb-0">
+                {% for field, errors in form.errors.items() %}
+                    {% for error in errors %}
+                        <li><strong>{{ form[field].label.text }}:</strong> {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+{% endmacro %}
+
+{# Quick form render #}
+{% macro quick_form(form, action="", method="post", extra_classes="", novalidate=false) %}
+    <form action="{{ action }}" method="{{ method }}" class="{{ extra_classes }}" {% if novalidate %}novalidate{% endif %}>
+        {{ form.hidden_tag() }}
+        {{ render_form_errors(form) }}
+        
+        {% for field in form %}
+            {% if field.type != 'HiddenField' and field.type != 'CSRFTokenField' %}
+                {{ render_field(field) }}
+            {% endif %}
+        {% endfor %}
+    </form>
 {% endmacro %}

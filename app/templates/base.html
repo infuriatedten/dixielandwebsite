@@ -36,40 +36,40 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.index') }}">Home</a>
+                        <a class="nav-link {{ 'active' if request.endpoint == 'main.index' else '' }}" href="{{ url_for('main.index') }}">Home</a>
                     </li>
 
                     {% if current_user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('main.site_home') }}">Site Home</a>
+                            <a class="nav-link {{ 'active' if request.endpoint == 'main.site_home' else '' }}" href="{{ url_for('main.site_home') }}">Site Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('auth.profile') }}">Profile</a>
+                            <a class="nav-link {{ 'active' if request.endpoint == 'auth.profile' else '' }}" href="{{ url_for('auth.profile') }}">Profile</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('banking.dashboard') }}">Banking</a>
+                            <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('banking.') else '' }}" href="{{ url_for('banking.dashboard') }}">Banking</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('taxes.tax_info') }}">Tax Info</a>
+                            <a class="nav-link {{ 'active' if request.endpoint == 'taxes.tax_info' else '' }}" href="{{ url_for('taxes.tax_info') }}">Tax Info</a>
                         </li>
 
                         {% if not current_user.farmer %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('dot.dashboard') }}">DOT Dashboard</a>
+                            <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('dot.') else '' }}" href="{{ url_for('dot.dashboard') }}">DOT Dashboard</a>
                         </li>
                         {% endif %}
 
                         {% if current_user.role == UserRole.ADMIN %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('main.admin_dashboard') }}">Admin Panel</a>
+                                <a class="nav-link {{ 'active' if request.endpoint == 'main.admin_dashboard' else '' }}" href="{{ url_for('main.admin_dashboard') }}">Admin Panel</a>
                             </li>
                         {% endif %}
 
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('marketplace.index') }}">Marketplace</a>
+                            <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('marketplace.') else '' }}" href="{{ url_for('marketplace.index') }}">Marketplace</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('auction.index') }}">Auctions</a>
+                            <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('auction.') else '' }}" href="{{ url_for('auction.index') }}">Auctions</a>
                         </li>
 
                         <!-- Farmers links as separate nav items -->
@@ -158,11 +158,19 @@
         </div>
     </footer>
 
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" 
+            integrity="sha384-1H217gwSVyLSIfaLxHbE7dRb3v4mYCKbpQvzx0cegeju1MVsGrX5xXxAvs/HgeFs" 
+            crossorigin="anonymous"></script>
+    
     <!-- Bootstrap JS Bundle -->
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
       integrity="sha384-GOaAY1wOa4CD78qCQkgOpTqQF6vFb9mL0pXt+kR3n7oJ1hJbXG9y8zFYlq6MN9c3"
       crossorigin="anonymous"
     ></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>
