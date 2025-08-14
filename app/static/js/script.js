@@ -1,11 +1,17 @@
 // Enhanced JavaScript for modern interactions and animations
 $(document).ready(function(){
-    // Initialize Bootstrap tooltips and popovers
-    if (typeof $.fn.tooltip !== 'undefined') {
-        $('[data-bs-toggle="tooltip"]').tooltip();
+    // Initialize Bootstrap tooltips if Bootstrap is available
+    if (typeof bootstrap !== 'undefined') {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
     }
-    if (typeof $.fn.popover !== 'undefined') {
-        $('[data-bs-toggle="popover"]').popover();
+    if (typeof bootstrap !== 'undefined') {
+        var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'));
+        var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+            return new bootstrap.Dropdown(dropdownToggleEl);
+        });
     }
 
     // Enhanced alert dismissal with better animations
