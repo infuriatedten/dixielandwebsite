@@ -6,7 +6,7 @@
     <h1>Create Contract</h1>
     <div class="row">
         <div class="col-md-6">
-            {{ wtf.quick_form(form, action_url=url_for('main.create_contract'), method="POST") }}
+            {{ wtf.quick_form(form, action=url_for('main.create_contract'), method="POST") }}
         </div>
     </div>
 </div>
