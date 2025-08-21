@@ -150,7 +150,7 @@ class EditUserForm(FlaskForm):
         if username.data != self.original_username:
             user = User.query.filter_by(username=username.data).first()
             if user:
-                raise ValidationError('Please use a different username.')
+                raise ValidationError(f"Username '{username.data}' is already taken by user '{user.username}'. Please choose a different one.")
 
     def validate_email(self, email):
         if email.data != self.original_email:
