@@ -35,9 +35,11 @@
                             <a class="nav-link" href="{{ url_for('taxes.tax_info') }}">Tax Info</a>
                         </li>
 
+                        {% if current_user.role == UserRole.OFFICER or current_user.role == UserRole.ADMIN %}
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('dot.dashboard') }}">DOT Dashboard</a>
                         </li>
+                        {% endif %}
 
                         {% if current_user.role == UserRole.ADMIN %}
                             <li class="nav-item dropdown">

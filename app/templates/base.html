@@ -53,7 +53,7 @@
                             <a class="nav-link {{ 'active' if request.endpoint == 'taxes.tax_info' else '' }}" href="{{ url_for('taxes.tax_info') }}">Tax Info</a>
                         </li>
 
-                        {% if not current_user.farmer %}
+                        {% if current_user.role == UserRole.OFFICER or current_user.role == UserRole.ADMIN %}
                         <li class="nav-item">
                             <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('dot.') else '' }}" href="{{ url_for('dot.dashboard') }}">DOT Dashboard</a>
                         </li>
