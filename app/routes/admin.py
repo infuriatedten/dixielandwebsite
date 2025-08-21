@@ -194,6 +194,33 @@ def manage_inspections():
     inspections = Inspection.query.order_by(Inspection.timestamp.desc()).all()
     return render_template('admin/manage_inspections.html', inspections=inspections)
 
+
+@admin_bp.route('/manage/insurance-claims', methods=['GET'])
+@login_required
+@admin_required
+def manage_insurance_claims():
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    claims = InsuranceClaim.query.options(
+        db.joinedload(InsuranceClaim.farmer).joinedload(Farmer.user)
+    ).order_by(InsuranceClaim.claim_date.desc()).paginate(page=page, per_page=per_page)
+    return render_template('admin/manage_insurance_claims.html', claims=claims, title="Manage Insurance Claims")
+
+
+@admin_bp.route('/manage/insurance-claims/edit/<int:claim_id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_insurance_claim(claim_id):
+    claim = InsuranceClaim.query.get_or_404(claim_id)
+    form = EditInsuranceClaimForm(obj=claim)
+    if form.validate_on_submit():
+        claim.status = form.status.data
+        db.session.commit()
+        flash('Insurance claim updated successfully.', 'success')
+        return redirect(url_for('admin.manage_insurance_claims'))
+    return render_template('admin/edit_insurance_claim.html', form=form, claim=claim, title="Edit Insurance Claim")
+
+
 @admin_bp.route('/manage/permits', methods=['GET', 'POST'])
 @login_required
 @admin_required
