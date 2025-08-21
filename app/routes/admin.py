@@ -8,7 +8,7 @@ from app.models import (
     User, Account, Ticket, PermitApplication, Inspection, TaxBracket, Transaction,
     TransactionType, VehicleRegion, RulesContent, UserRole, InsuranceClaim,
     InsuranceClaimStatus, PermitApplicationStatus, TicketStatus, Contract,
-    Conversation, Message, Fine
+    Conversation, Message, Fine, Farmer
 )
 from app.forms import (
     EditRulesForm, EditUserForm, AccountForm, EditAccountForm, EditTicketForm, EditPermitForm,
