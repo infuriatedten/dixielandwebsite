@@ -201,9 +201,7 @@ def manage_inspections():
 def manage_insurance_claims():
     page = request.args.get('page', 1, type=int)
     per_page = 20
-    claims = InsuranceClaim.query.options(
-        db.joinedload(InsuranceClaim.farmer).joinedload(Farmer.user)
-    ).order_by(InsuranceClaim.claim_date.desc()).paginate(page=page, per_page=per_page)
+    claims = InsuranceClaim.query.order_by(InsuranceClaim.claim_date.desc()).paginate(page=page, per_page=per_page)
     return render_template('admin/manage_insurance_claims.html', claims=claims, title="Manage Insurance Claims")
 
 
