@@ -619,6 +619,7 @@ def list_permit_applications_for_review():
 
 @bp.route('/dashboard')
 @login_required
+@officer_required
 def dashboard():
     # Add your logic here (e.g., query data for dashboard)
     return render_template('dot/dashboard.html', title='DOT Dashboard')
