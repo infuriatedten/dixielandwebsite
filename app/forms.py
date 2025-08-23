@@ -219,10 +219,10 @@ class FarmerForm(FlaskForm):
 
 
 class IssueTicketForm(FlaskForm):
-    user_search = StringField('Username of Person to Ticket', validators=[DataRequired(), Length(min=3)])
-    vehicle_id = StringField('Vehicle ID / License Plate', validators=[Optional(), Length(max=100)])
-    violation_details = TextAreaField('Violation Details', validators=[DataRequired(), Length(min=10, max=1000)])
-    fine_amount = DecimalField('Fine Amount', places=2, validators=[DataRequired()])
+    user_search = StringField('Username of Person to Ticket', validators=[DataRequired(), Length(min=3)], render_kw={'placeholder': 'Enter exact username of the recipient'})
+    vehicle_id = StringField('Vehicle ID / License Plate', validators=[Optional(), Length(max=100)], render_kw={'placeholder': 'e.g., License Plate or Vehicle Name'})
+    violation_details = TextAreaField('Violation Details', validators=[DataRequired(), Length(min=10, max=1000)], render_kw={'placeholder': 'Describe the violation clearly and concisely.', 'rows': 5})
+    fine_amount = DecimalField('Fine Amount', places=2, validators=[DataRequired()], render_kw={'placeholder': 'e.g., 150.00'})
     submit = SubmitField('Issue Ticket')
 
 from flask_wtf import FlaskForm

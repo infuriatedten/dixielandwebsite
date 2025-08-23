@@ -22,12 +22,12 @@
 
                         <p class="text-muted small">Ensure the username is correct. Tickets cannot be re-assigned easily.</p>
 
-                        {{ wtf.render_field(form.user_search, placeholder="Enter exact username of the recipient") }}
-                        {{ wtf.render_field(form.vehicle_id, placeholder="e.g., License Plate or Vehicle Name") }}
-                        {{ wtf.render_field(form.violation_details, rows=5, placeholder="Describe the violation clearly and concisely.") }}
-                        {{ wtf.render_field(form.fine_amount, placeholder="e.g., 150.00") }}
+                        {{ wtf.render_field(form.user_search) }}
+                        {{ wtf.render_field(form.vehicle_id) }}
+                        {{ wtf.render_field(form.violation_details) }}
+                        {{ wtf.render_field(form.fine_amount) }}
 
-                        {{ wtf.render_field(form.submit, button_map={'submit': 'btn-danger w-100'}) }}
+                        {{ wtf.render_field(form.submit, field_class='btn-danger w-100') }}
                     </form>
                 </div>
             </div>
