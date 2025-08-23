@@ -333,11 +333,11 @@ class ProductForm(FlaskForm):
 
 
 class RecordInspectionForm(FlaskForm):
-    inspected_user_search = StringField('Inspected User\'s Username (Optional, if registered)', validators=[Optional(), Length(min=3)])
-    vehicle_id = StringField('Vehicle ID / License Plate', validators=[DataRequired(), Length(min=3, max=100)])
+    inspected_user_search = StringField('Inspected User\'s Username (Optional, if registered)', validators=[Optional(), Length(min=3)], render_kw={'placeholder': 'Username of driver/owner (if registered)'})
+    vehicle_id = StringField('Vehicle ID / License Plate', validators=[DataRequired(), Length(min=3, max=100)], render_kw={'placeholder': 'Enter Vehicle ID or License Plate'})
     pass_status = RadioField('Inspection Result', choices=[('True', 'Pass'), ('False', 'Fail')],
                              validators=[DataRequired(message="Must select Pass or Fail.")], default='True')
-    notes = TextAreaField('Inspection Notes (Required if Fail, details, reasons)', validators=[Optional(), Length(max=2000)])
+    notes = TextAreaField('Inspection Notes (Required if Fail, details, reasons)', validators=[Optional(), Length(max=2000)], render_kw={'placeholder': 'Enter detailed notes, especially required if inspection failed.', 'rows': 5})
     submit = SubmitField('Record Inspection')
 
     def validate_notes(self, field):
