@@ -13,18 +13,18 @@
                     <form method="POST" action="{{ url_for('marketplace.create_listing') }}" novalidate>
                         {{ form.hidden_tag() }}
 
-                        {{ wtf.render_field(form.item_name, placeholder="e.g., Refined Iron Ore, Vintage Spaceship Model") }}
-                        {{ wtf.render_field(form.description, rows=5, placeholder="Provide a detailed description of your item, condition, location, etc.") }}
+                        {{ wtf.render_field(form.item_name) }}
+                        {{ wtf.render_field(form.description) }}
 
                         <div class="row">
                             <div class="col-md-4 mb-3">
-                                {{ wtf.render_field(form.price, placeholder="e.g., 100.00") }}
+                                {{ wtf.render_field(form.price) }}
                             </div>
                             <div class="col-md-4 mb-3">
-                                {{ wtf.render_field(form.quantity, placeholder="e.g., 10 or 50.5") }}
+                                {{ wtf.render_field(form.quantity) }}
                             </div>
                             <div class="col-md-4 mb-3">
-                                {{ wtf.render_field(form.unit, placeholder="e.g., items, liters, kg") }}
+                                {{ wtf.render_field(form.unit) }}
                             </div>
                         </div>
 
@@ -32,7 +32,7 @@
                             By creating this listing, you agree to handle inquiries and sales responsibly. Your website username will be displayed with the listing.
                         </p>
 
-                        {{ wtf.render_field(form.submit, button_map={'submit': 'btn-success w-100'}) }}
+                        {{ wtf.render_field(form.submit, field_class='btn-success w-100') }}
                     </form>
                 </div>
             </div>

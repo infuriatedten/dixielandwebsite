@@ -102,11 +102,11 @@ class ContestTicketForm(FlaskForm):
 
 
 class CreateListingForm(FlaskForm):
-    item_name = StringField('Item Name', validators=[DataRequired(), Length(max=200)])
-    description = TextAreaField('Description (Optional)', validators=[Optional(), Length(max=1000)])
-    price = DecimalField('Price', places=2, validators=[DataRequired()])
-    quantity = DecimalField('Quantity', places=2, validators=[DataRequired()])
-    unit = StringField('Unit (e.g., items, liters, kg)', validators=[DataRequired(), Length(max=50)])
+    item_name = StringField('Item Name', validators=[DataRequired(), Length(max=200)], render_kw={'placeholder': 'e.g., Refined Iron Ore, Vintage Spaceship Model'})
+    description = TextAreaField('Description (Optional)', validators=[Optional(), Length(max=1000)], render_kw={'placeholder': 'Provide a detailed description of your item, condition, location, etc.', 'rows': 5})
+    price = DecimalField('Price', places=2, validators=[DataRequired()], render_kw={'placeholder': 'e.g., 100.00'})
+    quantity = DecimalField('Quantity', places=2, validators=[DataRequired()], render_kw={'placeholder': 'e.g., 10 or 50.5'})
+    unit = StringField('Unit (e.g., items, liters, kg)', validators=[DataRequired(), Length(max=50)], render_kw={'placeholder': 'e.g., items, liters, kg'})
     submit = SubmitField('Create Listing')
 
 
