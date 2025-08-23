@@ -33,8 +33,8 @@
         <div class="card-body">
             <form method="POST" action="{{ url_for('messaging.admin_view_conversation', conversation_id=conversation.id) }}" novalidate>
                 {{ form.hidden_tag() }}
-                {{ wtf.render_field(form.body, rows=4, placeholder="Type your reply...") }}
-                {{ wtf.render_field(form.submit, button_map={'submit': 'btn-primary'}) }}
+                {{ wtf.render_field(form.body) }}
+                {{ wtf.render_field(form.submit) }}
             </form>
         </div>
     </div>

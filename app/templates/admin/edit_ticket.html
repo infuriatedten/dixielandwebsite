@@ -13,21 +13,21 @@
                 {{ form.hidden_tag() }}
 
                 <div class="mb-3">
-                    {{ wtf.render_field(form.fine_amount, class="form-control") }}
+                    {{ wtf.render_field(form.fine_amount) }}
                     {% if form.fine_amount.errors %}
                         <div class="text-danger small">{{ form.fine_amount.errors[0] }}</div>
                     {% endif %}
                 </div>
 
                 <div class="mb-3">
-                    {{ wtf.render_field(form.status, class="form-select") }}
+                    {{ wtf.render_field(form.status) }}
                     {% if form.status.errors %}
                         <div class="text-danger small">{{ form.status.errors[0] }}</div>
                     {% endif %}
                 </div>
 
                 <div class="text-end">
-                    {{ wtf.render_field(form.submit, class="btn btn-primary") }}
+                    {{ wtf.render_field(form.submit) }}
                 </div>
             </form>
         </div>

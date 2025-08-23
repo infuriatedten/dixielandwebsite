@@ -25,7 +25,7 @@
                 <div class="mb-3">
                     {{ wtf.render_field(form.description) }}
                 </div>
-                {{ wtf.render_field(form.submit, button_map={'submit': 'btn btn-success w-100'}) }}
+                {{ wtf.render_field(form.submit, field_class='btn btn-success w-100') }}
             </form>
         </div>
     </div>

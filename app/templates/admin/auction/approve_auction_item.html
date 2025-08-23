@@ -35,18 +35,18 @@
 
                         <p class="text-muted">Set the final parameters for this auction if approving, or provide notes if rejecting.</p>
 
-                        {{ wtf.render_field(form.actual_starting_bid, placeholder="e.g., 150.00") }}
-                        {{ wtf.render_field(form.minimum_bid_increment, placeholder="e.g., 5.00 (Default: " ~ config.AUCTION_DEFAULT_MIN_BID_INCREMENT ~ ")") }}
+                        {{ wtf.render_field(form.actual_starting_bid) }}
+                        {{ wtf.render_field(form.minimum_bid_increment) }}
                         {# Add form.auction_duration_hours if made configurable #}
 
-                        {{ wtf.render_field(form.admin_notes, rows=4, placeholder="Required if rejecting. Optional for approval notes.") }}
+                        {{ wtf.render_field(form.admin_notes) }}
 
                         <div class="form-row mt-3">
                             <div class="col">
-                                {{ wtf.render_field(form.submit_approve, button_map={'submit_approve': 'btn-success btn-block'}) }}
+                                {{ wtf.render_field(form.submit_approve, field_class='btn-success btn-block') }}
                             </div>
                             <div class="col">
-                                {{ wtf.render_field(form.submit_reject, button_map={'submit_reject': 'btn-danger btn-block'}) }}
+                                {{ wtf.render_field(form.submit_reject, field_class='btn-danger btn-block') }}
                             </div>
                         </div>
                     </form>

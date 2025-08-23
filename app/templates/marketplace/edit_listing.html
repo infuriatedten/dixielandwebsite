@@ -16,7 +16,7 @@
                         {{ form.hidden_tag() }}
 
                         {{ wtf.render_field(form.item_name) }}
-                        {{ wtf.render_field(form.description, rows=5) }}
+                        {{ wtf.render_field(form.description) }}
 
                         <div class="row">
                             <div class="col-md-4">
@@ -34,7 +34,7 @@
                         {# {{ wtf.render_field(form.status) }} #}
 
                         <div class="mt-4">
-                            {{ wtf.render_field(form.submit, button_map={'submit': 'btn-primary w-100'}) }}
+                            {{ wtf.render_field(form.submit, field_class='btn-primary w-100') }}
                         </div>
                     </form>
                 </div>

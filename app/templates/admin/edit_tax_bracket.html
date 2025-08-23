@@ -11,35 +11,35 @@
                 {{ form.hidden_tag() }}
 
                 <div class="mb-3">
-                    {{ wtf.render_field(form.name, class_="form-control") }}
+                    {{ wtf.render_field(form.name) }}
                     {% if form.name.errors %}
                         <div class="text-danger small mt-1">{{ form.name.errors[0] }}</div>
                     {% endif %}
                 </div>
 
                 <div class="mb-3">
-                    {{ wtf.render_field(form.min_balance, class_="form-control") }}
+                    {{ wtf.render_field(form.min_balance) }}
                     {% if form.min_balance.errors %}
                         <div class="text-danger small mt-1">{{ form.min_balance.errors[0] }}</div>
                     {% endif %}
                 </div>
 
                 <div class="mb-3">
-                    {{ wtf.render_field(form.max_balance, class_="form-control") }}
+                    {{ wtf.render_field(form.max_balance) }}
                     {% if form.max_balance.errors %}
                         <div class="text-danger small mt-1">{{ form.max_balance.errors[0] }}</div>
                     {% endif %}
                 </div>
 
                 <div class="mb-3">
-                    {{ wtf.render_field(form.tax_rate, class_="form-control") }}
+                    {{ wtf.render_field(form.tax_rate) }}
                     {% if form.tax_rate.errors %}
                         <div class="text-danger small mt-1">{{ form.tax_rate.errors[0] }}</div>
                     {% endif %}
                 </div>
 
                 <div class="form-check mb-3">
-                    {{ wtf.render_field(form.is_active, class_="form-check-input") }}
+                    {{ wtf.render_field(form.is_active) }}
                     <label class="form-check-label" for="{{ form.is_active.id }}">Active</label>
                     {% if form.is_active.errors %}
                         <div class="text-danger small mt-1">{{ form.is_active.errors[0] }}</div>
@@ -47,7 +47,7 @@
                 </div>
 
                 <div class="text-end">
-                    {{ wtf.render_field(form.submit, class_="btn btn-success") }}
+                    {{ wtf.render_field(form.submit, field_class="btn-success") }}
                 </div>
             </form>
         </div>

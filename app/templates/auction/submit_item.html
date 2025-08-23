@@ -19,16 +19,16 @@
                             </div>
                         {% endif %}
 
-                        {{ wtf.render_field(form.item_name, placeholder="e.g., Rare Spaceship Collectible, Stack of 1000 Iron Ingots") }}
-                        {{ wtf.render_field(form.item_description, rows=6, placeholder="Describe your item in detail. Include condition, quantity (if applicable and not covered by a quantity field), any special attributes, etc.") }}
-                        {{ wtf.render_field(form.suggested_starting_bid, placeholder="e.g., 100.00 (Optional, admin will set final)") }}
-                        {{ wtf.render_field(form.image_url, placeholder="e.g., https://example.com/your_item_image.jpg (Optional)") }}
+                        {{ wtf.render_field(form.item_name) }}
+                        {{ wtf.render_field(form.item_description) }}
+                        {{ wtf.render_field(form.suggested_starting_bid) }}
+                        {{ wtf.render_field(form.image_url) }}
 
                         <p class="small text-muted mt-3">
                             By submitting this item, you agree that if approved and sold, the item must be made available to the winning bidder as described.
                             Payment will be transferred to your account upon successful collection from the winner.
                         </p>
-                        {{ wtf.render_field(form.submit, button_map={'submit': 'btn-primary w-100'}) }}
+                        {{ wtf.render_field(form.submit, field_class='btn-primary w-100') }}
                     </form>
                 </div>
             </div>

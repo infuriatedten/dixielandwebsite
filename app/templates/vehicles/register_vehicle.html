@@ -8,16 +8,16 @@
         {{ form.hidden_tag() }}
 
         <div class="mb-3">
-            {{ wtf.render_field(form.vehicle_make, placeholder="e.g., Ford, Scania, John Deere") }}
+            {{ wtf.render_field(form.vehicle_make) }}
         </div>
         <div class="mb-3">
-            {{ wtf.render_field(form.vehicle_model, placeholder="e.g., F-150, R730, 9RX") }}
+            {{ wtf.render_field(form.vehicle_model) }}
         </div>
         <div class="mb-3">
-            {{ wtf.render_field(form.vehicle_type, placeholder="e.g., Sedan, Truck, Tractor") }}
+            {{ wtf.render_field(form.vehicle_type) }}
         </div>
         <div class="mb-3">
-            {{ wtf.render_field(form.vehicle_description, placeholder="e.g., My primary logging truck, Red sports car with custom rims") }}
+            {{ wtf.render_field(form.vehicle_description) }}
         </div>
         <div class="mb-3">
             {{ wtf.render_field(form.region_format) }}
@@ -28,7 +28,7 @@
         </p>
 
         <div class="d-grid mt-3">
-            {{ wtf.render_field(form.submit, button_map={'submit': 'btn-primary'}) }}
+            {{ wtf.render_field(form.submit) }}
         </div>
     </form>
 </div>

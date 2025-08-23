@@ -37,7 +37,7 @@ class ApplyPermitForm(FlaskForm):
     route_details = TextAreaField('Proposed Route Details (From, Via, To)', validators=[DataRequired(), Length(min=10, max=1000)])
     travel_start_date = DateField('Travel Start Date', format='%Y-%m-%d', validators=[DataRequired()])
     travel_end_date = DateField('Travel End Date', format='%Y-%m-%d', validators=[DataRequired()])
-    user_notes = TextAreaField('Additional Notes for Your Application (Optional)', validators=[Optional(), Length(max=1000)])
+    user_notes = TextAreaField('Additional Notes for Your Application (Optional)', validators=[Optional(), Length(max=1000)], render_kw={'rows': 4, 'placeholder': 'e.g., Any special handling instructions, contact person, etc.'})
     submit = SubmitField('Submit Permit Application')
 
     def validate_travel_end_date(self, field):
@@ -53,9 +53,9 @@ class ApplyPermitForm(FlaskForm):
 
 
 class ApproveAuctionItemForm(FlaskForm):
-    actual_starting_bid = DecimalField('Actual Starting Bid', places=2, validators=[DataRequired()])
-    minimum_bid_increment = DecimalField('Minimum Bid Increment (Optional)', places=2, validators=[Optional(),])
-    admin_notes = TextAreaField('Admin Notes (e.g., for rejection, or internal)', validators=[Optional(), Length(max=2000)])
+    actual_starting_bid = DecimalField('Actual Starting Bid', places=2, validators=[DataRequired()], render_kw={'placeholder': 'e.g., 150.00'})
+    minimum_bid_increment = DecimalField('Minimum Bid Increment (Optional)', places=2, validators=[Optional()], render_kw={'placeholder': 'e.g., 5.00 (Default: 1.00)'})
+    admin_notes = TextAreaField('Admin Notes (e.g., for rejection, or internal)', validators=[Optional(), Length(max=2000)], render_kw={'rows': 4, 'placeholder': 'Required if rejecting. Optional for approval notes.'})
     submit_approve = SubmitField('Approve & Start Auction')
     submit_reject = SubmitField('Reject Submission')
 
@@ -76,7 +76,7 @@ class ApproveAuctionItemForm(FlaskForm):
 
 
 class CompanyForm(FlaskForm):
-    name = StringField('Company Name', validators=[DataRequired(), Length(min=3, max=128)])
+    name = StringField('Company Name', validators=[DataRequired(), Length(min=3, max=128)], render_kw={'class': 'form-control'})
     details = TextAreaField('Company Details', validators=[Optional(), Length(max=1024)])
     submit = SubmitField('Add Company')
 
@@ -118,7 +118,7 @@ class EditBalanceForm(FlaskForm):
 
 class EditListingForm(FlaskForm):
     item_name = StringField('Item Name', validators=[DataRequired(), Length(min=3, max=150)])
-    description = TextAreaField('Item Description', validators=[Optional(), Length(max=1000)])
+    description = TextAreaField('Item Description', validators=[Optional(), Length(max=1000)], render_kw={'rows': 5})
     price = DecimalField('Price (per unit)', places=2, validators=[DataRequired()])
     quantity = DecimalField('Quantity Available', places=2, validators=[DataRequired()])
     unit = StringField('Unit', validators=[DataRequired(), Length(min=1, max=50)])
@@ -209,7 +209,7 @@ class EditUserRoleForm(FlaskForm):
 
 class FineForm(FlaskForm):
     name = StringField('Fine Name', validators=[DataRequired(), Length(max=100)])
-    description = TextAreaField('Description', validators=[Optional(), Length(max=1000)])
+    description = TextAreaField('Description', validators=[Optional(), Length(max=1000)], render_kw={'rows': 5})
     amount = DecimalField('Amount', places=2, validators=[DataRequired()])
     submit = SubmitField('Save Fine')
 
@@ -239,9 +239,9 @@ class LoginForm(FlaskForm):
 
 
 class NewConversationForm(FlaskForm): # Admin to User
-    user_search = StringField('Recipient Username', validators=[DataRequired(), Length(min=3)])
-    subject = StringField('Subject', validators=[DataRequired(), Length(min=5, max=255)])
-    message_body = TextAreaField('Message', validators=[DataRequired(), Length(min=10)], render_kw={'rows': 5})
+    user_search = StringField('Recipient Username', validators=[DataRequired(), Length(min=3)], render_kw={'placeholder': 'Enter username of the user'})
+    subject = StringField('Subject', validators=[DataRequired(), Length(min=5, max=255)], render_kw={'placeholder': 'Subject of your message'})
+    message_body = TextAreaField('Message', validators=[DataRequired(), Length(min=10)], render_kw={'rows': 6, 'placeholder': 'Type your initial message to the user...'})
     submit = SubmitField('Send Message')
 
 
@@ -346,10 +346,10 @@ class RecordInspectionForm(FlaskForm):
 
 
 class RegisterVehicleForm(FlaskForm):
-    vehicle_make = StringField('Vehicle Make (e.g., Ford, Volvo)', validators=[DataRequired(), Length(max=100)])
-    vehicle_model = StringField('Vehicle Model (e.g., F-150, FH16)', validators=[DataRequired(), Length(max=100)])
-    vehicle_type = StringField('Vehicle Type (e.g., Sedan, Truck, Tractor)', validators=[DataRequired(), Length(min=3, max=100)])
-    vehicle_description = TextAreaField('Vehicle Description/Details (Optional)', validators=[Optional(), Length(max=255)])
+    vehicle_make = StringField('Vehicle Make (e.g., Ford, Volvo)', validators=[DataRequired(), Length(max=100)], render_kw={'placeholder': 'e.g., Ford, Scania, John Deere'})
+    vehicle_model = StringField('Vehicle Model (e.g., F-150, FH16)', validators=[DataRequired(), Length(max=100)], render_kw={'placeholder': 'e.g., F-150, R730, 9RX'})
+    vehicle_type = StringField('Vehicle Type (e.g., Sedan, Truck, Tractor)', validators=[DataRequired(), Length(min=3, max=100)], render_kw={'placeholder': 'e.g., Sedan, Truck, Tractor'})
+    vehicle_description = TextAreaField('Vehicle Description/Details (Optional)', validators=[Optional(), Length(max=255)], render_kw={'placeholder': 'e.g., My primary logging truck, Red sports car with custom rims'})
     region_format = SelectField('License Plate Region',
                                 choices=[(region.name, region.value) for region in VehicleRegion],
                                 validators=[DataRequired()])
@@ -381,7 +381,7 @@ class RegistrationForm(FlaskForm):
 
 
 class ReplyMessageForm(FlaskForm): # For both User and Admin
-    message_body = TextAreaField('Your Reply', validators=[DataRequired(), Length(min=1)], render_kw={'rows': 5})
+    message_body = TextAreaField('Your Reply', validators=[DataRequired(), Length(min=1)], render_kw={'rows': 4, 'placeholder': 'Type your reply...'})
     submit = SubmitField('Send Reply')
 
 
@@ -399,8 +399,8 @@ class ResolveTicketForm(FlaskForm):
 
 class ReviewPermitApplicationForm(FlaskForm):
     new_status = SelectField('Application Status', choices=[], validators=[DataRequired()]) # Choices populated in route
-    permit_fee = DecimalField('Permit Fee (if approving)', places=2, validators=[Optional()])
-    officer_notes = TextAreaField('Officer/Admin Notes (feedback to user or internal)', validators=[Optional(), Length(max=2000)])
+    permit_fee = DecimalField('Permit Fee (if approving)', places=2, validators=[Optional()], render_kw={'placeholder': 'Enter fee if approving'})
+    officer_notes = TextAreaField('Officer/Admin Notes (feedback to user or internal)', validators=[Optional(), Length(max=2000)], render_kw={'rows': 5, 'placeholder': 'Add notes for the applicant or internal records. Required for rejection or modification requests.'})
     submit = SubmitField('Update Application Status')
 
     def __init__(self, *args, **kwargs):
@@ -434,10 +434,10 @@ class StartConversationForm(FlaskForm):
 
 
 class SubmitAuctionItemForm(FlaskForm):
-    item_name = StringField('Item Name', validators=[DataRequired(), Length(min=3, max=200)])
-    item_description = TextAreaField('Item Description', validators=[DataRequired(), Length(min=10, max=2000)])
-    suggested_starting_bid = DecimalField('Suggested Starting Bid (Optional, e.g., 10.00)', places=2, validators=[Optional()])
-    image_url = StringField('Image URL (Optional, e.g., https://.../image.png)', validators=[Optional(), URL(message="Please enter a valid URL for the image."), Length(max=512)])
+    item_name = StringField('Item Name', validators=[DataRequired(), Length(min=3, max=200)], render_kw={'placeholder': 'e.g., Rare Spaceship Collectible, Stack of 1000 Iron Ingots'})
+    item_description = TextAreaField('Item Description', validators=[DataRequired(), Length(min=10, max=2000)], render_kw={'rows': 5, 'placeholder': 'Describe the item in detail, including condition, history, and any special features.'})
+    suggested_starting_bid = DecimalField('Suggested Starting Bid (Optional, e.g., 10.00)', places=2, validators=[Optional()], render_kw={'placeholder': 'e.g., 50.00'})
+    image_url = StringField('Image URL (Optional, e.g., https://.../image.png)', validators=[Optional(), URL(message="Please enter a valid URL for the image."), Length(max=512)], render_kw={'placeholder': 'https://i.imgur.com/your_image.png'})
     submit = SubmitField('Submit Item for Auction Approval')
 
     def validate_suggested_starting_bid(self, field):

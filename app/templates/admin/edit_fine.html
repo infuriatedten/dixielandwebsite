@@ -9,9 +9,9 @@
             <form method="POST" action="">
                 {{ form.hidden_tag() }}
                 {{ wtf.render_field(form.name) }}
-                {{ wtf.render_field(form.description, rows=5) }}
+                {{ wtf.render_field(form.description) }}
                 {{ wtf.render_field(form.amount) }}
-                {{ wtf.render_field(form.submit, class="btn btn-primary") }}
+                {{ wtf.render_field(form.submit) }}
             </form>
         </div>
     </div>

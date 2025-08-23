@@ -20,17 +20,17 @@
                         {{ form.hidden_tag() }}
 
                         {% if not target_username %}
-                            {{ wtf.render_field(form.user_search, placeholder="Enter username of the user") }}
+                            {{ wtf.render_field(form.user_search) }}
                         {% else %}
                             {# If target_username is pre-filled, the user_search field might be hidden or readonly in the route #}
                             {# Or simply not displayed if the target_user_id is already in the URL #}
                             <input type="hidden" name="user_search" value="{{ target_username }}">
                         {% endif %}
 
-                        {{ wtf.render_field(form.subject, placeholder="Subject of your message") }}
-                        {{ wtf.render_field(form.initial_message_body, rows=6, placeholder="Type your initial message to the user...") }}
+                        {{ wtf.render_field(form.subject) }}
+                        {{ wtf.render_field(form.initial_message_body) }}
 
-                        {{ wtf.render_field(form.submit, button_map={'submit': 'btn-success btn-block'}) }}
+                        {{ wtf.render_field(form.submit, field_class='btn-success btn-block') }}
                     </form>
                 </div>
             </div>

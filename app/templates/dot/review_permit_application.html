@@ -36,11 +36,11 @@
                         {{ wtf.render_field(form.new_status) }}
 
                         <div id="permit_fee_group" class="{{ 'd-none' if form.new_status.data != PermitApplicationStatus.APPROVED_PENDING_PAYMENT.value else '' }}">
-                             {{ wtf.render_field(form.permit_fee, placeholder="Enter fee if approving") }}
+                             {{ wtf.render_field(form.permit_fee) }}
                         </div>
 
-                        {{ wtf.render_field(form.officer_notes, rows=5, placeholder="Add notes for the applicant or internal records. Required for rejection or modification requests.") }}
-                        {{ wtf.render_field(form.submit, button_map={'submit': 'btn-primary w-100'}) }}
+                        {{ wtf.render_field(form.officer_notes) }}
+                        {{ wtf.render_field(form.submit, field_class='btn-primary w-100') }}
                     </form>
                 </div>
             </div>
