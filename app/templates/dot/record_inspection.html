@@ -12,8 +12,8 @@
                     <form method="POST" action="{{ url_for('dot.record_inspection') }}" novalidate autocomplete="off">
                         {{ form.hidden_tag() }}
 
-                        {{ wtf.render_field(form.vehicle_id, placeholder="Enter Vehicle ID or License Plate", class_="mb-3") }}
-                        {{ wtf.render_field(form.inspected_user_search, placeholder="Username of driver/owner (if registered)", class_="mb-3") }}
+                        {{ wtf.render_field(form.vehicle_id) }}
+                        {{ wtf.render_field(form.inspected_user_search) }}
 
                         <div class="mb-3">
                             {{ form.pass_status.label(class="form-label") }}<br>
@@ -32,9 +32,9 @@
                             {% endif %}
                         </div>
 
-                        {{ wtf.render_field(form.notes, rows=5, placeholder="Enter detailed notes, especially required if inspection failed.", class_="mb-3") }}
+                        {{ wtf.render_field(form.notes) }}
 
-                        {{ wtf.render_field(form.submit, button_map={'submit': 'btn-primary w-100'}) }}
+                        {{ wtf.render_field(form.submit, field_class='btn-primary w-100') }}
                     </form>
                 </div>
             </div>
