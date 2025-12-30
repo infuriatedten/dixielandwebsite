@@ -59,10 +59,10 @@ def main_index():
             # Calculate actual claims count based on rate type
             claims_count = 0
             
-            if rate.rate_type.value == 'Farm':
+            if rate.rate_type == InsuranceRateType.FARM:
                 # Count farm insurance claims
                 claims_count = InsuranceClaim.query.count()
-            elif rate.rate_type.value == 'Vehicle':
+            elif rate.rate_type == InsuranceRateType.VEHICLE:
                 # Count company vehicle insurance claims (if you have them)
                 claims_count = CompanyInsuranceClaim.query.count()
             # Add other rate types as needed
@@ -116,7 +116,7 @@ def site_home():
     }
 
     # Only show farm-related insurance rates on home screen
-    insurance_rates = InsuranceRate.query.filter(InsuranceRate.rate_type == 'Farm').order_by(InsuranceRate.rate_type).all()
+    insurance_rates = InsuranceRate.query.filter(InsuranceRate.rate_type == InsuranceRateType.FARM).order_by(InsuranceRate.rate_type).all()
     dynamic_rates = []
     
     for rate in insurance_rates:
