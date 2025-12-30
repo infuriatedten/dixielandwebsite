@@ -48,6 +48,11 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {{ 'active' if request.endpoint == 'main.mods' else '' }}" href="{{ url_for('main.mods') }}">Mods & Updates</a>
+
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if request.endpoint == 'auth.profile' else '' }}" href="{{ url_for('auth.profile') }}">Profile</a>
+
                         </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownAccount" role="button" data-bs-toggle="dropdown" aria-expanded="false">
