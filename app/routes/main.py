@@ -171,6 +171,16 @@ def fines():
     return render_template('main/fines.html', title='Fines', fines=fines)
 
 
+@main_bp.route('/mods')
+@login_required
+def mods():
+    """
+    Renders the page for server mods and updates.
+    Accessible only by logged-in users.
+    """
+    return render_template('main/mods.html', title='Mods & Updates')
+
+
 # ------------------------ ADMIN ------------------------
 
 
