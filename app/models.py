@@ -491,10 +491,10 @@ class InsuranceClaim(db.Model):
 import enum
 
 class InsuranceRateType(enum.Enum):
-    VEHICLE = "Vehicle"
-    FARM = "Farm"
-    CROP = "Crop"
-    ANIMAL = "Animal"
+    VEHICLE = "VEHICLE"
+    FARM = "FARM"
+    CROP = "CROP"
+    ANIMAL = "ANIMAL"
 
 class InsuranceRate(db.Model):
     __tablename__ = 'insurance_rates'
