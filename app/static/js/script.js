@@ -49,7 +49,7 @@ $(document).ready(function(){
     );
 
     // Smooth scrolling for anchor links
-    $('a[href^="#"]').on('click', function(event) {
+    $('a[href^="#"]:not([data-bs-toggle="dropdown"])').on('click', function(event) {
         const target = $(this.getAttribute('href'));
         if (target.length) {
             event.preventDefault();
