@@ -21,7 +21,7 @@
 {% endmacro %}
 
 {% macro dashboards_dropdown(current_user, UserRole) %}
-  {% if current_user.farmer or current_user.role.name in ['OFFICER', 'ADMIN'] %}
+  {% if current_user.farmer or current_user.role in [UserRole.OFFICER, UserRole.ADMIN] %}
     <li class="nav-item dropdown">
       <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownDashboards" role="button" data-bs-toggle="dropdown" aria-expanded="false">
         Dashboards
@@ -30,10 +30,10 @@
         {% if current_user.farmer %}
           <li><a class="dropdown-item" href="{{ url_for('main.farmer_dashboard') }}">Farmers Dashboard</a></li>
         {% endif %}
-        {% if current_user.role.name in ['OFFICER', 'ADMIN'] %}
+        {% if current_user.role in [UserRole.OFFICER, UserRole.ADMIN] %}
           <li><a class="dropdown-item" href="{{ url_for('dot.dashboard') }}">DOT Dashboard</a></li>
         {% endif %}
-        {% if current_user.role.name == 'ADMIN' %}
+        {% if current_user.role == UserRole.ADMIN %}
           <li><a class="dropdown-item" href="{{ url_for('main.admin_dashboard') }}">Admin Panel</a></li>
         {% endif %}
       </ul>
@@ -90,7 +90,7 @@
         <li><a class="dropdown-item" href="{{ url_for('dot.apply_for_permit') }}">Apply for New Permit</a></li>
         <li><a class="dropdown-item" href="{{ url_for('dot.my_permit_applications') }}">My Permit Applications</a></li>
 
-        {% if current_user.role.name in ['OFFICER', 'ADMIN'] %}
+        {% if current_user.role in [UserRole.OFFICER, UserRole.ADMIN] %}
             <li><hr class="dropdown-divider"></li>
             <li><h6 class="dropdown-header">Officer Tools</h6></li>
             <li><a class="dropdown-item" href="{{ url_for('dot.issue_ticket') }}">Issue Ticket</a></li>
