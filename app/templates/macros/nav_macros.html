@@ -1,3 +1,81 @@
+{% macro nav_link(endpoint, text) %}
+  <li class="nav-item">
+    <a class="nav-link {{ 'active' if request.endpoint == endpoint else '' }}" href="{{ url_for(endpoint) }}">{{ text }}</a>
+  </li>
+{% endmacro %}
+
+{% macro account_dropdown(current_user) %}
+  <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownAccount" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+      My Account
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="navbarDropdownAccount">
+      <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}">Profile</a></li>
+      <li><a class="dropdown-item" href="{{ url_for('banking.dashboard') }}">Banking</a></li>
+      <li><a class="dropdown-item" href="{{ url_for('taxes.tax_info') }}">Tax Info</a></li>
+      {% if not current_user.farmer %}
+        <li><a class="dropdown-item" href="{{ url_for('main.company') }}">Manage Company</a></li>
+      {% endif %}
+    </ul>
+  </li>
+{% endmacro %}
+
+{% macro dashboards_dropdown(current_user, UserRole) %}
+  <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownDashboards" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+      Dashboards
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="navbarDropdownDashboards">
+      {% if current_user.farmer %}
+        <li><a class="dropdown-item" href="{{ url_for('main.farmer_dashboard') }}">Farmers Dashboard</a></li>
+      {% endif %}
+      {% if current_user.role in [UserRole.OFFICER, UserRole.ADMIN] %}
+        <li><a class="dropdown-item" href="{{ url_for('dot.dashboard') }}">DOT Dashboard</a></li>
+      {% endif %}
+      {% if current_user.role == UserRole.ADMIN %}
+        <li><a class="dropdown-item" href="{{ url_for('main.admin_dashboard') }}">Admin Panel</a></li>
+      {% endif %}
+    </ul>
+  </li>
+{% endmacro %}
+
+{% macro community_dropdown() %}
+  <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownCommunity" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+      Community
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="navbarDropdownCommunity">
+      <li><a class="dropdown-item" href="{{ url_for('marketplace.index') }}">Marketplace</a></li>
+      <li><a class="dropdown-item" href="{{ url_for('auction.index') }}">Auctions</a></li>
+      <li><a class="dropdown-item" href="{{ url_for('main.contracts') }}">Available Contracts</a></li>
+      <li><a class="dropdown-item" href="{{ url_for('main.view_rules') }}">Rules</a></li>
+      <li><a class="dropdown-item" href="{{ url_for('main.fines') }}">Fines</a></li>
+    </ul>
+  </li>
+{% endmacro %}
+
+{% macro messages_link(unread_message_count) %}
+  <li class="nav-item">
+    <a class="nav-link" href="{{ url_for('messaging.list_my_conversations') }}">
+      Messages
+      {% if unread_message_count and unread_message_count > 0 %}
+        <span class="badge bg-danger rounded-pill">{{ unread_message_count }}</span>
+      {% endif %}
+    </a>
+  </li>
+{% endmacro %}
+
+{% macro notifications_link(unread_notification_count) %}
+  <li class="nav-item">
+    <a class="nav-link" href="{{ url_for('notifications.list_notifications') }}">
+      Notifications
+      {% if unread_notification_count and unread_notification_count > 0 %}
+        <span class="badge bg-warning text-dark rounded-pill">{{ unread_notification_count }}</span>
+      {% endif %}
+    </a>
+  </li>
+{% endmacro %}
+
 {% macro dot_services_dropdown(current_user, UserRole) %}
 <li class="nav-item dropdown">
     <a class="nav-link dropdown-toggle" href="#" id="dotDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
