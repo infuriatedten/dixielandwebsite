@@ -12,7 +12,7 @@ from markupsafe import Markup, escape
 from config import Config
 
 # Initialize extensions
-db = SQLAlchemy(engine_options={"pool_pre_ping": True, "pool_recycle": 300})
+db = SQLAlchemy()
 login_manager = LoginManager()
 scheduler = APScheduler()
 migrate = Migrate()
@@ -108,9 +108,13 @@ def create_app(config_class=Config):
     from app.api_fs25 import api_fs25_bp
     from app.routes.export import export_bp
     from app.routes.health import health_bp
+    from app.routes.timesheet import bp as timesheet_bp
+    from app.routes.admin_timesheet import bp as admin_timesheet_bp
 
     app.register_blueprint(auth_bp, url_prefix='/auth')
+    app.register_blueprint(admin_timesheet_bp)
     app.register_blueprint(main_bp)
+    app.register_blueprint(timesheet_bp, url_prefix='/timesheet')
     app.register_blueprint(admin_bp)
     app.register_blueprint(api_fs25_bp)
     app.register_blueprint(vehicle_bp, url_prefix='/vehicle')

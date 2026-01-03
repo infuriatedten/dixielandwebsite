@@ -57,6 +57,7 @@
                                 <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}">Profile</a></li>
                                 <li><a class="dropdown-item" href="{{ url_for('banking.dashboard') }}">Banking</a></li>
                                 <li><a class="dropdown-item" href="{{ url_for('taxes.tax_info') }}">Tax Info</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('timesheet.view_timesheet') }}">Timesheet</a></li>
                                 {% if not current_user.farmer %}
                                 <li><a class="dropdown-item" href="{{ url_for('main.company') }}">Manage Company</a></li>
                                 {% endif %}
