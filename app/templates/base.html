@@ -43,57 +43,63 @@
                     </li>
 
                     {% if current_user.is_authenticated %}
-                        <li class="nav-item">
-                      
-						<li class="nav-item">
-                            <a class="nav-link {{ 'active' if request.endpoint == 'main.mods' else '' }}" href="{{ url_for('main.mods') }}">Mods & Updates</a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownAccount" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                My Account
-                            </a>
-                            <ul class="dropdown-menu" aria-labelledby="navbarDropdownAccount">
-                                <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}">Profile</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('banking.dashboard') }}">Banking</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('taxes.tax_info') }}">Tax Info</a></li>
-                                {% if not current_user.farmer %}
-                                <li><a class="dropdown-item" href="{{ url_for('main.company') }}">Manage Company</a></li>
-                                {% endif %}
-                            </ul>
-                        </li>
 
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownDashboards" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Dashboards
-                            </a>
-                            <ul class="dropdown-menu" aria-labelledby="navbarDropdownDashboards">
-                                {% if current_user.farmer %}
-                                <li><a class="dropdown-item" href="{{ url_for('main.farmer_dashboard') }}">Farmers Dashboard</a></li>
-                                {% endif %}
-                                {% if current_user.role == UserRole.OFFICER or current_user.role == UserRole.ADMIN %}
-                                <li><a class="dropdown-item" href="{{ url_for('dot.dashboard') }}">DOT Dashboard</a></li>
-                                {% endif %}
-                                {% if current_user.role == UserRole.ADMIN %}
-                                <li><a class="dropdown-item" href="{{ url_for('main.admin_dashboard') }}">Admin Panel</a></li>
-                                {% endif %}
-                            </ul>
-                        </li>
+<li class="nav-item">
+    <a class="nav-link {{ 'active' if request.endpoint == 'main.mods' else '' }}"
+       href="{{ url_for('main.mods') }}">
+        Mods & Updates
+    </a>
+</li>
 
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownCommunity" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Community
-                            </a>
-                            <ul class="dropdown-menu" aria-labelledby="navbarDropdownCommunity">
-                                <li><a class="dropdown-item" href="{{ url_for('marketplace.index') }}">Marketplace</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('auction.index') }}">Auctions</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('main.contracts') }}">Available Contracts</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('main.view_rules') }}">Rules</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('main.fines') }}">Fines</a></li>
-                            </ul>
-                        </li>
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownAccount"
+       role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        My Account
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="navbarDropdownAccount">
+        <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}">Profile</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('banking.dashboard') }}">Banking</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('taxes.tax_info') }}">Tax Info</a></li>
+        {% if not current_user.farmer %}
+        <li><a class="dropdown-item" href="{{ url_for('main.company') }}">Manage Company</a></li>
+        {% endif %}
+    </ul>
+</li>
 
-                        {% if not current_user.farmer %}
-                        {% endif %}
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownDashboards"
+       role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        Dashboards
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="navbarDropdownDashboards">
+        {% if current_user.farmer %}
+        <li><a class="dropdown-item" href="{{ url_for('main.farmer_dashboard') }}">Farmers Dashboard</a></li>
+        {% endif %}
+        {% if current_user.role in [UserRole.OFFICER, UserRole.ADMIN] %}
+        <li><a class="dropdown-item" href="{{ url_for('dot.dashboard') }}">DOT Dashboard</a></li>
+        {% endif %}
+        {% if current_user.role == UserRole.ADMIN %}
+        <li><a class="dropdown-item" href="{{ url_for('main.admin_dashboard') }}">Admin Panel</a></li>
+        {% endif %}
+    </ul>
+</li>
+
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownCommunity"
+       role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        Community
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="navbarDropdownCommunity">
+        <li><a class="dropdown-item" href="{{ url_for('marketplace.index') }}">Marketplace</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('auction.index') }}">Auctions</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('main.contracts') }}">Available Contracts</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('main.view_rules') }}">Rules</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('main.fines') }}">Fines</a></li>
+    </ul>
+</li>
+
+{% endif %}
+
 
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('messaging.list_my_conversations') }}">
