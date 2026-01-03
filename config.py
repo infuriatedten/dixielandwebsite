@@ -11,7 +11,10 @@ class Config:
 
     # PostgreSQL Neon connection string (must be set correctly in env)
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
-    if not SQLALCHEMY_DATABASE_URI or 'postgresql://' not in SQLALCHEMY_DATABASE_URI:
+    if SQLALCHEMY_DATABASE_URI and 'postgresql://' in SQLALCHEMY_DATABASE_URI:
+        if 'sslmode' not in SQLALCHEMY_DATABASE_URI:
+            SQLALCHEMY_DATABASE_URI += '?sslmode=require'
+    else:
         raise RuntimeError("DATABASE_URL is not properly set. Aborting to avoid fallback to SQLite.")
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False

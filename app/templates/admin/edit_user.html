@@ -1,55 +1,19 @@
-{% extends "admin/base.html" %}
-{% import "bootstrap_wtf.html" as wtf %}
+{% extends "base.html" %}
+{% import "macros/form_macros.html" as f %}
 
-{% block title %}Edit User{% endblock %}
+{% block title %}Admin - Edit User{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <h1 class="mb-4">Edit User</h1>
+    <h1 class="mb-4">Edit User: {{ user.username }}</h1>
 
-    <div class="card shadow-sm">
+    <div class="card">
         <div class="card-body">
-            <form method="POST" action="{{ url_for('admin.edit_user', user_id=user.id) }}">
+            <form method="POST" action="{{ url_for('admin_timesheet.edit_user', user_id=user.id) }}">
                 {{ form.hidden_tag() }}
-
-                <div class="mb-3">
-                    {{ wtf.render_field(form.username) }}
-                    {% if form.username.errors %}
-                        <div class="text-danger small">{{ form.username.errors[0] }}</div>
-                    {% endif %}
-                </div>
-
-                <div class="mb-3">
-                    {{ wtf.render_field(form.email) }}
-                    {% if form.email.errors %}
-                        <div class="text-danger small">{{ form.email.errors[0] }}</div>
-                    {% endif %}
-                </div>
-
-                <div class="mb-3">
-                    {{ wtf.render_field(form.role) }}
-                    {% if form.role.errors %}
-                        <div class="text-danger small">{{ form.role.errors[0] }}</div>
-                    {% endif %}
-                </div>
-
-                <div class="mb-3">
-                    {{ wtf.render_field(form.discord_user_id) }}
-                    {% if form.discord_user_id.errors %}
-                        <div class="text-danger small">{{ form.discord_user_id.errors[0] }}</div>
-                    {% endif %}
-                </div>
-
-                <div class="mb-3">
-                    {{ wtf.render_field(form.region) }}
-                    {% if form.region.errors %}
-                        <div class="text-danger small">{{ form.region.errors[0] }}</div>
-                    {% endif %}
-                </div>
-
-                <div class="text-end">
-                    {{ wtf.render_field(form.submit) }}
-                </div>
+                {{ f.render_form_field(form.position) }}
+                {{ f.render_form_field(form.pay_rate) }}
+                {{ f.render_submit_button(form.submit) }}
             </form>
         </div>
     </div>
