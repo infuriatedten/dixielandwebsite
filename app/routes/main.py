@@ -9,7 +9,7 @@ from app.models import (
     User, UserRole, RulesContent, Farmer, Parcel, UserVehicle, CompanyVehicle,
     Account, InsuranceClaim, Contract, ContractStatus, Company, CompanyContract, CompanyInsuranceClaim,
     MarketplaceListing, MarketplaceListingStatus, Ticket, PermitApplication,
-    Transaction, TransactionType, InsuranceRate, Fine, SiloStorage, InsuranceRateType
+    Transaction, TransactionType, InsuranceRate, Fine, SiloStorage
 )
 from app.forms import (
     ParcelForm, InsuranceClaimForm, ContractForm, CompanyNameForm, CompanyVehicleForm, CompanyContractForm, CompanyInsuranceClaimForm
@@ -59,10 +59,10 @@ def main_index():
             # Calculate actual claims count based on rate type
             claims_count = 0
             
-            if rate.rate_type == InsuranceRateType.FARM:
+            if rate.rate_type.value == 'Farm':
                 # Count farm insurance claims
                 claims_count = InsuranceClaim.query.count()
-            elif rate.rate_type == InsuranceRateType.VEHICLE:
+            elif rate.rate_type.value == 'Vehicle':
                 # Count company vehicle insurance claims (if you have them)
                 claims_count = CompanyInsuranceClaim.query.count()
             # Add other rate types as needed
@@ -116,7 +116,7 @@ def site_home():
     }
 
     # Only show farm-related insurance rates on home screen
-    insurance_rates = InsuranceRate.query.filter(InsuranceRate.rate_type == InsuranceRateType.FARM).order_by(InsuranceRate.rate_type).all()
+    insurance_rates = InsuranceRate.query.filter(InsuranceRate.rate_type == 'Farm').order_by(InsuranceRate.rate_type).all()
     dynamic_rates = []
     
     for rate in insurance_rates:
@@ -169,16 +169,6 @@ def view_rules():
 def fines():
     fines = Fine.query.order_by(Fine.name.asc()).all()
     return render_template('main/fines.html', title='Fines', fines=fines)
-
-
-@main_bp.route('/mods')
-@login_required
-def mods():
-    """
-    Renders the page for server mods and updates.
-    Accessible only by logged-in users.
-    """
-    return render_template('main/mods.html', title='Mods & Updates')
 
 
 # ------------------------ ADMIN ------------------------

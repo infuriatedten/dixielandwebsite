@@ -12,7 +12,7 @@ from markupsafe import Markup, escape
 from config import Config
 
 # Initialize extensions
-db = SQLAlchemy(engine_options={"pool_pre_ping": True, "pool_recycle": 300})
+db = SQLAlchemy()
 login_manager = LoginManager()
 scheduler = APScheduler()
 migrate = Migrate()
