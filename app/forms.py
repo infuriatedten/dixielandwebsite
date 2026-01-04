@@ -133,7 +133,7 @@ class EditListingForm(FlaskForm):
             raise ValidationError('Quantity must be a positive value.')
 
 
-class EditUserProfileForm(FlaskForm):
+class EditUserForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
     role = SelectField('Role', choices=[(role.name, role.value) for role in UserRole], validators=[DataRequired()])
@@ -157,11 +157,6 @@ class EditUserProfileForm(FlaskForm):
             user = User.query.filter_by(email=email.data).first()
             if user:
                 raise ValidationError('This email is already in use.')
-
-class EditUserForm(FlaskForm):
-    position = StringField('Position', validators=[Optional(), Length(max=128)])
-    pay_rate = DecimalField('Pay Rate', places=2, validators=[Optional()])
-    submit = SubmitField('Update User')
 
 class EditRulesForm(FlaskForm):
     content_markdown = TextAreaField('Rules Content (Markdown Format)',

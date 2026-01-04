@@ -20,12 +20,9 @@ class User(UserMixin, db.Model):
     discord_user_id = db.Column(db.String(100), nullable=True, unique=True, index=True)
     discord_username = db.Column(db.String(100), nullable=True)
     region = db.Column(db.Enum('US', 'EU', 'OTHER_DEFAULT', name='region_enum'), nullable=True, default='OTHER_DEFAULT')
-    position = db.Column(db.String(128), nullable=True)
-    pay_rate = db.Column(db.Numeric(10, 2), nullable=True)
     accounts = db.relationship('Account', back_populates='user', lazy='dynamic', cascade="all, delete-orphan")
     company = db.relationship('Company', uselist=False, back_populates='user', cascade="all, delete-orphan")
     farmer = db.relationship('Farmer', uselist=False, back_populates='user', cascade="all, delete-orphan")
-    timesheets = db.relationship('Timesheet', backref='user', lazy='dynamic', cascade="all, delete-orphan")
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -494,10 +491,10 @@ class InsuranceClaim(db.Model):
 import enum
 
 class InsuranceRateType(enum.Enum):
-    VEHICLE = "VEHICLE"
-    FARM = "FARM"
-    CROP = "CROP"
-    ANIMAL = "ANIMAL"
+    VEHICLE = "Vehicle"
+    FARM = "Farm"
+    CROP = "Crop"
+    ANIMAL = "Animal"
 
 class InsuranceRate(db.Model):
     __tablename__ = 'insurance_rates'
@@ -572,14 +569,3 @@ class CompanyInsuranceClaim(db.Model):
 
     def __repr__(self):
         return f'<CompanyInsuranceClaim {self.id}>'
-
-class Timesheet(db.Model):
-    __tablename__ = 'timesheets'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
-    clock_in_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    clock_out_time = db.Column(db.DateTime, nullable=True)
-    approved_by_admin_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-
-    def __repr__(self):
-        return f'<Timesheet {self.id} for User {self.user_id}>'

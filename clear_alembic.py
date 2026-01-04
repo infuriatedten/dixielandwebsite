@@ -1,15 +1,7 @@
 import os
 from sqlalchemy import create_engine, text
 
-from dotenv import load_dotenv
-
-load_dotenv()
-db_uri = os.environ.get('DATABASE_URL')
-if db_uri and 'postgresql://' in db_uri:
-    if 'sslmode' not in db_uri:
-        db_uri += '?sslmode=require'
-else:
-    raise RuntimeError("DATABASE_URL is not properly set.")
+db_uri = os.environ.get('SQLALCHEMY_DATABASE_URI') or 'postgresql://dixielandwebsite_user:gKeSGCTQcARpwDXW4k7CGpOlkDegi2KW@dpg-d1mouvje5dus73dq5p00-a.virginia-postgres.render.com/dixielandwebsite'
 
 engine = create_engine(db_uri)
 

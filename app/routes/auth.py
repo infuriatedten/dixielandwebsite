@@ -61,7 +61,10 @@ def login():
         login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
         if not next_page or not is_safe_url(next_page):
-            next_page = url_for('banking.dashboard')
+            if user.role == UserRole.ADMIN:
+                next_page = url_for('admin.index')
+            else:
+                next_page = url_for('main.index')
         flash(f'Welcome back, {user.username}!', 'success')
         return redirect(next_page)
     return render_template('auth/login.html', title='Sign In', form=form)
