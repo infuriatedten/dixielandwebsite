@@ -34,3 +34,29 @@ def time_ago(timestamp):
         return f"{minutes} minutes ago"
     else:
         return "Just now"
+
+import hmac
+import hashlib
+import json
+from flask import current_app
+
+def verify_signature(data):
+    """Verify the signature of the request"""
+    if not isinstance(data, dict):
+        return False
+
+    signature = data.pop("signature", None)
+    if not signature:
+        return False
+
+    # Sort the dictionary by key to ensure consistent hash
+    sorted_data = json.dumps(data, sort_keys=True)
+
+    # Calculate the expected signature
+    expected_signature = hmac.new(
+        current_app.config['SECRET_KEY'].encode('utf-8'),
+        sorted_data.encode('utf-8'),
+        hashlib.sha256
+    ).hexdigest()
+
+    return hmac.compare_digest(expected_signature, signature)

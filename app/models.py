@@ -569,3 +569,28 @@ class CompanyInsuranceClaim(db.Model):
 
     def __repr__(self):
         return f'<CompanyInsuranceClaim {self.id}>'
+
+class Player(db.Model):
+    __tablename__ = 'players'
+    id = db.Column(db.Integer, primary_key=True)
+    discord_id = db.Column(db.String(100), unique=True, nullable=False, index=True)
+    last_login = db.Column(db.DateTime, nullable=True)
+    last_logout = db.Column(db.DateTime, nullable=True)
+    last_heartbeat = db.Column(db.DateTime, nullable=True)
+    total_time = db.Column(db.Float, default=0)
+    half_rate_time = db.Column(db.Float, default=0)
+    purchases = db.relationship('Purchase', backref='player', lazy='dynamic', cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f'<Player {self.discord_id}>'
+
+class Purchase(db.Model):
+    __tablename__ = 'purchases'
+    id = db.Column(db.Integer, primary_key=True)
+    player_id = db.Column(db.Integer, db.ForeignKey('players.id'), nullable=False, index=True)
+    xml_filename = db.Column(db.String(255), nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+    def __repr__(self):
+        return f'<Purchase {self.id} by Player {self.player_id}>'
