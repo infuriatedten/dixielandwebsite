@@ -1,25 +1,70 @@
-{% macro dot_services_dropdown(current_user, UserRole) %}
-<li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle" href="#" id="dotDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-        DOT Services
-    </a>
-    <ul class="dropdown-menu" aria-labelledby="dotDropdown">
-        <li><a class="dropdown-item" href="{{ url_for('dot.my_tickets') }}">My Tickets</a></li>
-        <li><a class="dropdown-item" href="{{ url_for('dot.registered_vehicles') }}">My Registered Vehicles</a></li>
-        <li><hr class="dropdown-divider"></li>
-        <li><a class="dropdown-item" href="{{ url_for('dot.apply_for_permit') }}">Apply for New Permit</a></li>
-        <li><a class="dropdown-item" href="{{ url_for('dot.my_permit_applications') }}">My Permit Applications</a></li>
+{% macro nav_link(endpoint, text) %}
+  <li class="nav-item">
+    <a class="nav-link {{ 'active' if request.endpoint == endpoint else '' }}" href="{{ url_for(endpoint) }}">{{ text }}</a>
+  </li>
+{% endmacro %}
 
-        {% if current_user.role in [UserRole.OFFICER, UserRole.ADMIN] %}
-            <li><hr class="dropdown-divider"></li>
-            <li><h6 class="dropdown-header">Officer Tools</h6></li>
-            <li><a class="dropdown-item" href="{{ url_for('dot.issue_ticket') }}">Issue Ticket</a></li>
-            <li><a class="dropdown-item" href="{{ url_for('dot.list_issued_tickets') }}">My Issued Tickets</a></li>
-            <li><a class="dropdown-item" href="{{ url_for('dot.review_permit_applications_list') }}">Review Permit Apps</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="{{ url_for('dot.record_inspection') }}">Record Inspection</a></li>
-            <li><a class="dropdown-item" href="{{ url_for('dot.list_my_conducted_inspections') }}">My Conducted Inspections</a></li>
-        {% endif %}
-    </ul>
-</li>
+{% macro account_dropdown(current_user) %}
+  {{ nav_link('auth.profile', 'Profile') }}
+  {{ nav_link('banking.dashboard', 'Banking') }}
+  {{ nav_link('taxes.tax_info', 'Tax Info') }}
+  {% if not current_user.farmer %}
+    {{ nav_link('main.company', 'Manage Company') }}
+  {% endif %}
+{% endmacro %}
+
+{% macro dashboards_dropdown(current_user, UserRole) %}
+  {% if current_user.farmer %}
+    {{ nav_link('main.farmer_dashboard', 'Farmers Dashboard') }}
+  {% endif %}
+  {% if current_user.role in [UserRole.OFFICER, UserRole.ADMIN] %}
+    {{ nav_link('dot.dashboard', 'DOT Dashboard') }}
+  {% endif %}
+  {% if current_user.role == UserRole.ADMIN %}
+    {{ nav_link('main.admin_dashboard', 'Admin Panel') }}
+  {% endif %}
+{% endmacro %}
+
+{% macro community_dropdown() %}
+  {{ nav_link('marketplace.index', 'Marketplace') }}
+  {{ nav_link('auction.index', 'Auctions') }}
+  {{ nav_link('main.contracts', 'Available Contracts') }}
+  {{ nav_link('main.view_rules', 'Rules') }}
+  {{ nav_link('main.fines', 'Fines') }}
+{% endmacro %}
+
+{% macro messages_link(unread_message_count) %}
+  <li class="nav-item">
+    <a class="nav-link" href="{{ url_for('messaging.list_my_conversations') }}">
+      Messages
+      {% if unread_message_count and unread_message_count > 0 %}
+        <span class="badge bg-danger rounded-pill">{{ unread_message_count }}</span>
+      {% endif %}
+    </a>
+  </li>
+{% endmacro %}
+
+{% macro notifications_link(unread_notification_count) %}
+  <li class="nav-item">
+    <a class="nav-link" href="{{ url_for('notifications.list_notifications') }}">
+      Notifications
+      {% if unread_notification_count and unread_notification_count > 0 %}
+        <span class="badge bg-warning text-dark rounded-pill">{{ unread_notification_count }}</span>
+      {% endif %}
+    </a>
+  </li>
+{% endmacro %}
+
+{% macro dot_services_dropdown(current_user, UserRole) %}
+  {{ nav_link('dot.my_tickets', 'My Tickets') }}
+  {{ nav_link('dot.registered_vehicles', 'My Registered Vehicles') }}
+  {{ nav_link('dot.apply_for_permit', 'Apply for New Permit') }}
+  {{ nav_link('dot.my_permit_applications', 'My Permit Applications') }}
+  {% if current_user.role in [UserRole.OFFICER, UserRole.ADMIN] %}
+    {{ nav_link('dot.issue_ticket', 'Issue Ticket') }}
+    {{ nav_link('dot.list_issued_tickets', 'My Issued Tickets') }}
+    {{ nav_link('dot.review_permit_applications_list', 'Review Permit Apps') }}
+    {{ nav_link('dot.record_inspection', 'Record Inspection') }}
+    {{ nav_link('dot.list_my_conducted_inspections', 'My Conducted Inspections') }}
+  {% endif %}
 {% endmacro %}
