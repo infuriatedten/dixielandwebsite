@@ -3,8 +3,8 @@
 body {
     padding-top: 56px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    color: #C9EF31;
+    background: #f0f2f5; /* A light, neutral background */
+    color: #333; /* Darker text for readability */
     display: flex;
     flex-direction: column;
     min-height: 100vh;
@@ -18,20 +18,20 @@ body {
 /* Enhanced navbar styling */
 .navbar {
     margin-bottom: 20px;
-    box-shadow: 0 4px 12px rgba(0,0,0,.15);
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,.1);
+    background: #C9EF31 !important; /* Main color */
     backdrop-filter: blur(10px);
 }
 
 .navbar-brand {
     font-weight: 700;
     font-size: 1.5rem;
-    color: #ffffff !important;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    color: #333 !important; /* Dark text on light background */
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
 .navbar-nav .nav-link {
-    color: #ffffff !important;
+    color: #333 !important; /* Dark text */
     font-weight: 500;
     padding: 0.5rem 1rem !important;
     margin: 0 0.2rem;
@@ -40,12 +40,12 @@ body {
 }
 
 .navbar-nav .nav-link:hover {
-    background-color: rgba(255,255,255,0.2);
+    background-color: rgba(0,0,0,0.1);
     transform: translateY(-2px);
 }
 
 .navbar-nav .nav-link.active {
-    background-color: rgba(255,255,255,0.3);
+    background-color: rgba(0,0,0,0.15);
     font-weight: 600;
     border-radius: 0.5rem;
 }
@@ -61,19 +61,19 @@ body {
 
 /* Enhanced jumbotron */
 .jumbotron {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: linear-gradient(135deg, #C9EF31 0%, #a8c700 100%); /* Main color gradient */
+    color: #333; /* Dark text */
     padding: 3rem 2rem;
     border-radius: 1rem;
     box-shadow: 0 8px 32px rgba(0,0,0,0.1);
     margin-bottom: 2rem;
-    border: 1px solid rgba(255,255,255,0.18);
+    border: 1px solid rgba(0,0,0,0.1);
 }
 
 body .jumbotron h1 {
-    color: #ffffff;
+    color: #333;
     font-weight: 700;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
 .jumbotron p {
@@ -83,12 +83,11 @@ body .jumbotron h1 {
 
 /* Enhanced form styling */
 form {
-    background: rgba(255,255,255,0.95);
+    background: #ffffff;
     padding: 2rem;
     border-radius: 1rem;
     box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.18);
+    border: 1px solid #e9ecef;
 }
 
 form .form-group {
@@ -97,7 +96,7 @@ form .form-group {
 
 form label {
     font-weight: 600;
-    color: #2c3e50;
+    color: #333;
     margin-bottom: 0.5rem;
 }
 
@@ -110,8 +109,8 @@ form label {
 }
 
 .form-control:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    border-color: #C9EF31;
+    box-shadow: 0 0 0 0.2rem rgba(201, 239, 49, 0.4);
 }
 
 /* Enhanced buttons - Improved visibility and clarity */
@@ -134,24 +133,24 @@ body .btn, .btn {
 }
 
 body .btn-primary, .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border: 2px solid #667eea;
-    color: #ffffff !important;
+    background: linear-gradient(135deg, #C9EF31 0%, #a8c700 100%);
+    border: 2px solid #C9EF31;
+    color: #333 !important; /* Dark text for readability */
     padding: 0.75rem 1.5rem;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 15px rgba(201, 239, 49, 0.4);
     font-size: 0.95rem;
 }
 
 body .btn-primary:hover, .btn-primary:hover {
-    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-    border-color: #5a6fd8;
+    background: linear-gradient(135deg, #b8d82a 0%, #97b500 100%);
+    border-color: #b8d82a;
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-    color: #ffffff !important;
+    box-shadow: 0 6px 20px rgba(201, 239, 49, 0.6);
+    color: #333 !important;
 }
 
 body .btn-primary:focus, .btn-primary:focus {
-    box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.5);
+    box-shadow: 0 0 0 0.25rem rgba(201, 239, 49, 0.5);
     outline: none;
 }
 
@@ -239,17 +238,17 @@ body .btn-primary:focus, .btn-primary:focus {
 
 .btn-outline-primary {
     background: transparent;
-    border: 2px solid #667eea;
-    color: #667eea !important;
+    border: 2px solid #C9EF31;
+    color: #a8c700 !important;
     padding: 0.75rem 1.5rem;
     font-size: 0.95rem;
     font-weight: 600;
 }
 
 .btn-outline-primary:hover {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-color: #667eea;
-    color: #ffffff !important;
+    background: linear-gradient(135deg, #C9EF31 0%, #a8c700 100%);
+    border-color: #C9EF31;
+    color: #333 !important;
     transform: translateY(-2px);
 }
 
@@ -342,32 +341,32 @@ form .btn[type="submit"], form button[type="submit"] {
 }
 
 .alert-success {
-    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    background: #d4edda;
     color: #155724;
 }
 
 .alert-danger {
-    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    background: #f8d7da;
     color: #721c24;
 }
 
 .alert-warning {
-    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    background: #fff3cd;
     color: #856404;
 }
 
 .alert-info {
-    background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+    background: #d1ecf1;
     color: #0c5460;
 }
 
 /* Enhanced footer */
 .footer {
     padding: 2rem 0;
-    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    background: #343a40;
     text-align: center;
     font-size: 0.9em;
-    color: #ecf0f1;
+    color: #f8f9fa;
     margin-top: auto;
     box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
 }
@@ -375,11 +374,10 @@ form .btn[type="submit"], form button[type="submit"] {
 /* Enhanced card styling */
 .card {
     margin-top: 20px;
-    border: none;
+    border: 1px solid #e9ecef;
     border-radius: 1rem;
     box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-    backdrop-filter: blur(10px);
-    background: rgba(255,255,255,0.95);
+    background: #ffffff;
     transition: all 0.3s ease;
 }
 
@@ -389,15 +387,15 @@ form .btn[type="submit"], form button[type="submit"] {
 }
 
 .card-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: #C9EF31;
+    color: #333;
     border-radius: 1rem 1rem 0 0 !important;
     padding: 1rem 1.5rem;
     font-weight: 600;
 }
 
 body .card-title {
-    color: #667eea;
+    color: #333;
     font-weight: 700;
 }
 
@@ -407,15 +405,15 @@ body .card-title {
 
 /* Enhanced table styling */
 .table {
-    background: rgba(255,255,255,0.95);
+    background: #ffffff;
     border-radius: 0.75rem;
     overflow: hidden;
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .table thead th {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: #C9EF31;
+    color: #333;
     border: none;
     padding: 1rem;
     font-weight: 600;
@@ -428,13 +426,13 @@ body .card-title {
 }
 
 .table tbody tr:hover {
-    background-color: rgba(102, 126, 234, 0.1);
+    background-color: rgba(201, 239, 49, 0.1);
     transform: scale(1.01);
 }
 
 .table td {
     padding: 0.75rem 1rem;
-    border-top: 1px solid rgba(0,0,0,0.05);
+    border-top: 1px solid #e9ecef;
 }
 
 /* Badge enhancements */
@@ -446,15 +444,15 @@ body .card-title {
 }
 
 .bg-danger {
-    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important;
+    background: #e74c3c !important;
 }
 
 .bg-warning {
-    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%) !important;
+    background: #f39c12 !important;
 }
 
 .text-dark {
-    color: #2c3e50 !important;
+    color: #333 !important;
 }
 
 /* Helper classes */
@@ -467,7 +465,7 @@ body .card-title {
 /* Pagination styling */
 .pagination .page-link {
     border: none;
-    color: #667eea;
+    color: #C9EF31;
     font-weight: 500;
     margin: 0 0.2rem;
     border-radius: 0.5rem;
@@ -475,14 +473,15 @@ body .card-title {
 }
 
 .pagination .page-link:hover {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: #C9EF31;
+    color: #333;
     transform: translateY(-2px);
 }
 
 .pagination .page-item.active .page-link {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-color: #667eea;
+    background: #C9EF31;
+    border-color: #C9EF31;
+    color: #333;
 }
 
 /* Loading animations */
@@ -614,17 +613,90 @@ body .card-title {
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
     body {
-        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-        color: #ecf0f1;
+        background: #121212;
+        color: #e0e0e0;
     }
-    
-    .card, form {
-        background: rgba(52, 73, 94, 0.95);
-        color: #ecf0f1;
+
+    .navbar {
+        background: #1f1f1f !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,.3);
     }
-    
-    .table {
-        background: rgba(52, 73, 94, 0.95);
-        color: #ecf0f1;
+
+    .navbar-brand, .navbar-nav .nav-link {
+        color: #e0e0e0 !important;
+    }
+
+    .navbar-nav .nav-link:hover {
+        background-color: rgba(201, 239, 49, 0.2);
+    }
+
+    .navbar-nav .nav-link.active {
+        background-color: rgba(201, 239, 49, 0.3);
+    }
+
+    .jumbotron {
+        background: #1f1f1f;
+        color: #e0e0e0;
+        border: 1px solid #333;
+    }
+
+    body .jumbotron h1 {
+        color: #e0e0e0;
+    }
+
+    form, .card, .table {
+        background: #1f1f1f;
+        color: #e0e0e0;
+        border: 1px solid #333;
+    }
+
+    .form-control {
+        background-color: #333;
+        color: #e0e0e0;
+        border-color: #444;
+    }
+
+    .form-control:focus {
+        border-color: #C9EF31;
+        background-color: #333;
+        color: #e0e0e0;
+        box-shadow: 0 0 0 0.2rem rgba(201, 239, 49, 0.4);
+    }
+
+    form label, body .card-title {
+        color: #e0e0e0;
+    }
+
+    .card-header, .table thead th {
+        background: #2a2a2a;
+        color: #e0e0e0;
+    }
+
+    .table tbody tr:hover {
+        background-color: rgba(201, 239, 49, 0.1);
+    }
+
+    .table td {
+        border-top: 1px solid #333;
+    }
+
+    .footer {
+        background: #1f1f1f;
+        color: #aaa;
+    }
+
+    .pagination .page-link {
+        color: #C9EF31;
+    }
+
+    .pagination .page-link:hover {
+        background: #C9EF31;
+        color: #121212;
+    }
+
+    .pagination .page-item.active .page-link {
+        background: #C9EF31;
+        border-color: #C9EF31;
+        color: #121212;
     }
 }
