@@ -1,8 +1,7 @@
 # api_fs25.py
 from flask import Blueprint, request, jsonify, current_app
-from app.models import db, Farmer, Account, Transaction, TransactionType, FarmerStats, Notification, Conversation, SiloStorage, Player, Purchase
+from app.models import db, Farmer, Account, Transaction, TransactionType, FarmerStats, Notification, Conversation, SiloStorage
 from datetime import datetime
-from app.utils import verify_signature
 
 api_fs25_bp = Blueprint('api_fs25', __name__)
 
@@ -141,85 +140,3 @@ def update_silo():
         db.session.rollback()
         current_app.logger.error(f"Error updating silo for farmer {farmer_id}: {e}", exc_info=True)
         return jsonify({"error": "An unexpected error occurred."}), 500
-
-# ------------------------
-# Player login/logout/heartbeat
-# ------------------------
-@api_fs25_bp.route("/api/fs25/heartbeat", methods=["POST"])
-def heartbeat():
-    data = request.get_json()
-    if not verify_signature(data):
-        return jsonify({"error": "invalid signature"}), 403
-
-    discord_id = data.get("discord_id")
-    event = data.get("event", "heartbeat")
-    timestamp = datetime.fromisoformat(data.get("timestamp"))
-
-    player = Player.query.filter_by(discord_id=discord_id).first()
-    if not player:
-        player = Player(discord_id=discord_id)
-        db.session.add(player)
-
-    if event == "login":
-        player.last_login = timestamp
-    elif event == "logout":
-        player.last_logout = timestamp
-        # Calculate session time
-        if player.last_login:
-            session_time = (timestamp - player.last_login).total_seconds()
-            player.total_time += session_time
-    elif event == "idle_logout":
-        # Half rate time
-        if player.last_login:
-            session_time = (timestamp - player.last_login).total_seconds()
-            player.half_rate_time += session_time / 2
-            player.total_time += session_time / 2
-    else:
-        # heartbeat updates last_heartbeat
-        player.last_heartbeat = timestamp
-
-    db.session.commit()
-    return jsonify({"status": "ok"})
-
-
-# ------------------------
-# Store purchase
-# ------------------------
-@api_fs25_bp.route("/api/fs25/store/purchase", methods=["POST"])
-def store_purchase():
-    data = request.get_json()
-    if not verify_signature(data):
-        return jsonify({"error": "invalid signature"}), 403
-
-    discord_id = data.get("playerId") or data.get("discord_id")
-    xml = data.get("xml")
-    price = float(data.get("price", 0))
-
-    player = Player.query.filter_by(discord_id=str(discord_id)).first()
-    if not player:
-        return jsonify({"error": "player not found"}), 404
-
-    purchase = Purchase(player_id=player.id, xml_filename=xml, price=price)
-    db.session.add(purchase)
-    db.session.commit()
-
-    return jsonify({"status": "ok"})
-
-
-# ------------------------
-# Admin endpoint to get stats
-# ------------------------
-@api_fs25_bp.route("/api/fs25/stats/<discord_id>", methods=["GET"])
-def stats(discord_id):
-    player = Player.query.filter_by(discord_id=discord_id).first()
-    if not player:
-        return jsonify({"error": "player not found"}), 404
-
-    return jsonify({
-        "discord_id": player.discord_id,
-        "total_time": player.total_time,
-        "half_rate_time": player.half_rate_time,
-        "last_login": player.last_login.isoformat() if player.last_login else None,
-        "last_logout": player.last_logout.isoformat() if player.last_logout else None,
-        "last_heartbeat": player.last_heartbeat.isoformat() if player.last_heartbeat else None
-    })

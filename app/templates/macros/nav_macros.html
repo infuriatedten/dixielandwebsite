@@ -1,4 +1,3 @@
-
 {% macro nav_link(endpoint, text) %}
   <li class="nav-item">
     <a class="nav-link {{ 'active' if request.endpoint == endpoint else '' }}" href="{{ url_for(endpoint) }}">{{ text }}</a>
@@ -55,7 +54,6 @@
     </a>
   </li>
 {% endmacro %}
-
 
 {% macro dot_services_dropdown(current_user, UserRole) %}
   {{ nav_link('dot.my_tickets', 'My Tickets') }}

@@ -1,14 +1,27 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row">
-  <div class="col-md-12">
-    <h2>Mods and Updates</h2>
-    <p>This page contains links to download game mods and see the latest updates.</p>
-    <ul>
-      <li><a href="http://209.222.101.213:29298/mods.html">Mods Page</a></li>
-      <li><a href="https://docs.google.com/spreadsheets/d/1-caxA3t2j2b-1oX52KIv8E-kC92vI-2A/edit#gid=1331221769">Server Google Sheet</a></li>
-    </ul>
-  </div>
+<div class="container">
+    <h1 class="mb-4">Mods & Updates</h1>
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Main Mod Download</h5>
+                    <p class="card-text">Click the button below to download the main mod package for the server.</p>
+                    <a href="http://209.222.101.213:29298/mods.html" class="btn btn-primary" target="_blank">Download Main Mod</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Updates</h5>
+                    <p class="card-text">Check the Google Drive folder for the latest mod updates and patches.</p>
+                    <a href="https://drive.google.com/drive/u/0/folders/1yweImLak-PUqKwXvDb__xowAFpbGbGqv" class="btn btn-secondary" target="_blank">View Updates</a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

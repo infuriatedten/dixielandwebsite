@@ -37,81 +37,16 @@
                     <li class="nav-item">
                         <a class="nav-link" href="https://discord.gg/DsQVs4dxv2" target="_blank">Discord</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'main.mods' else '' }}" href="{{ url_for('main.mods') }}">Mods & Updates</a>
+                    </li>
 
                     {% if current_user.is_authenticated %}
-                        <li class="nav-item">
-                            <a class="nav-link {{ 'active' if request.endpoint == 'main.site_home' else '' }}" href="{{ url_for('main.site_home') }}">Site Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ 'active' if request.endpoint == 'auth.profile' else '' }}" href="{{ url_for('auth.profile') }}">Profile</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('banking.') else '' }}" href="{{ url_for('banking.dashboard') }}">Banking</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ 'active' if request.endpoint == 'taxes.tax_info' else '' }}" href="{{ url_for('taxes.tax_info') }}">Tax Info</a>
-                        </li>
-
-                        {% if current_user.role == UserRole.OFFICER or current_user.role == UserRole.ADMIN %}
-                        <li class="nav-item">
-                            <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('dot.') else '' }}" href="{{ url_for('dot.dashboard') }}">DOT Dashboard</a>
-                        </li>
-                        {% endif %}
-
-                        {% if current_user.role == UserRole.ADMIN %}
-                            <li class="nav-item">
-                                <a class="nav-link {{ 'active' if request.endpoint == 'main.admin_dashboard' else '' }}" href="{{ url_for('main.admin_dashboard') }}">Admin Panel</a>
-                            </li>
-                        {% endif %}
-
-                        <li class="nav-item">
-                            <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('marketplace.') else '' }}" href="{{ url_for('marketplace.index') }}">Marketplace</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('auction.') else '' }}" href="{{ url_for('auction.index') }}">Auctions</a>
-                        </li>
-
-                        <!-- Farmers links as separate nav items -->
-                        {% if current_user.farmer %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('main.farmer_dashboard') }}">Farmers Dashboard</a>
-                        </li>
-                        {% endif %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('main.contracts') }}">Available Contracts</a>
-                        </li>
-                        {% if not current_user.farmer %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('main.company') }}">Manage Company</a>
-                        </li>
-                        {% endif %}
-
-                        <li class="nav-item">
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('main.view_rules') }}">Rules</a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('main.fines') }}">Fines</a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('messaging.list_my_conversations') }}">
-                                Messages
-                                {% if unread_message_count and unread_message_count > 0 %}
-                                    <span class="badge bg-danger rounded-pill">{{ unread_message_count }}</span>
-                                {% endif %}
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('notifications.list_notifications') }}">
-                                Notifications
-                                {% if unread_notification_count and unread_notification_count > 0 %}
-                                    <span class="badge bg-warning text-dark rounded-pill">{{ unread_notification_count }}</span>
-                                {% endif %}
-                            </a>
-                        </li>
+                        {{ nav.account_dropdown(current_user) }}
+                        {{ nav.dashboards_dropdown(current_user, UserRole) }}
+                        {{ nav.community_dropdown() }}
+                        {{ nav.messages_link(unread_message_count) }}
+                        {{ nav.notifications_link(unread_notification_count) }}
                     {% endif %}
                 </ul>
 
