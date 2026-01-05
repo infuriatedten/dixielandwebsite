@@ -5,55 +5,32 @@
 {% endmacro %}
 
 {% macro account_dropdown(current_user) %}
-  <li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownAccount" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-      My Account
-    </a>
-    <ul class="dropdown-menu" aria-labelledby="navbarDropdownAccount">
-      <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}">Profile</a></li>
-      <li><a class="dropdown-item" href="{{ url_for('banking.dashboard') }}">Banking</a></li>
-      <li><a class="dropdown-item" href="{{ url_for('taxes.tax_info') }}">Tax Info</a></li>
-      {% if not current_user.farmer %}
-        <li><a class="dropdown-item" href="{{ url_for('main.company') }}">Manage Company</a></li>
-      {% endif %}
-    </ul>
-  </li>
+  {{ nav_link('auth.profile', 'Profile') }}
+  {{ nav_link('banking.dashboard', 'Banking') }}
+  {{ nav_link('taxes.tax_info', 'Tax Info') }}
+  {% if not current_user.farmer %}
+    {{ nav_link('main.company', 'Manage Company') }}
+  {% endif %}
 {% endmacro %}
 
 {% macro dashboards_dropdown(current_user, UserRole) %}
-  {% if current_user.farmer or current_user.role in [UserRole.OFFICER, UserRole.ADMIN] %}
-    <li class="nav-item dropdown">
-      <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownDashboards" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-        Dashboards
-      </a>
-      <ul class="dropdown-menu" aria-labelledby="navbarDropdownDashboards">
-        {% if current_user.farmer %}
-          <li><a class="dropdown-item" href="{{ url_for('main.farmer_dashboard') }}">Farmers Dashboard</a></li>
-        {% endif %}
-        {% if current_user.role in [UserRole.OFFICER, UserRole.ADMIN] %}
-          <li><a class="dropdown-item" href="{{ url_for('dot.dashboard') }}">DOT Dashboard</a></li>
-        {% endif %}
-        {% if current_user.role == UserRole.ADMIN %}
-          <li><a class="dropdown-item" href="{{ url_for('main.admin_dashboard') }}">Admin Panel</a></li>
-        {% endif %}
-      </ul>
-    </li>
+  {% if current_user.farmer %}
+    {{ nav_link('main.farmer_dashboard', 'Farmers Dashboard') }}
+  {% endif %}
+  {% if current_user.role in [UserRole.OFFICER, UserRole.ADMIN] %}
+    {{ nav_link('dot.dashboard', 'DOT Dashboard') }}
+  {% endif %}
+  {% if current_user.role == UserRole.ADMIN %}
+    {{ nav_link('main.admin_dashboard', 'Admin Panel') }}
   {% endif %}
 {% endmacro %}
 
 {% macro community_dropdown() %}
-  <li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownCommunity" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-      Community
-    </a>
-    <ul class="dropdown-menu" aria-labelledby="navbarDropdownCommunity">
-      <li><a class="dropdown-item" href="{{ url_for('marketplace.index') }}">Marketplace</a></li>
-      <li><a class="dropdown-item" href="{{ url_for('auction.index') }}">Auctions</a></li>
-      <li><a class="dropdown-item" href="{{ url_for('main.contracts') }}">Available Contracts</a></li>
-      <li><a class="dropdown-item" href="{{ url_for('main.view_rules') }}">Rules</a></li>
-      <li><a class="dropdown-item" href="{{ url_for('main.fines') }}">Fines</a></li>
-    </ul>
-  </li>
+  {{ nav_link('marketplace.index', 'Marketplace') }}
+  {{ nav_link('auction.index', 'Auctions') }}
+  {{ nav_link('main.contracts', 'Available Contracts') }}
+  {{ nav_link('main.view_rules', 'Rules') }}
+  {{ nav_link('main.fines', 'Fines') }}
 {% endmacro %}
 
 {% macro messages_link(unread_message_count) %}
@@ -79,27 +56,15 @@
 {% endmacro %}
 
 {% macro dot_services_dropdown(current_user, UserRole) %}
-<li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle" href="#" id="dotDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-        DOT Services
-    </a>
-    <ul class="dropdown-menu" aria-labelledby="dotDropdown">
-        <li><a class="dropdown-item" href="{{ url_for('dot.my_tickets') }}">My Tickets</a></li>
-        <li><a class="dropdown-item" href="{{ url_for('dot.registered_vehicles') }}">My Registered Vehicles</a></li>
-        <li><hr class="dropdown-divider"></li>
-        <li><a class="dropdown-item" href="{{ url_for('dot.apply_for_permit') }}">Apply for New Permit</a></li>
-        <li><a class="dropdown-item" href="{{ url_for('dot.my_permit_applications') }}">My Permit Applications</a></li>
-
-        {% if current_user.role in [UserRole.OFFICER, UserRole.ADMIN] %}
-            <li><hr class="dropdown-divider"></li>
-            <li><h6 class="dropdown-header">Officer Tools</h6></li>
-            <li><a class="dropdown-item" href="{{ url_for('dot.issue_ticket') }}">Issue Ticket</a></li>
-            <li><a class="dropdown-item" href="{{ url_for('dot.list_issued_tickets') }}">My Issued Tickets</a></li>
-            <li><a class="dropdown-item" href="{{ url_for('dot.review_permit_applications_list') }}">Review Permit Apps</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="{{ url_for('dot.record_inspection') }}">Record Inspection</a></li>
-            <li><a class="dropdown-item" href="{{ url_for('dot.list_my_conducted_inspections') }}">My Conducted Inspections</a></li>
-        {% endif %}
-    </ul>
-</li>
+  {{ nav_link('dot.my_tickets', 'My Tickets') }}
+  {{ nav_link('dot.registered_vehicles', 'My Registered Vehicles') }}
+  {{ nav_link('dot.apply_for_permit', 'Apply for New Permit') }}
+  {{ nav_link('dot.my_permit_applications', 'My Permit Applications') }}
+  {% if current_user.role in [UserRole.OFFICER, UserRole.ADMIN] %}
+    {{ nav_link('dot.issue_ticket', 'Issue Ticket') }}
+    {{ nav_link('dot.list_issued_tickets', 'My Issued Tickets') }}
+    {{ nav_link('dot.review_permit_applications_list', 'Review Permit Apps') }}
+    {{ nav_link('dot.record_inspection', 'Record Inspection') }}
+    {{ nav_link('dot.list_my_conducted_inspections', 'My Conducted Inspections') }}
+  {% endif %}
 {% endmacro %}
