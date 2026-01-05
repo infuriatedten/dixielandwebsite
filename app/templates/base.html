@@ -38,9 +38,11 @@
                     <li class="nav-item">
                         <a class="nav-link {{ 'active' if request.endpoint == 'main.index' else '' }}" href="{{ url_for('main.index') }}">Home</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://discord.gg/DsQVs4dxv2" target="_blank">Discord</a>
+                    </li>
 
                     {% if current_user.is_authenticated %}
-
                         <li class="nav-item">
                             <a class="nav-link {{ 'active' if request.endpoint == 'main.site_home' else '' }}" href="{{ url_for('main.site_home') }}">Site Home</a>
                         </li>
@@ -114,14 +116,6 @@
                                 {% endif %}
                             </a>
                         </li>
-
-                        {{ nav.nav_link('main.mods', 'Mods & Updates') }}
-                        {{ nav.account_dropdown(current_user) }}
-                        {{ nav.dashboards_dropdown(current_user, UserRole) }}
-                        {{ nav.community_dropdown() }}
-                        {{ nav.messages_link(unread_message_count) }}
-                        {{ nav.notifications_link(unread_notification_count) }}
-
                     {% endif %}
                 </ul>
 
