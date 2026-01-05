@@ -439,3 +439,7 @@ def complete_contract(contract_id):
 def users():
     all_users = User.query.all()
     return render_template('main/users.html', title='Users', users=all_users)
+
+@main_bp.route('/mods')
+def mods():
+    return render_template('main/mods.html', title='Mods')
