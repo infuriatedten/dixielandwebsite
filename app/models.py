@@ -3,7 +3,7 @@ from datetime import datetime
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
-from sqlalchemy import Enum as SqlEnum, Numeric
+from sqlalchemy import Enum as SqlEnum
 
 class UserRole(enum.Enum):
     USER = "user"
@@ -20,7 +20,6 @@ class User(UserMixin, db.Model):
     discord_user_id = db.Column(db.String(100), nullable=True, unique=True, index=True)
     discord_username = db.Column(db.String(100), nullable=True)
     region = db.Column(db.Enum('US', 'EU', 'OTHER_DEFAULT', name='region_enum'), nullable=True, default='OTHER_DEFAULT')
-    is_active = db.Column(db.Boolean, default=True)
     accounts = db.relationship('Account', back_populates='user', lazy='dynamic', cascade="all, delete-orphan")
     company = db.relationship('Company', uselist=False, back_populates='user', cascade="all, delete-orphan")
     farmer = db.relationship('Farmer', uselist=False, back_populates='user', cascade="all, delete-orphan")
@@ -33,6 +32,9 @@ class User(UserMixin, db.Model):
 
     def __repr__(self):
         return f'<User {self.username} ({self.role.value})>'
+
+from datetime import datetime
+from sqlalchemy import Numeric
 
 class Account(db.Model):
     __tablename__ = 'accounts'
@@ -567,27 +569,3 @@ class CompanyInsuranceClaim(db.Model):
 
     def __repr__(self):
         return f'<CompanyInsuranceClaim {self.id}>'
-
-
-class MiningActivity(db.Model):
-    __tablename__ = 'mining_activities'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    description = db.Column(db.String(255), nullable=False)
-    user = db.relationship('User', backref=db.backref('mining_activities', lazy='dynamic'))
-
-    def __repr__(self):
-        return f'<MiningActivity {self.id} by User {self.user_id}>'
-
-
-class LoggingActivity(db.Model):
-    __tablename__ = 'logging_activities'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    description = db.Column(db.String(255), nullable=False)
-    user = db.relationship('User', backref=db.backref('logging_activities', lazy='dynamic'))
-
-    def __repr__(self):
-        return f'<LoggingActivity {self.id} by User {self.user_id}>'
