@@ -25,7 +25,10 @@ main_bp = Blueprint('main', __name__)
 def main_index():
     try:
         if current_user.is_authenticated:
-            return redirect(url_for('main.user_dashboard'))
+            if hasattr(current_user, 'farmer') and current_user.farmer:
+                return redirect(url_for('main.farmer_dashboard'))
+            elif hasattr(current_user, 'company') and current_user.company:
+                return redirect(url_for('main.company_dashboard'))
 
         recent_listings = MarketplaceListing.query \
             .filter_by(status=MarketplaceListingStatus.AVAILABLE) \
@@ -326,22 +329,6 @@ def company_dashboard():
         vehicle_form=vehicle_form,
         contract_form=contract_form,
         insurance_form=insurance_form
-    )
-
-
-@main_bp.route('/dashboard')
-@login_required
-def user_dashboard():
-    bank_accounts = Account.query.filter_by(user_id=current_user.id).all()
-    # Placeholder for mining and logging activities
-    mining_activities = []
-    logging_activities = []
-    return render_template(
-        'main/user_dashboard.html',
-        title='Dashboard',
-        bank_accounts=bank_accounts,
-        mining_activities=mining_activities,
-        logging_activities=logging_activities
     )
 
 @main_bp.route('/company', methods=['GET', 'POST'])
