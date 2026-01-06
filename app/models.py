@@ -20,6 +20,7 @@ class User(UserMixin, db.Model):
     discord_user_id = db.Column(db.String(100), nullable=True, unique=True, index=True)
     discord_username = db.Column(db.String(100), nullable=True)
     region = db.Column(db.Enum('US', 'EU', 'OTHER_DEFAULT', name='region_enum'), nullable=True, default='OTHER_DEFAULT')
+    is_active = db.Column(db.Boolean, default=True)
     accounts = db.relationship('Account', back_populates='user', lazy='dynamic', cascade="all, delete-orphan")
     company = db.relationship('Company', uselist=False, back_populates='user', cascade="all, delete-orphan")
     farmer = db.relationship('Farmer', uselist=False, back_populates='user', cascade="all, delete-orphan")
