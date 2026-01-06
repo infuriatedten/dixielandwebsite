@@ -3,7 +3,7 @@ from datetime import datetime
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
-from sqlalchemy import Enum as SqlEnum
+from sqlalchemy import Enum as SqlEnum, Numeric
 
 class UserRole(enum.Enum):
     USER = "user"
@@ -32,9 +32,6 @@ class User(UserMixin, db.Model):
 
     def __repr__(self):
         return f'<User {self.username} ({self.role.value})>'
-
-from datetime import datetime
-from sqlalchemy import Numeric
 
 class Account(db.Model):
     __tablename__ = 'accounts'
@@ -569,3 +566,27 @@ class CompanyInsuranceClaim(db.Model):
 
     def __repr__(self):
         return f'<CompanyInsuranceClaim {self.id}>'
+
+
+class MiningActivity(db.Model):
+    __tablename__ = 'mining_activities'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    description = db.Column(db.String(255), nullable=False)
+    user = db.relationship('User', backref=db.backref('mining_activities', lazy='dynamic'))
+
+    def __repr__(self):
+        return f'<MiningActivity {self.id} by User {self.user_id}>'
+
+
+class LoggingActivity(db.Model):
+    __tablename__ = 'logging_activities'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    description = db.Column(db.String(255), nullable=False)
+    user = db.relationship('User', backref=db.backref('logging_activities', lazy='dynamic'))
+
+    def __repr__(self):
+        return f'<LoggingActivity {self.id} by User {self.user_id}>'
