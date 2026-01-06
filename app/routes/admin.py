@@ -392,10 +392,12 @@ def edit_user(user_id):
     if form.validate_on_submit():
         user.username = form.username.data
         user.email = form.email.data
-        user.role = form.role.data
+        user.role = UserRole(form.role.data)
+        user.pay_rate = form.pay_rate.data
         db.session.commit()
         flash('User updated successfully.', 'success')
         return redirect(url_for('admin.manage_users'))
+    form.role.data = user.role.value
     return render_template('admin/edit_user.html', title='Edit User', form=form, user=user)
 
 @admin_bp.route('/users', methods=['GET'])

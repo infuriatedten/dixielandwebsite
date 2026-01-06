@@ -136,7 +136,8 @@ class EditListingForm(FlaskForm):
 class EditUserForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
-    role = SelectField('Role', choices=[(role.name, role.value) for role in UserRole], validators=[DataRequired()])
+    pay_rate = DecimalField('Pay Rate', places=2, validators=[Optional(), NumberRange(min=0)])
+    role = SelectField('Role', choices=[(role.value, role.value) for role in UserRole], validators=[DataRequired()])
     discord_user_id = StringField('Discord User ID', validators=[Optional(), Length(max=100)])
     region = SelectField('Region', choices=[(region.name, region.value) for region in VehicleRegion], validators=[DataRequired()])
     submit = SubmitField('Update User')

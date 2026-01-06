@@ -61,7 +61,7 @@ def login():
         login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
         if not next_page or not is_safe_url(next_page):
-            next_page = url_for('main.index')
+            next_page = '/home'
         flash(f'Welcome back, {user.username}!', 'success')
         return redirect(next_page)
     return render_template('auth/login.html', title='Sign In', form=form)
