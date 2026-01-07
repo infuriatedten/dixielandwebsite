@@ -505,3 +505,8 @@ class EditProfileForm(FlaskForm):
             user = User.query.filter_by(email=email.data).first()
             if user:
                 raise ValidationError('This email is already in use.')
+class ClockInForm(FlaskForm):
+    submit = SubmitField('Clock In')
+
+class ClockOutForm(FlaskForm):
+    submit = SubmitField('Clock Out')

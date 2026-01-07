@@ -13,14 +13,14 @@
                 {% if current_user.is_clocked_in %}
                     <p>You are currently clocked in. Your session started at {{ current_user.current_session_start.strftime('%Y-%m-%d %H:%M:%S') }} UTC.</p>
                     <form action="{{ url_for('timesheet.clock_out') }}" method="post" class="d-inline">
-                        {{ g.csrf_token }}
-                        <button type="submit" class="btn btn-danger">Clock Out</button>
+                        {{ clock_out_form.hidden_tag() }}
+                        {{ clock_out_form.submit(class='btn btn-danger') }}
                     </form>
                 {% else %}
                     <p>You are currently clocked out.</p>
                     <form action="{{ url_for('timesheet.clock_in') }}" method="post" class="d-inline">
-                        {{ g.csrf_token }}
-                        <button type="submit" class="btn btn-success">Clock In</button>
+                        {{ clock_in_form.hidden_tag() }}
+                        {{ clock_in_form.submit(class='btn btn-success') }}
                     </form>
                 {% endif %}
             </div>
