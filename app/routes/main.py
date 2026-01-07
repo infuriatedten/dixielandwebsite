@@ -12,7 +12,8 @@ from app.models import (
     Transaction, TransactionType, InsuranceRate, Fine, SiloStorage, InsuranceRateType
 )
 from app.forms import (
-    ParcelForm, InsuranceClaimForm, ContractForm, CompanyNameForm, CompanyVehicleForm, CompanyContractForm, CompanyInsuranceClaimForm
+    ParcelForm, InsuranceClaimForm, ContractForm, CompanyNameForm, CompanyVehicleForm, CompanyContractForm, CompanyInsuranceClaimForm,
+    ClockInForm, ClockOutForm
 )
 from app.services import vehicle_service
 
@@ -93,6 +94,8 @@ def main_index():
 
 @main_bp.route('/site-home', endpoint='site_home')
 def site_home():
+    clock_in_form = ClockInForm()
+    clock_out_form = ClockOutForm()
     recent_listings = MarketplaceListing.query \
         .filter_by(status=MarketplaceListingStatus.AVAILABLE) \
         .order_by(MarketplaceListing.creation_date.desc()) \
@@ -141,7 +144,9 @@ def site_home():
                            recent_listings=recent_listings,
                            announcements=announcements,
                            stats=stats,
-                           insurance_rates=dynamic_rates)
+                           insurance_rates=dynamic_rates,
+                           clock_in_form=clock_in_form,
+                           clock_out_form=clock_out_form)
 
 
 # Create markdown parser once (reuse)
@@ -207,6 +212,8 @@ def officer_area():
 @main_bp.route('/farmer-dashboard', methods=['GET', 'POST'])
 @login_required
 def farmer_dashboard():
+    clock_in_form = ClockInForm()
+    clock_out_form = ClockOutForm()
     bank_accounts = Account.query.filter_by(user_id=current_user.id).all()
     farmer = Farmer.query.filter_by(user_id=current_user.id).first()
     parcels = Parcel.query.filter_by(farmer_id=farmer.id).all() if farmer else []
@@ -256,7 +263,9 @@ def farmer_dashboard():
         insurance_claims=insurance_claims,
         parcel_form=parcel_form,
         insurance_form=insurance_form,
-        silo_contents=silo_contents
+        silo_contents=silo_contents,
+        clock_in_form=clock_in_form,
+        clock_out_form=clock_out_form
     )
 
 
@@ -265,6 +274,8 @@ def farmer_dashboard():
 @main_bp.route('/company-dashboard', methods=['GET', 'POST'])
 @login_required
 def company_dashboard():
+    clock_in_form = ClockInForm()
+    clock_out_form = ClockOutForm()
     company = Company.query.filter_by(user_id=current_user.id).first()
     if not company:
         flash('You do not have a company.', 'danger')
@@ -328,7 +339,9 @@ def company_dashboard():
         insurance_claims=insurance_claims,
         vehicle_form=vehicle_form,
         contract_form=contract_form,
-        insurance_form=insurance_form
+        insurance_form=insurance_form,
+        clock_in_form=clock_in_form,
+        clock_out_form=clock_out_form
     )
 
 @main_bp.route('/company', methods=['GET', 'POST'])
