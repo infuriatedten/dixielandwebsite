@@ -24,83 +24,19 @@ main_bp = Blueprint('main', __name__)
 
 @main_bp.route('/', endpoint='index')
 def main_index():
-    try:
-        if current_user.is_authenticated:
-            if hasattr(current_user, 'farmer') and current_user.farmer:
-                return redirect(url_for('main.farmer_dashboard'))
-            elif hasattr(current_user, 'company') and current_user.company:
-                return redirect(url_for('main.company_dashboard'))
-
-        recent_listings = MarketplaceListing.query \
-            .filter_by(status=MarketplaceListingStatus.AVAILABLE) \
-            .order_by(MarketplaceListing.creation_date.desc()) \
-            .limit(4).all()
-
-        announcements = [
-            {
-                'title': 'Welcome to the new and improved Game Portal!',
-                'content': 'We have redesigned the home page to be more informative and user-friendly.'
-            },
-            {
-                'title': 'New Marketplace Items Available',
-                'content': 'Check out the new items available in the marketplace. There are some great deals to be had!'
-            },
-        ]
-
-        stats = {
-            'active_players': User.query.count(),
-            'open_tickets': Ticket.query.filter_by(status='OUTSTANDING').count(),
-            'pending_permits': PermitApplication.query.filter_by(status='PENDING_REVIEW').count(),
-        }
-
-        insurance_rates = InsuranceRate.query.order_by(InsuranceRate.rate_type).all()
-        dynamic_rates = []
-        
-        for rate in insurance_rates:
-            # Calculate actual claims count based on rate type
-            claims_count = 0
-            
-            if rate.rate_type == InsuranceRateType.FARM:
-                # Count farm insurance claims
-                claims_count = InsuranceClaim.query.count()
-            elif rate.rate_type == InsuranceRateType.VEHICLE:
-                # Count company vehicle insurance claims (if you have them)
-                claims_count = CompanyInsuranceClaim.query.count()
-            # Add other rate types as needed
-            
-            # Calculate dynamic rate: base rate + (claims_count / 5) * 10% increase
-            base_rate = float(rate.rate)
-            rate_multiplier = 1 + (claims_count / 20.0) * 0.1  # 10% increase per 20 claims
-            new_rate = base_rate * rate_multiplier
-            
-            dynamic_rates.append({
-                'rate_type': rate.rate_type,
-                'name': rate.name,
-                'description': rate.description,
-                'rate': round(new_rate, 2),
-                'claims_count': claims_count,
-                'base_rate': base_rate
-            })
-
-        return render_template('main/index.html', title='Home',
-                               recent_listings=recent_listings,
-                               announcements=announcements,
-                               stats=stats,
-                               insurance_rates=dynamic_rates)
-    except Exception as e:
-        print(f"Error in main_index: {e}")
-        return f"Error loading page: {e}", 500
+    return redirect(url_for('main.site_home'))
 
 
 @main_bp.route('/site-home', endpoint='site_home')
 def site_home():
     clock_in_form = ClockInForm()
     clock_out_form = ClockOutForm()
+
+    # Generic data for all users
     recent_listings = MarketplaceListing.query \
         .filter_by(status=MarketplaceListingStatus.AVAILABLE) \
         .order_by(MarketplaceListing.creation_date.desc()) \
         .limit(4).all()
-
     announcements = [
         {
             'title': 'Welcome to the new and improved Game Portal!',
@@ -111,26 +47,19 @@ def site_home():
             'content': 'Check out the new items available in the marketplace. There are some great deals to be had!'
         },
     ]
-
     stats = {
         'active_players': User.query.count(),
         'open_tickets': Ticket.query.filter_by(status='OUTSTANDING').count(),
         'pending_permits': PermitApplication.query.filter_by(status='PENDING_REVIEW').count(),
     }
-
-    # Only show farm-related insurance rates on home screen
     insurance_rates = InsuranceRate.query.filter(InsuranceRate.rate_type == InsuranceRateType.FARM).order_by(InsuranceRate.rate_type).all()
     dynamic_rates = []
     
     for rate in insurance_rates:
-        # Calculate actual claims count for farm insurance
         claims_count = InsuranceClaim.query.count()
-        
-        # Calculate dynamic rate: base rate + (claims_count / 20) * 10% increase
         base_rate = float(rate.rate)
-        rate_multiplier = 1 + (claims_count / 20.0) * 0.1  # 10% increase per 20 claims
+        rate_multiplier = 1 + (claims_count / 20.0) * 0.1
         new_rate = base_rate * rate_multiplier
-        
         dynamic_rates.append({
             'rate_type': rate.rate_type,
             'name': rate.name,
@@ -140,13 +69,40 @@ def site_home():
             'base_rate': base_rate
         })
 
+    # Data for logged-in users
+    farmer_data = {}
+    company_data = {}
+    if current_user.is_authenticated:
+        if hasattr(current_user, 'farmer') and current_user.farmer:
+            farmer = current_user.farmer
+            farmer_data = {
+                'parcels': Parcel.query.filter_by(farmer_id=farmer.id).all(),
+                'silo_contents': SiloStorage.query.filter_by(farmer_id=farmer.id).order_by(SiloStorage.crop_type).all(),
+                'insurance_claims': InsuranceClaim.query.filter_by(farmer_id=farmer.id).all(),
+                'parcel_form': ParcelForm(),
+                'insurance_form': InsuranceClaimForm()
+            }
+        elif hasattr(current_user, 'company') and current_user.company:
+            company = current_user.company
+            company_data = {
+                'company': company,
+                'vehicles': CompanyVehicle.query.filter_by(company_id=company.id).all(),
+                'contracts': CompanyContract.query.filter_by(company_id=company.id).all(),
+                'insurance_claims': CompanyInsuranceClaim.query.filter_by(company_id=company.id).all(),
+                'vehicle_form': CompanyVehicleForm(),
+                'contract_form': CompanyContractForm(),
+                'insurance_form': CompanyInsuranceClaimForm()
+            }
+
     return render_template('main/index.html', title='Home',
                            recent_listings=recent_listings,
                            announcements=announcements,
                            stats=stats,
                            insurance_rates=dynamic_rates,
                            clock_in_form=clock_in_form,
-                           clock_out_form=clock_out_form)
+                           clock_out_form=clock_out_form,
+                           farmer_data=farmer_data,
+                           company_data=company_data)
 
 
 # Create markdown parser once (reuse)
@@ -157,6 +113,7 @@ markdown_parser = mistune.create_markdown(escape=False)
 @main_bp.route('/rules', endpoint='view_rules')
 def view_rules():
     rules_entry = RulesContent.query.first()
+    fines = Fine.query.order_by(Fine.name.asc()).all()
 
     if rules_entry and rules_entry.content_markdown:
         rules_content_html = markdown_parser(rules_entry.content_markdown)
@@ -167,6 +124,7 @@ def view_rules():
 
     return render_template('main/rules.html', title='Rules',
                            rules_content_html=rules_content_html,
+                           fines=fines,
                            current_user=current_user, UserRole=UserRole)
 
 
@@ -207,142 +165,8 @@ def admin_dashboard():
 @officer_required
 def officer_area():
     return render_template('officer/area.html', title='Officer Area')
-# ------------------------ FARMERS ------------------------
-
-@main_bp.route('/farmer-dashboard', methods=['GET', 'POST'])
-@login_required
-def farmer_dashboard():
-    clock_in_form = ClockInForm()
-    clock_out_form = ClockOutForm()
-    bank_accounts = Account.query.filter_by(user_id=current_user.id).all()
-    farmer = Farmer.query.filter_by(user_id=current_user.id).first()
-    parcels = Parcel.query.filter_by(farmer_id=farmer.id).all() if farmer else []
-    silo_contents = SiloStorage.query.filter_by(farmer_id=farmer.id).order_by(SiloStorage.crop_type).all() if farmer else []
-    vehicles = vehicle_service.get_user_owned_vehicles(current_user.id)[:5]
-    tickets = Ticket.query.filter_by(issued_to_user_id=current_user.id).all()
-    insurance_claims = InsuranceClaim.query.filter_by(farmer_id=farmer.id).all() if farmer else []
-    parcel_form = ParcelForm()
-    insurance_form = InsuranceClaimForm()
-
-    if parcel_form.validate_on_submit() and parcel_form.submit.data:
-        if farmer:
-            new_parcel = Parcel(
-                location=parcel_form.location.data,
-                size=parcel_form.size.data,
-                farmer_id=farmer.id
-            )
-            db.session.add(new_parcel)
-            db.session.commit()
-            flash('Parcel added successfully!', 'success')
-        else:
-            flash('You must be a registered farmer to add a parcel.', 'danger')
-        return redirect(url_for('main.farmer_dashboard'))
-
-    if insurance_form.validate_on_submit() and insurance_form.submit.data:
-        if farmer:
-            claim = InsuranceClaim(
-                reason=insurance_form.reason.data,
-                description=insurance_form.description.data,
-                estimated_loss=insurance_form.estimated_loss.data,
-                farmer_id=farmer.id
-            )
-            db.session.add(claim)
-            db.session.commit()
-            flash('Farm insurance claim submitted successfully! We will review your claim and contact you within 2-3 business days.', 'success')
-        else:
-            flash('You must be a registered farmer to submit a claim.', 'danger')
-        return redirect(url_for('main.farmer_dashboard'))
-
-    return render_template(
-        'main/farmer_dashboard.html',
-        title='Farmer Dashboard',
-        bank_accounts=bank_accounts,
-        parcels=parcels,
-        vehicles=vehicles,
-        tickets=tickets,
-        insurance_claims=insurance_claims,
-        parcel_form=parcel_form,
-        insurance_form=insurance_form,
-        silo_contents=silo_contents,
-        clock_in_form=clock_in_form,
-        clock_out_form=clock_out_form
-    )
-
-
 
 # ------------------------ COMPANY ------------------------
-@main_bp.route('/company-dashboard', methods=['GET', 'POST'])
-@login_required
-def company_dashboard():
-    clock_in_form = ClockInForm()
-    clock_out_form = ClockOutForm()
-    company = Company.query.filter_by(user_id=current_user.id).first()
-    if not company:
-        flash('You do not have a company.', 'danger')
-        return redirect(url_for('main.index'))
-
-    bank_accounts = Account.query.filter_by(user_id=current_user.id).all()
-    vehicles = CompanyVehicle.query.filter_by(company_id=company.id).all()
-    tickets = Ticket.query.filter_by(issued_to_user_id=current_user.id).all()
-    contracts = CompanyContract.query.filter_by(company_id=company.id).all()
-    insurance_claims = CompanyInsuranceClaim.query.filter_by(company_id=company.id).all()
-
-    vehicle_form = CompanyVehicleForm()
-    contract_form = CompanyContractForm()
-    insurance_form = CompanyInsuranceClaimForm()
-
-    if vehicle_form.validate_on_submit() and vehicle_form.submit.data:
-        new_vehicle = CompanyVehicle(
-            company_id=company.id,
-            vehicle_make=vehicle_form.vehicle_make.data,
-            vehicle_model=vehicle_form.vehicle_model.data,
-            vehicle_type=vehicle_form.vehicle_type.data,
-            vehicle_description=vehicle_form.vehicle_description.data,
-            license_plate=f"{vehicle_form.region_format.data}-{company.name.upper()}-{len(vehicles) + 1}",
-            region_format=vehicle_form.region_format.data
-        )
-        db.session.add(new_vehicle)
-        db.session.commit()
-        flash('Vehicle registered successfully!', 'success')
-        return redirect(url_for('main.company_dashboard'))
-
-    if contract_form.validate_on_submit() and contract_form.submit.data:
-        new_contract = CompanyContract(
-            title=contract_form.title.data,
-            description=contract_form.description.data,
-            reward=contract_form.reward.data,
-            company_id=company.id
-        )
-        db.session.add(new_contract)
-        db.session.commit()
-        flash('Contract created successfully!', 'success')
-        return redirect(url_for('main.company_dashboard'))
-
-    if insurance_form.validate_on_submit() and insurance_form.submit.data:
-        claim = CompanyInsuranceClaim(
-            reason=insurance_form.reason.data,
-            company_id=company.id
-        )
-        db.session.add(claim)
-        db.session.commit()
-        flash('Insurance claim submitted successfully!', 'success')
-        return redirect(url_for('main.company_dashboard'))
-
-    return render_template(
-        'main/company_dashboard.html',
-        title='Company Dashboard',
-        company=company,
-        bank_accounts=bank_accounts,
-        vehicles=vehicles,
-        tickets=tickets,
-        contracts=contracts,
-        insurance_claims=insurance_claims,
-        vehicle_form=vehicle_form,
-        contract_form=contract_form,
-        insurance_form=insurance_form,
-        clock_in_form=clock_in_form,
-        clock_out_form=clock_out_form
-    )
 
 @main_bp.route('/company', methods=['GET', 'POST'])
 @login_required

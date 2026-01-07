@@ -63,5 +63,32 @@
             </div>
         </div>
     {% endif %}
+
+    <h3 class="mb-3">Tax Information</h3>
+    <div class="card">
+        <div class="card-body">
+            <p>The following tax brackets are currently active:</p>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Bracket Name</th>
+                        <th>Min Balance</th>
+                        <th>Max Balance</th>
+                        <th>Tax Rate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bracket in tax_brackets %}
+                    <tr>
+                        <td>{{ bracket.name }}</td>
+                        <td>{{ "%.2f"|format(bracket.min_balance) }}</td>
+                        <td>{{ "%.2f"|format(bracket.max_balance) if bracket.max_balance else 'Unlimited' }}</td>
+                        <td>{{ bracket.tax_rate }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 {% endblock %}
