@@ -21,6 +21,8 @@ class User(UserMixin, db.Model):
     discord_username = db.Column(db.String(100), nullable=True)
     region = db.Column(db.Enum('US', 'EU', 'OTHER_DEFAULT', name='region_enum'), nullable=True, default='OTHER_DEFAULT')
     pay_rate = db.Column(db.Numeric(10, 2), default=0.00, nullable=False)
+    is_clocked_in = db.Column(db.Boolean, default=False, nullable=False)
+    current_session_start = db.Column(db.DateTime, nullable=True)
     accounts = db.relationship('Account', back_populates='user', lazy='dynamic', cascade="all, delete-orphan")
     company = db.relationship('Company', uselist=False, back_populates='user', cascade="all, delete-orphan")
     farmer = db.relationship('Farmer', uselist=False, back_populates='user', cascade="all, delete-orphan")
@@ -265,6 +267,13 @@ class Conversation(db.Model):
     user = db.relationship('User', foreign_keys=[user_id], backref=db.backref('conversations_as_user_participant', lazy='dynamic', cascade="all, delete-orphan"))
     admin = db.relationship('User', foreign_keys=[admin_id], backref=db.backref('conversations_as_admin_participant', lazy='dynamic', cascade="all, delete-orphan"))
     messages = db.relationship('Message', backref='conversation', lazy='dynamic', cascade="all, delete-orphan", order_by="Message.timestamp")
+
+    def is_unread_for_admin(self, admin_user_id):
+        """Check if there are any unread messages for the admin in this conversation."""
+        return any(
+            not m.is_read_by_recipient and m.sender_id != admin_user_id
+            for m in self.messages
+        )
 
     def __repr__(self):
         return f'<Conversation {self.id}: "{self.subject}" between User {self.user_id} and Admin {self.admin_id}>'

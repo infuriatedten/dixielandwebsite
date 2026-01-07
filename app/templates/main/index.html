@@ -31,6 +31,30 @@
 </div>
 
 <div class="container">
+    <!-- Timesheet Section -->
+    {% if current_user.is_authenticated %}
+    <div class="mb-5 text-center">
+        <div class="card p-4 mx-auto" style="max-width: 500px;">
+            <div class="card-body">
+                <h5 class="card-title">Timesheet</h5>
+                {% if current_user.is_clocked_in %}
+                    <p>You are currently clocked in. Your session started at {{ current_user.current_session_start.strftime('%Y-%m-%d %H:%M:%S') }} UTC.</p>
+                    <form action="{{ url_for('timesheet.clock_out') }}" method="post">
+                        {{ g.csrf_token }}
+                        <button type="submit" class="btn btn-danger">Clock Out</button>
+                    </form>
+                {% else %}
+                    <p>You are currently clocked out.</p>
+                    <form action="{{ url_for('timesheet.clock_in') }}" method="post">
+                        {{ g.csrf_token }}
+                        <button type="submit" class="btn btn-success">Clock In</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Announcements Section -->
     <div class="mb-5">
         <h2 class="mb-4">Recent Announcements</h2>

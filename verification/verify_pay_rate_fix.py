@@ -17,7 +17,7 @@ async def main():
 
             # Go to manage users page
             await page.goto("http://127.0.0.1:5000/admin/users")
-            await page.screenshot(path="/home/jules/verification/user_list_before_edit_click.png")
+            await page.screenshot(path="screenshots/user_list_before_edit_click.png")
 
 
             # Click the first edit button on the page
@@ -34,11 +34,11 @@ async def main():
             await page.wait_for_url("http://127.0.0.1:5000/admin/users")
 
             # Take screenshot after changes
-            await page.screenshot(path="/home/jules/verification/user_list_after_final.png")
+            await page.screenshot(path="screenshots/user_list_after_final.png")
 
         except Exception as e:
             print(f"An error occurred: {e}")
-            await page.screenshot(path="/home/jules/verification/error.png")
+            await page.screenshot(path="screenshots/error.png")
 
         finally:
             await browser.close()

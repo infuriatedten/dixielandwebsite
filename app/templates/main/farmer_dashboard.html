@@ -6,6 +6,28 @@
     <h1>Farmer Dashboard</h1>
     <p>Welcome, {{ current_user.username }}!</p>
 
+    <!-- Timesheet Section -->
+    <div class="mb-4 text-center">
+        <div class="card p-3 mx-auto" style="max-width: 500px;">
+            <div class="card-body">
+                <h5 class="card-title">Timesheet</h5>
+                {% if current_user.is_clocked_in %}
+                    <p>You are currently clocked in. Your session started at {{ current_user.current_session_start.strftime('%Y-%m-%d %H:%M:%S') }} UTC.</p>
+                    <form action="{{ url_for('timesheet.clock_out') }}" method="post" class="d-inline">
+                        {{ g.csrf_token }}
+                        <button type="submit" class="btn btn-danger">Clock Out</button>
+                    </form>
+                {% else %}
+                    <p>You are currently clocked out.</p>
+                    <form action="{{ url_for('timesheet.clock_in') }}" method="post" class="d-inline">
+                        {{ g.csrf_token }}
+                        <button type="submit" class="btn btn-success">Clock In</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
     <div class="card mb-4">
         <div class="card-header">
             <h5 class="mb-0">Bank Accounts</h5>
