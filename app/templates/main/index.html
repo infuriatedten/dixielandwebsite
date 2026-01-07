@@ -147,6 +147,15 @@
     </div>
     {% endif %}
 
+    <!-- Farmer and Company Data -->
+    {% if current_user.is_authenticated %}
+        {% if farmer_data %}
+            {% include 'main/_farmer_dashboard_data.html' %}
+        {% elif company_data %}
+            {% include 'main/_company_dashboard_data.html' %}
+        {% endif %}
+    {% endif %}
+
     <!-- Game Statistics -->
     <div class="row text-center g-4">
         <div class="col-md-4">

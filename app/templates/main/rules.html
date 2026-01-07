@@ -21,5 +21,31 @@
             {% endif %}
         </div>
     </div>
+
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">Fines</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fine in fines %}
+                    <tr>
+                        <td>{{ fine.name }}</td>
+                        <td>{{ fine.description }}</td>
+                        <td>{{ "%.2f"|format(fine.amount) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 {% endblock %}

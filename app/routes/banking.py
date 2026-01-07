@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import current_user, login_required
 from app import db
-from app.models import User, Account, Transaction
+from app.models import User, Account, Transaction, TaxBracket
 from app.decorators import admin_required # If any admin-specific banking views were here
 from datetime import datetime # Added import
 
@@ -10,6 +10,7 @@ bp = Blueprint('banking', __name__)
 @bp.route('/dashboard')
 @login_required
 def dashboard():
+    tax_brackets = TaxBracket.query.filter_by(is_active=True).order_by(TaxBracket.min_balance).all()
     # The logic to fetch accounts based on user type seems correct.
     if hasattr(current_user, 'farmer') and current_user.farmer:
         accounts_query = Account.query.filter_by(user_id=current_user.id, is_company=False)
@@ -37,7 +38,8 @@ def dashboard():
                            title='Banking Dashboard',
                            accounts=accounts,
                            total_balance=total_balance,
-                           recent_transactions=consolidated_transactions)
+                           recent_transactions=consolidated_transactions,
+                           tax_brackets=tax_brackets)
 
 @bp.route('/account/<int:account_id>')
 @login_required

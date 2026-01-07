@@ -7,7 +7,6 @@
 {% macro account_dropdown(current_user) %}
   {{ nav_link('auth.profile', 'Profile') }}
   {{ nav_link('banking.dashboard', 'Banking') }}
-  {{ nav_link('taxes.tax_info', 'Tax Info') }}
   {% if not current_user.farmer %}
     {{ nav_link('main.company', 'Manage Company') }}
   {% endif %}
@@ -15,7 +14,7 @@
 
 {% macro dashboards_dropdown(current_user, UserRole) %}
   {% if current_user.farmer %}
-    {{ nav_link('main.farmer_dashboard', 'Farmers Dashboard') }}
+    {{ nav_link('main.site_home', 'Dashboard') }}
   {% endif %}
   {% if current_user.role in [UserRole.OFFICER, UserRole.ADMIN] %}
     {{ nav_link('dot.dashboard', 'DOT Dashboard') }}
@@ -30,7 +29,6 @@
   {{ nav_link('auction.index', 'Auctions') }}
   {{ nav_link('main.contracts', 'Available Contracts') }}
   {{ nav_link('main.view_rules', 'Rules') }}
-  {{ nav_link('main.fines', 'Fines') }}
 {% endmacro %}
 
 {% macro messages_link(unread_message_count) %}
