@@ -510,3 +510,9 @@ class ClockInForm(FlaskForm):
 
 class ClockOutForm(FlaskForm):
     submit = SubmitField('Clock Out')
+
+class VehicleForm(FlaskForm):
+    name = StringField('Vehicle Name', validators=[DataRequired(), Length(max=128)])
+    location = StringField('Location', validators=[DataRequired(), Length(max=256)])
+    notes = TextAreaField('Notes', validators=[Optional(), Length(max=1024)])
+    submit = SubmitField('Save Vehicle Location')
