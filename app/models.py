@@ -579,3 +579,15 @@ class CompanyInsuranceClaim(db.Model):
 
     def __repr__(self):
         return f'<CompanyInsuranceClaim {self.id}>'
+
+class StoreItem(db.Model):
+    __tablename__ = 'store_items'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    price = db.Column(db.Numeric(10, 2), nullable=False)
+    brand = db.Column(db.String(100), nullable=True)
+    category = db.Column(db.String(100), nullable=True)
+    xml_filename = db.Column(db.String(255), nullable=False, unique=True, index=True)
+
+    def __repr__(self):
+        return f'<StoreItem {self.id}: {self.name}>'

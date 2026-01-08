@@ -68,4 +68,24 @@
             {% endif %}
         </div>
     </div>
+
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5>My Vehicles</h5>
+        </div>
+        <div class="card-body">
+            {% if vehicles %}
+                <ul class="list-group">
+                    {% for vehicle in vehicles %}
+                        <li class="list-group-item">
+                            <strong>{{ vehicle.vehicle_make }} {{ vehicle.vehicle_model }}</strong><br>
+                            <small class="text-muted">License Plate: {{ vehicle.license_plate }}</small>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>You do not have any vehicles yet.</p>
+            {% endif %}
+        </div>
+    </div>
 {% endblock %}
