@@ -1,6 +1,6 @@
 # api_fs25.py
 from flask import Blueprint, request, jsonify, current_app
-from app.models import db, Farmer, Account, Transaction, TransactionType, FarmerStats, Notification, Conversation, SiloStorage
+from app.models import db, Farmer, Account, Transaction, TransactionType, FarmerStats, Notification, Conversation, SiloStorage, StoreItem, UserVehicle
 from datetime import datetime
 
 api_fs25_bp = Blueprint('api_fs25', __name__)
@@ -139,4 +139,82 @@ def update_silo():
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error updating silo for farmer {farmer_id}: {e}", exc_info=True)
+        return jsonify({"error": "An unexpected error occurred."}), 500
+
+@api_fs25_bp.route('/api/fs25/store/inventory', methods=['POST'])
+def store_inventory():
+    data = request.json
+    if not isinstance(data, list):
+        return jsonify({"error": "Expected a list of store items"}), 400
+
+    try:
+        # Clear existing store items
+        db.session.query(StoreItem).delete()
+
+        for item_data in data:
+            new_item = StoreItem(
+                name=item_data.get('name'),
+                price=item_data.get('price'),
+                brand=item_data.get('brand'),
+                category=item_data.get('category'),
+                xml_filename=item_data.get('xml_filename')
+            )
+            db.session.add(new_item)
+
+        db.session.commit()
+        return jsonify({"status": "success", "message": f"{len(data)} store items updated."}), 200
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error updating store inventory: {e}", exc_info=True)
+        return jsonify({"error": "An unexpected error occurred."}), 500
+
+@api_fs25_bp.route('/api/fs25/store/purchase', methods=['POST'])
+def store_purchase():
+    data = request.json
+    xml_filename = data.get('xml')
+    price = data.get('price')
+    discord_id = data.get('discordId')
+
+    if not all([xml_filename, price, discord_id]):
+        return jsonify({"error": "Missing xml, price, or discordId"}), 400
+
+    user = User.query.filter_by(discord_user_id=discord_id).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    account = user.accounts.first()
+    if not account or account.balance < price:
+        return jsonify({"error": "Insufficient funds"}), 400
+
+    item = StoreItem.query.filter_by(xml_filename=xml_filename).first()
+    if not item:
+        return jsonify({"error": "Item not found"}), 404
+
+    try:
+        # Deduct funds
+        account.balance -= price
+        new_transaction = Transaction(
+            account_id=account.id,
+            type=TransactionType.MARKETPLACE_PURCHASE,
+            amount=-price,
+            description=f'Purchase of {item.name} from the store.'
+        )
+        db.session.add(new_transaction)
+
+        # Add vehicle to user's garage
+        new_vehicle = UserVehicle(
+            user_id=user.id,
+            vehicle_make=item.brand,
+            vehicle_model=item.name,
+            vehicle_type=item.category,
+            license_plate=f"{user.username}-{item.name.replace(' ', '')[:5]}-{user.id}", # Generate a unique license plate
+            region_format='US' # Default to US format
+        )
+        db.session.add(new_vehicle)
+
+        db.session.commit()
+        return jsonify({"status": "success"}), 200
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error processing purchase for user {user.id}: {e}", exc_info=True)
         return jsonify({"error": "An unexpected error occurred."}), 500

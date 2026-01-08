@@ -81,11 +81,12 @@ from flask_login import login_required, current_user
 from app import db
 from app.routes.auth import bp
 from app.forms import EditProfileForm
-from app.models import Company, Farmer, Parcel
+from app.models import Company, Farmer, Parcel, UserVehicle
 
 @bp.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
+    vehicles = UserVehicle.query.filter_by(user_id=current_user.id).all()
     form = EditProfileForm(
         original_username=current_user.username,
         original_email=current_user.email,
@@ -113,5 +114,6 @@ def profile():
         'auth/profile.html',
         title='My Profile',
         form=form,
-        user=current_user
+        user=current_user,
+        vehicles=vehicles
     )

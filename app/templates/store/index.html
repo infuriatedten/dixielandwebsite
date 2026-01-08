@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">{{ title }}</h1>
+    <div class="row">
+        {% for item in items %}
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">{{ item.name }}</h5>
+                    <p class="card-text">
+                        <strong>Brand:</strong> {{ item.brand }}<br>
+                        <strong>Category:</strong> {{ item.category }}<br>
+                        <strong>Price:</strong> {{ "%.2f"|format(item.price) }}
+                    </p>
+                    <form action="{{ url_for('store.purchase_item', item_id=item.id) }}" method="post">
+                        <button type="submit" class="btn btn-primary">Buy</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -109,8 +109,10 @@ def create_app(config_class=Config):
     from app.routes.export import export_bp
     from app.routes.health import health_bp
     from app.routes.timesheet import timesheet_bp
+    from app.routes.store import store_bp
 
     app.register_blueprint(auth_bp, url_prefix='/auth')
+    app.register_blueprint(store_bp)
     app.register_blueprint(main_bp)
     app.register_blueprint(timesheet_bp, url_prefix='/timesheet')
     app.register_blueprint(admin_bp)
