@@ -150,10 +150,18 @@ def mods():
 @main_bp.route('/admin-dashboard')
 @admin_required
 def admin_dashboard():
+    revenue_query = db.session.query(db.func.sum(Transaction.amount)).filter(
+        Transaction.type.in_([
+            TransactionType.TICKET_PAYMENT,
+            TransactionType.PERMIT_FEE_PAYMENT,
+            TransactionType.PERMIT_FEE
+        ])
+    ).scalar()
     stats = {
         'total_users': User.query.count(),
         'pending_permits': PermitApplication.query.filter_by(status='PENDING_REVIEW').count(),
         'open_tickets': Ticket.query.filter_by(status='OUTSTANDING').count(),
+        'revenue': revenue_query or 0.0
           }
     return render_template('admin/dashboard.html', title='Admin Dashboard', stats=stats)
 
