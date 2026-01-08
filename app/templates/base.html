@@ -40,6 +40,9 @@
                     <li class="nav-item">
                         <a class="nav-link {{ 'active' if request.endpoint == 'marketplace.index' else '' }}" href="{{ url_for('marketplace.index') }}">Store</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'vehicles.locations' else '' }}" href="{{ url_for('vehicles.locations') }}">Vehicle Locations</a>
+                    </li>
 
                     {% if current_user.is_authenticated %}
                         {{ nav.account_dropdown(current_user) }}

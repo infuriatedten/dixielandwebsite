@@ -112,6 +112,7 @@ def create_app(config_class=Config):
     from app.routes.health import health_bp
     from app.routes.timesheet import timesheet_bp
     from app.routes.store import store_bp
+    from app.routes.vehicles import vehicles_bp
 
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(store_bp)
@@ -130,5 +131,6 @@ def create_app(config_class=Config):
     app.register_blueprint(notifications_bp, url_prefix='/notifications')
     app.register_blueprint(export_bp, url_prefix='/export')
     app.register_blueprint(health_bp, url_prefix='/api')
+    app.register_blueprint(vehicles_bp, url_prefix='/vehicles')
 
     return app

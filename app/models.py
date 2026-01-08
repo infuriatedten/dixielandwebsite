@@ -591,3 +591,17 @@ class StoreItem(db.Model):
 
     def __repr__(self):
         return f'<StoreItem {self.id}: {self.name}>'
+
+class Vehicle(db.Model):
+    __tablename__ = 'vehicle_locations'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(128), nullable=False)
+    location = db.Column(db.String(256), nullable=False)
+    notes = db.Column(db.Text, nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+    user = db.relationship('User', backref=db.backref('vehicle_locations', lazy='dynamic'))
+
+    def __repr__(self):
+        return f'<Vehicle {self.name} at {self.location}>'
