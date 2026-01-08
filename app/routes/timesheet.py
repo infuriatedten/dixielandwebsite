@@ -4,6 +4,7 @@ from app import db
 from app.models import User, Transaction, TransactionType
 from app.forms import ClockInForm, ClockOutForm
 from datetime import datetime
+from decimal import Decimal
 
 timesheet_bp = Blueprint('timesheet', __name__)
 
@@ -37,8 +38,8 @@ def clock_out():
         duration_seconds = (clock_out_time - current_user.current_session_start).total_seconds()
 
         # Pay rate is per hour, so convert duration to hours
-        duration_hours = duration_seconds / 3600
-        amount_earned = duration_hours * float(current_user.pay_rate)
+        duration_hours = Decimal(duration_seconds) / Decimal(3600)
+        amount_earned = duration_hours * current_user.pay_rate
 
         if amount_earned > 0:
             # Assume the user has one primary account
