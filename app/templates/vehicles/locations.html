@@ -18,8 +18,11 @@
                         {{ form.hidden_tag() }}
                         {{ wtf.render_field(form.name) }}
                         {{ wtf.render_field(form.location) }}
-                        {{ wtf.render_field(form.notes, rows=3) }}
-                        {{ wtf.render_field(form.submit, class="btn btn-primary") }}
+                        <div class="mb-3">
+                            {{ form.notes.label(class="form-label") }}
+                            {{ form.notes(class="form-control", rows="3") }}
+                        </div>
+                        {{ wtf.render_field(form.submit, field_class="btn btn-primary") }}
                     </form>
                 </div>
             </div>
