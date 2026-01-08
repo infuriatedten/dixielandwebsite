@@ -25,7 +25,7 @@
                 <div class="card-body d-flex flex-column">
                     <h5 class="card-title">{{ listing.item_name }}</h5>
                     <h6 class="card-subtitle text-success fw-bold mb-2">
-                        {{ "%.2f"|format(listing.price) }} {{ listing.seller.accounts.first().currency if listing.seller.accounts.first() else 'GDC' }}
+                        {{ "%.2f"|format(listing.price) }} USD
                     </h6>
                     <p class="card-text small text-muted mb-1">
                         <strong>Qty:</strong> {{ listing.quantity }} {{ listing.unit }}<br>
