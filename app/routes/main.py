@@ -39,7 +39,7 @@ def site_home():
         .limit(4).all()
     announcements = [
         {
-            'title': 'Welcome to the new and improved Game Portal!',
+            'title': 'Welcome to Jays construction.',
             'content': 'We have redesigned the home page to be more informative and user-friendly.'
         },
         {
@@ -154,8 +154,7 @@ def admin_dashboard():
         'total_users': User.query.count(),
         'pending_permits': PermitApplication.query.filter_by(status='PENDING_REVIEW').count(),
         'open_tickets': Ticket.query.filter_by(status='OUTSTANDING').count(),
-        'revenue': 0  # TODO: Implement revenue logic
-    }
+          }
     return render_template('admin/dashboard.html', title='Admin Dashboard', stats=stats)
 
 
