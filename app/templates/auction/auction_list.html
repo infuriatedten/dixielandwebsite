@@ -29,7 +29,7 @@
                         <strong>Current Bid:</strong>
                         <span class="text-success font-weight-bold">
                             {{ "%.2f"|format(current_bid.bid_amount) if current_bid else "%.2f"|format(auction.actual_starting_bid) }}
-                            {{ current_user.accounts.first().currency if current_user.is_authenticated and current_user.accounts.first() else 'GDC' }}
+                            USD
                         </span><br>
                         <small class="text-muted">
                             Highest Bidder: {{ current_bid.bidder.username if current_bid else "No bids yet" }} <br>

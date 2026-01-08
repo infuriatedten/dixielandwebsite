@@ -38,7 +38,7 @@
             <div class="card-body">
                 <h5 class="card-title">Timesheet</h5>
                 {% if current_user.is_clocked_in %}
-                    <p>You are currently clocked in. Your session started at {{ current_user.current_session_start.strftime('%Y-%m-%d %H:%M:%S') }} UTC.</p>
+                    <p>You are currently clocked in. Your session started at {{ (current_user.current_session_start | utc_minus_5).strftime('%Y-%m-%d %H:%M:%S') }} (UTC-5).</p>
                     <form action="{{ url_for('timesheet.clock_out') }}" method="post">
                         {{ clock_out_form.hidden_tag() }}
                         {{ clock_out_form.submit(class='btn btn-danger') }}
