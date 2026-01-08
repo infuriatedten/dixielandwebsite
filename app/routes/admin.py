@@ -8,12 +8,12 @@ from app.models import (
     User, Account, Ticket, PermitApplication, Inspection, TaxBracket, Transaction,
     TransactionType, VehicleRegion, RulesContent, UserRole, InsuranceClaim,
     InsuranceClaimStatus, PermitApplicationStatus, TicketStatus, Contract,
-    Conversation, Message, Fine, Farmer
+    Conversation, Message, Fine, Farmer, Vehicle
 )
 from app.forms import (
     EditRulesForm, EditUserForm, AccountForm, EditAccountForm, EditTicketForm, EditPermitForm,
     EditInspectionForm, EditTaxBracketForm, EditBalanceForm, EditInsuranceClaimForm,
-    EditBankForm, DeleteUserForm, FineForm, ResolveTicketForm
+    EditBankForm, DeleteUserForm, FineForm, ResolveTicketForm, VehicleLocationForm
 )
 import logging
 
@@ -407,3 +407,22 @@ def manage_users():
     users = User.query.order_by(User.username).paginate(page=page, per_page=10)
     delete_forms = {user.id: DeleteUserForm(prefix=str(user.id)) for user in users.items}
     return render_template('admin/manage_users.html', title='Manage Users', users=users, delete_forms=delete_forms)
+
+@admin_bp.route('/vehicle-locations', methods=['GET', 'POST'])
+@admin_required
+def manage_vehicle_locations():
+    form = VehicleLocationForm()
+    if form.validate_on_submit():
+        vehicle_location = Vehicle(
+            name=form.name.data,
+            location=form.location.data,
+            notes=form.notes.data,
+            user_id=current_user.id
+        )
+        db.session.add(vehicle_location)
+        db.session.commit()
+        flash('Vehicle location added successfully.', 'success')
+        return redirect(url_for('admin.manage_vehicle_locations'))
+
+    locations = Vehicle.query.order_by(Vehicle.timestamp.desc()).all()
+    return render_template('admin/vehicle_locations.html', title='Manage Vehicle Locations', form=form, locations=locations)
