@@ -34,7 +34,9 @@ def create_app(config_class=Config):
     app.config.from_object(config_class)
 
     # Apply custom filters
+    from app.utils import to_utc_minus_5
     app.jinja_env.filters['nl2br'] = nl2br
+    app.jinja_env.filters['utc_minus_5'] = to_utc_minus_5
 
     # Fallback to in-memory DB if config is default/missing
     db_uri = app.config.get('SQLALCHEMY_DATABASE_URI')
