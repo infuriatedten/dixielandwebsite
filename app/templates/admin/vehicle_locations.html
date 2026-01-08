@@ -15,7 +15,10 @@
                         {{ form.hidden_tag() }}
                         {{ wtf.render_field(form.name) }}
                         {{ wtf.render_field(form.location) }}
-                        {{ wtf.render_field(form.notes) }}
+                        <div class="mb-3">
+                            {{ form.notes.label(class="form-label") }}
+                            {{ form.notes(class="form-control", rows="5") }}
+                        </div>
                         {{ wtf.render_field(form.submit) }}
                     </form>
                 </div>
