@@ -31,8 +31,8 @@
 </div>
 
 <div class="container">
-    <!-- Timesheet Section -->
     {% if current_user.is_authenticated %}
+    <!-- Timesheet Section -->
     <div class="mb-5 text-center">
         <div class="card p-4 mx-auto" style="max-width: 500px;">
             <div class="card-body">
@@ -53,7 +53,6 @@
             </div>
         </div>
     </div>
-    {% endif %}
 
     <!-- Announcements Section -->
     <div class="mb-5">
@@ -104,7 +103,6 @@
     </div>
 
     <!-- Insurance Rates Section -->
-    {% if current_user.is_authenticated %}
     <div class="mb-5">
         <h2 class="mb-4">Insurance Rates</h2>
         {% for type in insurance_rates|map(attribute='rate_type')|unique %}
@@ -145,16 +143,13 @@
         </div>
         {% endfor %}
     </div>
-    {% endif %}
 
     <!-- Farmer and Company Data -->
-    {% if current_user.is_authenticated %}
         {% if farmer_data %}
             {% include 'main/_farmer_dashboard_data.html' %}
         {% elif company_data %}
             {% include 'main/_company_dashboard_data.html' %}
         {% endif %}
-    {% endif %}
 
     <!-- Game Statistics -->
     <div class="row text-center g-4">
@@ -183,5 +178,12 @@
             </div>
         </div>
     </div>
+    {% else %}
+    <div class="text-center">
+        <h2>Welcome to the Dixieland Roleplay Server Portal</h2>
+        <p>Please log in or register to access the full features of this site.</p>
+        <a href="https://discord.gg/DsQVs4dxv2" class="btn btn-primary">Join our Discord</a>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

@@ -34,6 +34,7 @@
 
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    {% if current_user.is_authenticated %}
                     <li class="nav-item">
                         <a class="nav-link {{ 'active' if request.endpoint == 'main.mods' else '' }}" href="{{ url_for('main.mods') }}">Mods & Updates</a>
                     </li>
@@ -41,7 +42,6 @@
                         <a class="nav-link {{ 'active' if request.endpoint == 'vehicles.locations' else '' }}" href="{{ url_for('vehicles.locations') }}">Vehicle Locations</a>
                     </li>
 
-                    {% if current_user.is_authenticated %}
                         {{ nav.account_dropdown(current_user) }}
                         {{ nav.dashboards_dropdown(current_user, UserRole) }}
                         {{ nav.community_dropdown() }}
