@@ -10,21 +10,24 @@
         
         {% if field.type == 'BooleanField' %}
             <div class="form-check">
-                {{ field(class="form-check-input " + field_class) }}
+                {{ field(class="form-check-input " + field_class, **kwargs) }}
                 {{ field.label(class="form-check-label") }}
             </div>
         {% elif field.type == 'SelectField' %}
-            {{ field(class="form-select " + field_class) }}
+            {{ field(class="form-select " + field_class, **kwargs) }}
         {% elif field.type == 'TextAreaField' %}
-            {{ field(class="form-control " + field_class, rows="3") }}
+            {% if 'rows' not in kwargs %}
+                {% set _unused = kwargs.update({'rows': '3'}) %}
+            {% endif %}
+            {{ field(class="form-control " + field_class, **kwargs) }}
         {% elif field.type == 'FileField' %}
-            {{ field(class="form-control " + field_class) }}
+            {{ field(class="form-control " + field_class, **kwargs) }}
         {% elif field.type == 'SubmitField' %}
-            {{ field(class="btn btn-primary " + field_class) }}
+            {{ field(class="btn btn-primary " + field_class, **kwargs) }}
         {% elif field.type == 'HiddenField' %}
-            {{ field() }}
+            {{ field(**kwargs) }}
         {% else %}
-            {{ field(class="form-control " + field_class) }}
+            {{ field(class="form-control " + field_class, **kwargs) }}
         {% endif %}
         
         {% if help_text %}
