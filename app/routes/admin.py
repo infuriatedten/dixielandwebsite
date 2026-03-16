@@ -8,12 +8,12 @@ from app.models import (
     User, Account, Ticket, PermitApplication, Inspection, TaxBracket, Transaction,
     TransactionType, VehicleRegion, RulesContent, UserRole, InsuranceClaim,
     InsuranceClaimStatus, PermitApplicationStatus, TicketStatus, Contract,
-    Conversation, Message, Fine, Farmer, Vehicle
+    Conversation, Message, Fine, Farmer, Vehicle, Announcement
 )
 from app.forms import (
     EditRulesForm, EditUserForm, AccountForm, EditAccountForm, EditTicketForm, EditPermitForm,
     EditInspectionForm, EditTaxBracketForm, EditBalanceForm, EditInsuranceClaimForm,
-    EditBankForm, DeleteUserForm, FineForm, ResolveTicketForm, VehicleLocationForm
+    EditBankForm, DeleteUserForm, FineForm, ResolveTicketForm, VehicleLocationForm, AnnouncementForm
 )
 import logging
 
@@ -426,3 +426,48 @@ def manage_vehicle_locations():
 
     locations = Vehicle.query.order_by(Vehicle.timestamp.desc()).all()
     return render_template('admin/vehicle_locations.html', title='Manage Vehicle Locations', form=form, locations=locations)
+
+@admin_bp.route('/announcements', methods=['GET'])
+@admin_required
+def manage_announcements():
+    announcements = Announcement.query.order_by(Announcement.created_at.desc()).all()
+    return render_template('admin/manage_announcements.html', title='Manage Announcements', announcements=announcements)
+
+@admin_bp.route('/announcements/new', methods=['GET', 'POST'])
+@admin_required
+def create_announcement():
+    form = AnnouncementForm()
+    if form.validate_on_submit():
+        announcement = Announcement(
+            title=form.title.data,
+            content=form.content.data,
+            is_active=form.is_active.data
+        )
+        db.session.add(announcement)
+        db.session.commit()
+        flash('Announcement created successfully.', 'success')
+        return redirect(url_for('admin.manage_announcements'))
+    return render_template('admin/edit_announcement.html', title='Create Announcement', form=form)
+
+@admin_bp.route('/announcements/edit/<int:announcement_id>', methods=['GET', 'POST'])
+@admin_required
+def edit_announcement(announcement_id):
+    announcement = Announcement.query.get_or_404(announcement_id)
+    form = AnnouncementForm(obj=announcement)
+    if form.validate_on_submit():
+        announcement.title = form.title.data
+        announcement.content = form.content.data
+        announcement.is_active = form.is_active.data
+        db.session.commit()
+        flash('Announcement updated successfully.', 'success')
+        return redirect(url_for('admin.manage_announcements'))
+    return render_template('admin/edit_announcement.html', title='Edit Announcement', form=form, announcement=announcement)
+
+@admin_bp.route('/announcements/delete/<int:announcement_id>', methods=['POST'])
+@admin_required
+def delete_announcement(announcement_id):
+    announcement = Announcement.query.get_or_404(announcement_id)
+    db.session.delete(announcement)
+    db.session.commit()
+    flash('Announcement deleted.', 'success')
+    return redirect(url_for('admin.manage_announcements'))
