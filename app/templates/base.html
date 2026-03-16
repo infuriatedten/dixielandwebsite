@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{{ title or "Jay's Construction" }}</title>
+    <title>{{ title or "DixieLand Farming sim server" }}</title>
 
     <!-- Bootstrap 5 CSS -->
     <link
@@ -45,7 +45,7 @@
                         {{ nav.account_dropdown(current_user) }}
                         {{ nav.dashboards_dropdown(current_user, UserRole) }}
                         {{ nav.community_dropdown() }}
-                        {{ nav.messages_link(unread_message_count) }}
+                        <!--{{ nav.messages_link(unread_message_count) }}-->
                         {{ nav.notifications_link(unread_notification_count) }}
                     {% endif %}
                 </ul>
@@ -88,7 +88,7 @@
 
     <footer class="footer mt-auto py-3 bg-light">
         <div class="container">
-            <span class="text-muted">© 2024 Jay's Construction</span>
+            <span class="text-muted">© 2026 DixieLand Farm sim server</span>
         </div>
     </footer>
 
