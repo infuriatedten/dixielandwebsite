@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+ fix-conversation-template-error-10816815923664026582
     <title>{{ title or "Dixieland Farming sim server" }}</title>
+
+    <title>{{ title or "DixieLand Farming sim server" }}</title>
+ main
 
     <!-- Bootstrap 5 CSS -->
     <link
@@ -45,7 +49,7 @@
                         {{ nav.account_dropdown(current_user) }}
                         {{ nav.dashboards_dropdown(current_user, UserRole) }}
                         {{ nav.community_dropdown() }}
-                        {{ nav.messages_link(unread_message_count) }}
+                        <!--{{ nav.messages_link(unread_message_count) }}-->
                         {{ nav.notifications_link(unread_notification_count) }}
                     {% endif %}
                 </ul>
@@ -88,7 +92,11 @@
 
     <footer class="footer mt-auto py-3 bg-light">
         <div class="container">
+fix-conversation-template-error-10816815923664026582
             <span class="text-muted">© 2024 Dixieland Farming sim server</span>
+
+            <span class="text-muted">© 2026 DixieLand Farm sim server</span>
+ main
         </div>
     </footer>
 
