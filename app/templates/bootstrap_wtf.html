@@ -3,6 +3,7 @@
 
 {# Render a form field with Bootstrap styling #}
 {% macro render_field(field, label_class="", field_class="", help_text="") %}
+    {% set _ = kwargs %}
     <div class="mb-3">
         {% if field.type != 'HiddenField' %}
             {{ field.label(class=label_class + " form-label") }}
