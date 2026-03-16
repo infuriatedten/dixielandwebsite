@@ -33,7 +33,7 @@
                                         {{ conv.status.value }}
                                     </span>
                                 </td>
-                                <td>{{ conv.last_updated.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>{{ conv.last_message_time.strftime('%Y-%m-%d %H:%M') }}</td>
                                 <td>
                                     <a href="{{ url_for('messaging.view_conversation', conversation_id=conv.id) }}" class="btn btn-sm btn-info">View</a>
                                 </td>
