@@ -522,3 +522,9 @@ class VehicleLocationForm(FlaskForm):
     location = StringField('Location', validators=[DataRequired(), Length(max=256)])
     notes = TextAreaField('Notes', validators=[Optional(), Length(max=1024)])
     submit = SubmitField('Add Vehicle Location')
+
+class AnnouncementForm(FlaskForm):
+    title = StringField('Title', validators=[DataRequired(), Length(max=200)])
+    content = TextAreaField('Content', validators=[DataRequired()])
+    is_active = BooleanField('Is Active', default=True)
+    submit = SubmitField('Save Announcement')

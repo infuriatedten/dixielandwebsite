@@ -1,0 +1,53 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ title }}</h1>
+        <a href="{{ url_for('admin.create_announcement') }}" class="btn btn-primary">Create New Announcement</a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            {% if announcements %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Title</th>
+                            <th>Status</th>
+                            <th>Created At</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for announcement in announcements %}
+                        <tr>
+                            <td>{{ announcement.title }}</td>
+                            <td>
+                                {% if announcement.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ announcement.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                <a href="{{ url_for('admin.edit_announcement', announcement_id=announcement.id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                <form action="{{ url_for('admin.delete_announcement', announcement_id=announcement.id) }}" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this announcement?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No announcements found. Create your first one!</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

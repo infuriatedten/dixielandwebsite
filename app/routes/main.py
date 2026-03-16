@@ -37,16 +37,21 @@ def site_home():
         .filter_by(status=MarketplaceListingStatus.AVAILABLE) \
         .order_by(MarketplaceListing.creation_date.desc()) \
         .limit(4).all()
-    announcements = [
-        {
-            'title': 'Welcome to Jays construction.',
-            'content': 'We have redesigned the home page to be more informative and user-friendly.'
-        },
-        {
-            'title': 'New Marketplace Items Available',
-            'content': 'Check out the new items available in the marketplace. There are some great deals to be had!'
-        },
-    ]
+
+    from app.models import Announcement
+    announcements = Announcement.query.filter_by(is_active=True).order_by(Announcement.created_at.desc()).all()
+
+    if not announcements:
+        announcements = [
+            {
+                'title': 'Welcome to Dixieland Farming sim server.',
+                'content': 'We have redesigned the home page to be more informative and user-friendly.'
+            },
+            {
+                'title': 'New Marketplace Items Available',
+                'content': 'Check out the new items available in the marketplace. There are some great deals to be had!'
+            },
+        ]
     stats = {
         'active_players': User.query.count(),
         'open_tickets': Ticket.query.filter_by(status='OUTSTANDING').count(),
