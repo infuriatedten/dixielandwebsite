@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% import "bootstrap_wtf.html" as wtf %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Add New Parcel for Farmer</h4>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">You can either enter parcel details manually or upload a <code>farmland.xml</code> file to bulk import parcels.</p>
+
+                <form method="POST" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+
+                    <div class="mb-4">
+                        {{ wtf.render_field(form.farmer_id) }}
+                    </div>
+
+                    <hr>
+                    <h5>Option 1: Manual Entry</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ wtf.render_field(form.location, placeholder="e.g. Field 1") }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ wtf.render_field(form.size, placeholder="e.g. 5.5") }}
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h5>Option 2: XML Upload</h5>
+                    <div class="mb-4">
+                        {{ wtf.render_field(form.xml_file) }}
+                        <small class="form-text text-muted">Upload a <code>farmland.xml</code> file to automatically extract parcel IDs and sizes.</small>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        {{ wtf.render_field(form.submit, class="btn btn-success btn-lg") }}
+                        <a href="{{ url_for('admin.manage_users') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

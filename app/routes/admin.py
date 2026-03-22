@@ -8,13 +8,14 @@ from app.models import (
     User, Account, Ticket, PermitApplication, Inspection, TaxBracket, Transaction,
     TransactionType, VehicleRegion, RulesContent, UserRole, InsuranceClaim,
     InsuranceClaimStatus, PermitApplicationStatus, TicketStatus, Contract,
-    Conversation, Message, Fine, Farmer, Announcement
+    Conversation, Message, Fine, Farmer, Announcement, Parcel
 )
 from app.forms import (
     EditRulesForm, EditUserForm, AccountForm, EditAccountForm, EditTicketForm, EditPermitForm,
     EditInspectionForm, EditTaxBracketForm, EditBalanceForm, EditInsuranceClaimForm,
-    EditBankForm, DeleteUserForm, FineForm, ResolveTicketForm, AnnouncementForm
+    EditBankForm, DeleteUserForm, FineForm, ResolveTicketForm, AnnouncementForm, ParcelForm
 )
+from app.utils import parse_farmland_xml
 import logging
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -453,3 +454,51 @@ def delete_announcement(announcement_id):
     db.session.commit()
     flash('Announcement deleted.', 'success')
     return redirect(url_for('admin.manage_announcements'))
+
+@admin_bp.route('/add_parcel', methods=['GET', 'POST'])
+@admin_required
+def add_parcel():
+    form = ParcelForm()
+    # Handle pre-selected farmer from URL
+    farmer_id = request.args.get('farmer_id', type=int)
+    if request.method == 'GET' and farmer_id:
+        form.farmer_id.data = farmer_id
+
+    if form.validate_on_submit():
+        farmer = Farmer.query.get_or_404(form.farmer_id.data)
+
+        # Check if XML file was uploaded
+        if form.xml_file.data:
+            xml_content = form.xml_file.data.read().decode('utf-8')
+            parcel_data = parse_farmland_xml(xml_content)
+
+            if not parcel_data:
+                flash('No valid parcel data found in XML.', 'warning')
+            else:
+                for data in parcel_data:
+                    parcel = Parcel(
+                        location=data['id'],
+                        size=data['area'],
+                        farmer_id=farmer.id
+                    )
+                    db.session.add(parcel)
+                db.session.commit()
+                flash(f'Successfully imported {len(parcel_data)} parcels from XML.', 'success')
+                return redirect(url_for('admin.manage_users'))
+
+        # Manual entry
+        elif form.location.data and form.size.data:
+            parcel = Parcel(
+                location=form.location.data,
+                size=form.size.data,
+                farmer_id=farmer.id
+            )
+            db.session.add(parcel)
+            db.session.commit()
+            flash('Parcel added successfully.', 'success')
+            return redirect(url_for('admin.manage_users'))
+
+        else:
+            flash('Please provide either manual details or an XML file.', 'danger')
+
+    return render_template('admin/add_parcel.html', title='Add Parcel', form=form)

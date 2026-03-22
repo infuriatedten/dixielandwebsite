@@ -247,9 +247,18 @@ class NewConversationForm(FlaskForm): # Admin to User
 
 
 class ParcelForm(FlaskForm):
-    location = StringField('Parcel Location', validators=[DataRequired(), Length(min=3, max=256)])
-    size = DecimalField('Parcel Size (in acres)', validators=[DataRequired()])
+    farmer_id = SelectField('Farmer', coerce=int, validators=[DataRequired()])
+    location = StringField('Parcel Location', validators=[Optional(), Length(min=1, max=256)])
+    size = DecimalField('Parcel Size (in acres)', validators=[Optional()])
+    xml_file = FileField('Upload farmland.xml (Optional)', validators=[
+        FileAllowed(['xml'], 'XML files only!')
+    ])
     submit = SubmitField('Add Parcel')
+
+    def __init__(self, *args, **kwargs):
+        super(ParcelForm, self).__init__(*args, **kwargs)
+        from app.models import Farmer
+        self.farmer_id.choices = [(f.id, f.user.username) for f in Farmer.query.join(User).order_by(User.username).all()]
 
 
 class InsuranceClaimForm(FlaskForm):
