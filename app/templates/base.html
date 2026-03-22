@@ -34,17 +34,20 @@
 
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link {{ 'active' if request.endpoint == 'main.mods' else '' }}" href="{{ url_for('main.mods') }}">Mods & Updates</a>
-                    </li>
-
                     {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if request.endpoint == 'main.mods' else '' }}" href="{{ url_for('main.mods') }}">Mods & Updates</a>
+                        </li>
                         {{ nav.account_links(current_user) }}
                         {{ nav.dashboard_links(current_user, UserRole) }}
                         {{ nav.dot_links(current_user, UserRole) }}
                         {{ nav.community_links() }}
                         {{ nav.messages_link(unread_message_count) }}
                         {{ nav.notifications_link(unread_notification_count) }}
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="https://discord.gg/kfDtPS9dcm" target="_blank">Join Discord</a>
+                        </li>
                     {% endif %}
                 </ul>
 
