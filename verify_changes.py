@@ -20,6 +20,7 @@ def test_routes():
         "csrf_token": csrf_token
     }, allow_redirects=True)
     print(f"Login status: {login_resp.status_code}")
+    print(f"Logged in as: {login_resp.url}")
 
     # Check Admin Add Parcel page
     resp = session.get(f"{BASE_URL}/admin/add_parcel")
@@ -27,6 +28,7 @@ def test_routes():
         print("PASS: /admin/add_parcel is accessible")
     else:
         print(f"FAIL: /admin/add_parcel returned {resp.status_code}")
+        # print(resp.text)
 
     # Check timesheet routes (should be 404 since blueprint is disabled)
     resp = session.post(f"{BASE_URL}/timesheet/clock_in")
