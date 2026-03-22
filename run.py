@@ -126,10 +126,10 @@ if __name__ == '__main__':
                     email='admin@example.com',
                     role=UserRole.ADMIN
                 )
-                admin_user.set_password('adminpassword')  # ✅ Change in production
+                admin_user.set_password('AdminPassword123!')  # ✅ Change in production
                 db.session.add(admin_user)
                 db.session.commit()
-                logger.info("Admin user created successfully: username=admin, password=adminpassword")
+                logger.info("Admin user created successfully: username=admin, password=AdminPassword123!")
             except Exception as e:
                 db.session.rollback()
                 logger.error("Failed to create admin user.")

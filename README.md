@@ -104,7 +104,7 @@ The application is built with Python using the Flask framework and MySQL as the 
     python run.py
     ```
     The application should be accessible at `http://localhost:5000` (or the port specified in `run.py`).
-    An initial admin user (`username: admin`, `password: adminpassword`) will be created if one doesn't exist.
+    An initial admin user (`username: admin`, `password: AdminPassword123!`) will be created if one doesn't exist.
 
 8.  **To Run the Tax Job Manually (for testing):**
     The automated tax job is designed for a cron scheduler. To test it locally:
