@@ -86,7 +86,6 @@ def site_home():
                 'parcels': Parcel.query.filter_by(farmer_id=farmer.id).all(),
                 'silo_contents': SiloStorage.query.filter_by(farmer_id=farmer.id).order_by(SiloStorage.crop_type).all(),
                 'insurance_claims': InsuranceClaim.query.filter_by(farmer_id=farmer.id).all(),
-                'parcel_form': ParcelForm(),
                 'insurance_form': InsuranceClaimForm()
             }
         elif hasattr(current_user, 'company') and current_user.company:
