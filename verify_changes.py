@@ -16,7 +16,7 @@ def test_routes():
 
     login_resp = session.post(f"{BASE_URL}/auth/login", data={
         "username": "admin",
-        "password": "adminpassword",
+        "password": "AdminPassword123!",
         "csrf_token": csrf_token
     }, allow_redirects=True)
     print(f"Login status: {login_resp.status_code}")
