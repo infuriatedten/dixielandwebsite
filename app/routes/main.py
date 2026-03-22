@@ -13,7 +13,7 @@ from app.models import (
 )
 from app.forms import (
     ParcelForm, InsuranceClaimForm, ContractForm, CompanyNameForm, CompanyVehicleForm, CompanyContractForm, CompanyInsuranceClaimForm,
-    ClockInForm, ClockOutForm
+    # ClockInForm, ClockOutForm
 )
 from app.services import vehicle_service
 
@@ -29,8 +29,10 @@ def main_index():
 
 @main_bp.route('/site-home', endpoint='site_home')
 def site_home():
-    clock_in_form = ClockInForm()
-    clock_out_form = ClockOutForm()
+    # clock_in_form = ClockInForm()
+    # clock_out_form = ClockOutForm()
+    clock_in_form = None
+    clock_out_form = None
 
     # Generic data for all users
     recent_listings = MarketplaceListing.query \

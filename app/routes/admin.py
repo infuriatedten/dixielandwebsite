@@ -393,7 +393,7 @@ def edit_user(user_id):
         user.username = form.username.data
         user.email = form.email.data
         user.role = UserRole(form.role.data)
-        user.pay_rate = form.pay_rate.data
+        # user.pay_rate = form.pay_rate.data
         db.session.commit()
         flash('User updated successfully.', 'success')
         return redirect(url_for('admin.manage_users'))
