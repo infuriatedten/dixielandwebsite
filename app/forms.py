@@ -136,7 +136,7 @@ class EditListingForm(FlaskForm):
 class EditUserForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
-    pay_rate = DecimalField('Pay Rate', places=2, validators=[Optional(), NumberRange(min=0)])
+    # pay_rate = DecimalField('Pay Rate', places=2, validators=[Optional(), NumberRange(min=0)])
     role = SelectField('Role', choices=[(role.value, role.value) for role in UserRole], validators=[DataRequired()])
     discord_user_id = StringField('Discord User ID', validators=[Optional(), Length(max=100)])
     region = SelectField('Region', choices=[(region.name, region.value) for region in VehicleRegion], validators=[DataRequired()])
@@ -505,11 +505,11 @@ class EditProfileForm(FlaskForm):
             user = User.query.filter_by(email=email.data).first()
             if user:
                 raise ValidationError('This email is already in use.')
-class ClockInForm(FlaskForm):
-    submit = SubmitField('Clock In')
+# class ClockInForm(FlaskForm):
+#     submit = SubmitField('Clock In')
 
-class ClockOutForm(FlaskForm):
-    submit = SubmitField('Clock Out')
+# class ClockOutForm(FlaskForm):
+#     submit = SubmitField('Clock Out')
 
 
 class AnnouncementForm(FlaskForm):
