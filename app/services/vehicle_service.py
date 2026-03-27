@@ -1,5 +1,5 @@
 from app import db
-from app.models import UserVehicle, VehicleRegion, User
+from app.models import UserVehicle, CompanyVehicle, VehicleRegion, User
 from datetime import datetime
 import random
 import string
@@ -29,7 +29,8 @@ def generate_license_plate_number(region_enum):
             numbers = ''.join(random.choices(string.digits, k=3))
             plate = f"{letters}{numbers}" # e.g., XYZ123
 
-        if not UserVehicle.query.filter_by(license_plate=plate).first():
+        if not UserVehicle.query.filter_by(license_plate=plate).first() and \
+           not CompanyVehicle.query.filter_by(license_plate=plate).first():
             return plate
 
     current_app.logger.error("Could not generate a unique license plate after max tries.")

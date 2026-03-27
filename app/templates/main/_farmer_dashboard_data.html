@@ -106,19 +106,6 @@
 </div>
 
 
-<div class="card mt-4">
-    <div class="card-header">
-        <h5 class="mb-0">Add New Parcel</h5>
-    </div>
-    <div class="card-body">
-        <form method="POST" action="{{ url_for('main.site_home') }}">
-            {{ farmer_data.parcel_form.hidden_tag() }}
-            {{ wtf.render_field(farmer_data.parcel_form.location) }}
-            {{ wtf.render_field(farmer_data.parcel_form.size) }}
-            {{ wtf.render_field(farmer_data.parcel_form.submit) }}
-        </form>
-    </div>
-</div>
 
 
 
