@@ -31,13 +31,22 @@
                         <p class="card-text"><strong>Reward:</strong> {{ contract.reward }}</p>
                         <p class="card-text"><strong>Status:</strong> {{ contract.status }}</p>
                         {% if contract.creator_id == current_user.id %}
-                            <a href="{{ url_for('main.delete_contract', contract_id=contract.id) }}" class="btn btn-danger">Delete Contract</a>
-                        {% elif contract.claimant_id == current_user.id and contract.status == 'CLAIMED' %}
-                            <a href="{{ url_for('main.complete_contract', contract_id=contract.id) }}" class="btn btn-success">Complete Contract</a>
+                            <form action="{{ url_for('main.delete_contract', contract_id=contract.id) }}" method="post" style="display: inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-danger">Delete Contract</button>
+                            </form>
+                        {% elif contract.claimant_id == current_user.id and contract.status.name == 'CLAIMED' %}
+                            <form action="{{ url_for('main.complete_contract', contract_id=contract.id) }}" method="post" style="display: inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-success">Complete Contract</button>
+                            </form>
                         {% elif contract.claimant_id and contract.claimant_id != current_user.id %}
                             <button class="btn btn-secondary" disabled>Claimed</button>
                         {% else %}
-                            <a href="{{ url_for('main.claim_contract', contract_id=contract.id) }}" class="btn btn-primary">Claim Contract</a>
+                            <form action="{{ url_for('main.claim_contract', contract_id=contract.id) }}" method="post" style="display: inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-primary">Claim Contract</button>
+                            </form>
                         {% endif %}
                     </div>
                 </div>
