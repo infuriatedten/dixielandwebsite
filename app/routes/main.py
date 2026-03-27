@@ -9,7 +9,8 @@ from app.models import (
     User, UserRole, RulesContent, Farmer, Parcel, UserVehicle, CompanyVehicle,
     Account, InsuranceClaim, Contract, ContractStatus, Company, CompanyContract, CompanyInsuranceClaim,
     MarketplaceListing, MarketplaceListingStatus, Ticket, PermitApplication,
-    Transaction, TransactionType, InsuranceRate, Fine, SiloStorage, InsuranceRateType
+    Transaction, TransactionType, InsuranceRate, Fine, SiloStorage, InsuranceRateType,
+    VehicleRegion
 )
 from app.forms import (
     ParcelForm, InsuranceClaimForm, ContractForm, CompanyNameForm, CompanyVehicleForm, CompanyContractForm, CompanyInsuranceClaimForm,
@@ -27,7 +28,7 @@ def main_index():
     return redirect(url_for('main.site_home'))
 
 
-@main_bp.route('/site-home', endpoint='site_home')
+@main_bp.route('/site-home', methods=['GET', 'POST'], endpoint='site_home')
 def site_home():
     # clock_in_form = ClockInForm()
     # clock_out_form = ClockOutForm()
@@ -82,22 +83,85 @@ def site_home():
     if current_user.is_authenticated:
         if hasattr(current_user, 'farmer') and current_user.farmer:
             farmer = current_user.farmer
+            insurance_form = InsuranceClaimForm()
+
+            if insurance_form.validate_on_submit():
+                new_claim = InsuranceClaim(
+                    farmer_id=farmer.id,
+                    reason=insurance_form.reason.data,
+                    description=insurance_form.description.data,
+                    estimated_loss=insurance_form.estimated_loss.data
+                )
+                db.session.add(new_claim)
+                db.session.commit()
+                flash('Insurance claim submitted successfully!', 'success')
+                return redirect(url_for('main.site_home'))
+
             farmer_data = {
                 'parcels': Parcel.query.filter_by(farmer_id=farmer.id).all(),
                 'silo_contents': SiloStorage.query.filter_by(farmer_id=farmer.id).order_by(SiloStorage.crop_type).all(),
-                'insurance_claims': InsuranceClaim.query.filter_by(farmer_id=farmer.id).all(),
-                'insurance_form': InsuranceClaimForm()
+                'insurance_claims': InsuranceClaim.query.filter_by(farmer_id=farmer.id).order_by(InsuranceClaim.claim_date.desc()).all(),
+                'insurance_form': insurance_form,
+                'bank_accounts': Account.query.filter_by(user_id=current_user.id, is_company=False).all(),
+                'vehicles': current_user.vehicles.all(),
+                'tickets': current_user.tickets_received.all()
             }
         elif hasattr(current_user, 'company') and current_user.company:
             company = current_user.company
+            vehicle_form = CompanyVehicleForm()
+            contract_form = CompanyContractForm()
+            insurance_form = CompanyInsuranceClaimForm()
+
+            if vehicle_form.validate_on_submit() and 'vehicle_make' in request.form:
+                region_enum = VehicleRegion[vehicle_form.region_format.data]
+                license_plate = vehicle_service.generate_license_plate_number(region_enum)
+
+                new_vehicle = CompanyVehicle(
+                    company_id=company.id,
+                    vehicle_make=vehicle_form.vehicle_make.data,
+                    vehicle_model=vehicle_form.vehicle_model.data,
+                    vehicle_type=vehicle_form.vehicle_type.data,
+                    vehicle_description=vehicle_form.vehicle_description.data,
+                    region_format=region_enum,
+                    license_plate=license_plate
+                )
+                db.session.add(new_vehicle)
+                db.session.commit()
+                flash('Company vehicle registered successfully!', 'success')
+                return redirect(url_for('main.site_home'))
+
+            if contract_form.validate_on_submit() and 'title' in request.form:
+                new_contract = CompanyContract(
+                    company_id=company.id,
+                    title=contract_form.title.data,
+                    description=contract_form.description.data,
+                    reward=contract_form.reward.data
+                )
+                db.session.add(new_contract)
+                db.session.commit()
+                flash('Company contract created successfully!', 'success')
+                return redirect(url_for('main.site_home'))
+
+            if insurance_form.validate_on_submit() and 'reason' in request.form:
+                new_claim = CompanyInsuranceClaim(
+                    company_id=company.id,
+                    reason=insurance_form.reason.data
+                )
+                db.session.add(new_claim)
+                db.session.commit()
+                flash('Company insurance claim submitted successfully!', 'success')
+                return redirect(url_for('main.site_home'))
+
             company_data = {
                 'company': company,
                 'vehicles': CompanyVehicle.query.filter_by(company_id=company.id).all(),
                 'contracts': CompanyContract.query.filter_by(company_id=company.id).all(),
                 'insurance_claims': CompanyInsuranceClaim.query.filter_by(company_id=company.id).all(),
-                'vehicle_form': CompanyVehicleForm(),
-                'contract_form': CompanyContractForm(),
-                'insurance_form': CompanyInsuranceClaimForm()
+                'vehicle_form': vehicle_form,
+                'contract_form': contract_form,
+                'insurance_form': insurance_form,
+                'bank_accounts': Account.query.filter_by(user_id=current_user.id, is_company=True).all(),
+                'tickets': current_user.tickets_received.all()
             }
 
     return render_template('main/index.html', title='Home',
